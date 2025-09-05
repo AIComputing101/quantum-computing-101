@@ -34,7 +34,10 @@ A comprehensive, hands-on quantum computing education platform with **40 product
 git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 
-# Install dependencies
+# Option 1: Install core dependencies (recommended for beginners)
+pip install -r examples/requirements-core.txt
+
+# Option 2: Install all dependencies (includes cloud SDKs, Jupyter, etc.)
 pip install -r examples/requirements.txt
 
 # Run your first quantum example
