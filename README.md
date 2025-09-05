@@ -31,7 +31,7 @@ A comprehensive, hands-on quantum computing education platform with **40 product
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/quantum-computing-101.git
+git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 
 # Install dependencies
@@ -163,7 +163,7 @@ We welcome contributions! Please see our [Contributing Guidelines](docs/CONTRIBU
 ### Development Setup
 ```bash
 # Clone and install development dependencies
-git clone https://github.com/your-username/quantum-computing-101.git
+git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 pip install -r examples/requirements-dev.txt
 
@@ -221,9 +221,9 @@ pylint examples/
 
 ## 📞 Support & Community
 
-- **📧 Email**: [quantum101@example.com](mailto:quantum101@example.com)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/your-username/quantum-computing-101/discussions)
-- **🐛 Issues**: [GitHub Issues](https://github.com/your-username/quantum-computing-101/issues)
+- **📧 Email**: [aicomputing101@gmail.com](mailto:aicomputing101@gmail.com)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/AIComputing101/quantum-computing-101/discussions)
+- **🐛 Issues**: [GitHub Issues](https://github.com/AIComputing101/quantum-computing-101/issues)
 - **📱 Twitter**: [@QuantumComputing101](https://twitter.com/QuantumComputing101)
 - **💼 LinkedIn**: [Quantum Computing 101 Project](https://linkedin.com/company/quantum-computing-101)
 
