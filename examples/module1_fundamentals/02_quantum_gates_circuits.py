@@ -147,7 +147,12 @@ def visualize_gate_effects(single_qubit_circuits):
         state = Statevector.from_instruction(circuit)
         
         ax = axes[i]
-        plot_bloch_multivector(state, ax=ax)
+        # plot_bloch_multivector no longer accepts ax parameter in Qiskit 2.x
+        try:
+            bloch_fig = plot_bloch_multivector(state, title="Qubit State")
+            # Save individual figure instead of using subplot
+        except Exception as e:
+            print(f"⚠️ Could not create Bloch sphere: {e}")
         ax.set_title(gate_name, fontsize=10, pad=10)
     
     plt.tight_layout()

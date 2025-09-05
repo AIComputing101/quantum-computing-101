@@ -169,7 +169,14 @@ def explore_measurement_bases():
         axes = [axes]
     
     for i, (basis, counts) in enumerate(results.items()):
-        plot_histogram(counts, ax=axes[i])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i].bar(list(counts.keys()), list(counts.values()))
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i].set_title(f'{basis}', fontsize=10)
     
     plt.tight_layout()

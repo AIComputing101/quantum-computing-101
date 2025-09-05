@@ -9,7 +9,7 @@ Implementation of hardware-specific circuit optimization and transpilation strat
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, transpile, QuantumRegister, ClassicalRegister
 from qiskit.transpiler import PassManager, Layout
 from qiskit.transpiler.passes import (
     BasicSwap, LookaheadSwap, SabreSwap, 

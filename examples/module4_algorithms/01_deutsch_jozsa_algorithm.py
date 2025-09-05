@@ -19,7 +19,7 @@ License: MIT
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
+from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister, QuantumRegister, transpile
 from qiskit.quantum_info import Statevector
 from qiskit.visualization import circuit_drawer, plot_histogram
 from qiskit_aer import AerSimulator
@@ -28,18 +28,37 @@ import time
 
 
 class DeutschJozsaOracle:
-    """Oracle implementation for Deutsch-Jozsa algorithm."""
+    """Oracle implementation for Deutsch-Jozsa algorithm.
+    
+    An oracle is a 'black box' quantum operation that computes a classical
+    function f(x) and stores the result in a quantum circuit. The key insight
+    from "Quantum Computing in Action" is that oracles transform the problem
+    of function evaluation into quantum circuit operations.
+    
+    Oracle Design Principles:
+    1. Reversibility: All quantum operations must be reversible
+    2. Unitary: Oracle operations preserve quantum superposition
+    3. Function embedding: f(x) is embedded as |x⟩|y⟩ → |x⟩|y ⊕ f(x)⟩
+    """
     
     def __init__(self, n_qubits, function_type='random'):
         """Initialize the oracle.
         
         Args:
-            n_qubits: Number of input qubits
+            n_qubits: Number of input qubits (determines function domain size)
             function_type: 'constant_0', 'constant_1', 'balanced', or 'random'
         """
         self.n_qubits = n_qubits
         self.function_type = function_type
         self.truth_table = self._generate_function()
+        
+        print(f"🔮 Oracle created: {function_type} function with {n_qubits} input qubits")
+        print(f"   Function domain: {2**n_qubits} possible inputs")
+        if len(self.truth_table) <= 16:  # Show truth table for small functions
+            print(f"   Truth table: {self.truth_table}")
+        else:
+            print(f"   Truth table too large to display ({len(self.truth_table)} entries)")
+        print(f"   Expected result: {'CONSTANT' if self._is_constant() else 'BALANCED'}")
     
     def _generate_function(self):
         """Generate the function based on type."""
@@ -306,7 +325,14 @@ def test_different_functions():
     
     for i, func_type in enumerate(function_types):
         counts = results[func_type]['counts']
-        plot_histogram(counts, ax=axes[i])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i].bar(list(counts.keys()), list(counts.values()))
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i].set_title(f'{func_type.replace("_", " ").title()} Function')
     
     plt.tight_layout()

@@ -139,6 +139,12 @@ def demonstrate_quantum_correlations():
     
     # Measure both qubits in Z-basis
     qc_measure = qc.copy()
+    # Create circuit with classical bits for measurement
+    if not hasattr(qc_measure, 'clbits') or not qc_measure.clbits:
+        # Recreate circuit with classical register
+        temp_circuit = QuantumCircuit(qc_measure.num_qubits, qc_measure.num_qubits)
+        temp_circuit = temp_circuit.compose(qc_measure)
+        qc_measure = temp_circuit
     qc_measure.measure_all()
     
     job = simulator.run(transpile(qc_measure, simulator), shots=shots)
@@ -228,7 +234,14 @@ def demonstrate_measurement_basis_effects():
         axes = [axes]
     
     for i, (setup_name, counts) in enumerate(results.items()):
-        plot_histogram(counts, ax=axes[i])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i].bar(list(counts.keys()), list(counts.values()))
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i].set_title(f'{setup_name}\nCorr: {correlations[setup_name]:.3f}', fontsize=10)
     
     plt.tight_layout()

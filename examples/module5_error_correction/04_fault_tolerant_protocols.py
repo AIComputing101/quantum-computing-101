@@ -9,7 +9,7 @@ Implementation of quantum error correction protocols and fault-tolerant operatio
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector, random_statevector
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error

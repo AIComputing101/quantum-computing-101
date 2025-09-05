@@ -14,7 +14,7 @@ import json
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import asyncio
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, transpile, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
 from qiskit.circuit.library import TwoLocal, EfficientSU2
 from scipy.optimize import minimize

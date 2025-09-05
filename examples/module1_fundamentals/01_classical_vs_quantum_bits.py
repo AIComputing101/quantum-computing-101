@@ -18,7 +18,7 @@ License: MIT
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.visualization import plot_bloch_multivector, plot_histogram
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
@@ -90,12 +90,8 @@ def visualize_qubit_states(circuits, verbose=False):
     print("=== QUBIT STATE VISUALIZATION ===")
     print()
     
-    # Create subplot for Bloch sphere visualizations
-    fig, axes = plt.subplots(1, len(circuits), figsize=(4*len(circuits), 4))
-    if len(circuits) == 1:
-        axes = [axes]
-    
     states = {}
+    bloch_figures = []
     
     for i, (label, circuit) in enumerate(circuits.items()):
         # Get the statevector
@@ -108,14 +104,21 @@ def visualize_qubit_states(circuits, verbose=False):
             print(f"  Probabilities: |0⟩: {abs(state[0])**2:.3f}, |1⟩: {abs(state[1])**2:.3f}")
             print()
         
-        # Plot on Bloch sphere
-        ax = axes[i]
-        plot_bloch_multivector(state, ax=ax)
-        ax.set_title(f'Qubit State: {label}', fontsize=12, pad=20)
+        # Plot individual Bloch sphere (Qiskit 2.x doesn't support ax parameter)
+        try:
+            bloch_fig = plot_bloch_multivector(state, title=f'Qubit State: {label}')
+            bloch_figures.append(bloch_fig)
+            
+            # Save individual Bloch sphere
+            filename = f'module1_01_qubit_state_{i:02d}.png'
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
+            print(f"💾 Saved: {filename}")
+            
+        except Exception as e:
+            print(f"⚠️ Could not create Bloch sphere for {label}: {e}")
     
-    plt.tight_layout()
-    plt.savefig('module1_01_qubit_states.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    if bloch_figures:
+        plt.show()
     
     return states
 
@@ -135,28 +138,37 @@ def measure_qubits(circuits, shots=1000):
     results = {}
     
     for i, (label, circuit) in enumerate(circuits.items()):
-        # Add measurement to circuit
-        qc_measure = circuit.copy()
-        qc_measure.add_register(circuit.cregs[0] if circuit.cregs else circuit.add_register('c', 1)[0])
+        # Create measurement circuit with proper classical register
+        qc_measure = QuantumCircuit(circuit.num_qubits, circuit.num_qubits)
+        qc_measure = qc_measure.compose(circuit)
         qc_measure.measure_all()
         
         # Run simulation
-        job = simulator.run(transpile(qc_measure, simulator), shots=shots)
-        result = job.result()
-        counts = result.get_counts()
-        results[label] = counts
-        
-        # Plot histogram
-        ax = axes[i]
-        plot_histogram(counts, ax=ax)
-        ax.set_title(f'Measurements: {label}', fontsize=10)
+        try:
+            job = simulator.run(transpile(qc_measure, simulator), shots=shots)
+            result = job.result()
+            counts = result.get_counts()
+            results[label] = counts
+            
+            # Plot histogram (newer Qiskit may not support ax parameter)
+            if i == 0:
+                hist_fig = plot_histogram(counts, title=f'Measurements: {label}')
+                # Save individual histogram
+                plt.savefig(f'module1_01_measurement_{i:02d}.png', dpi=300, bbox_inches='tight')
+                print(f"💾 Saved: module1_01_measurement_{i:02d}.png")
+            
+        except Exception as e:
+            print(f"⚠️ Measurement error for {label}: {e}")
+            results[label] = {}
+            continue
         
         # Print results
-        print(f"State {label} measured {shots} times:")
-        for outcome, count in counts.items():
-            percentage = (count / shots) * 100
-            print(f"  |{outcome}⟩: {count} times ({percentage:.1f}%)")
-        print()
+        if label in results and results[label]:
+            print(f"State {label} measured {shots} times:")
+            for outcome, count in results[label].items():
+                percentage = (count / shots) * 100
+                print(f"  |{outcome}⟩: {count} times ({percentage:.1f}%)")
+            print()
     
     plt.tight_layout()
     plt.savefig('module1_01_measurements.png', dpi=300, bbox_inches='tight')

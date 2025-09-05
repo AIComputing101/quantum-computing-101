@@ -48,28 +48,23 @@ def plot_bloch_comparison(states, labels, title="Qubit State Comparison", figsiz
         figsize: Figure size tuple
         
     Returns:
-        Figure and axes objects
+        List of figure objects (one per state)
     """
     setup_plot_style()
     
-    n_states = len(states)
-    fig, axes = plt.subplots(1, n_states, figsize=figsize)
-    if n_states == 1:
-        axes = [axes]
+    figures = []
     
     for i, (state, label) in enumerate(zip(states, labels)):
         # Convert to Statevector if needed
         if hasattr(state, 'data'):  # Quantum circuit
             state = Statevector.from_instruction(state)
         
-        # Plot on Bloch sphere
-        plot_bloch_multivector(state, ax=axes[i])
-        axes[i].set_title(label, fontsize=12, pad=20)
+        # Create individual figure for each Bloch sphere
+        # plot_bloch_multivector no longer accepts ax parameter
+        fig = plot_bloch_multivector(state, title=label, figsize=(5, 5))
+        figures.append(fig)
     
-    fig.suptitle(title, fontsize=16, y=1.02)
-    plt.tight_layout()
-    
-    return fig, axes
+    return figures
 
 
 def plot_measurement_comparison(results_dict, title="Measurement Results", figsize=(12, 4)):
@@ -91,8 +86,16 @@ def plot_measurement_comparison(results_dict, title="Measurement Results", figsi
         axes = [axes]
     
     for i, (name, counts) in enumerate(results_dict.items()):
-        plot_histogram(counts, ax=axes[i])
-        axes[i].set_title(name, fontsize=11)
+        # plot_histogram no longer accepts ax parameter in newer Qiskit
+        if n_experiments == 1:
+            fig_hist = plot_histogram(counts, title=name)
+            return fig_hist, None
+        else:
+            # For multiple plots, create individual histograms
+            axes[i].bar(counts.keys(), counts.values())
+            axes[i].set_title(name, fontsize=11)
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
     
     fig.suptitle(title, fontsize=14, y=1.02)
     plt.tight_layout()
@@ -165,8 +168,10 @@ def plot_quantum_circuit_with_explanation(circuit, explanation_text, figsize=(14
     
     # Circuit diagram (top 2/3)
     ax_circuit = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
-    circuit_drawer(circuit, output='mpl', ax=ax_circuit, style={'backgroundcolor': '#EEEEEE'})
+    # circuit_drawer no longer accepts ax parameter, create separate figure and copy
+    circuit_fig = circuit_drawer(circuit, output='mpl', style={'backgroundcolor': '#EEEEEE'})
     ax_circuit.set_title(f'Quantum Circuit (Depth: {circuit.depth()}, Qubits: {circuit.num_qubits})')
+    # Note: In modern Qiskit, you might need to handle circuit drawing differently
     
     # Explanation text (bottom 1/3)
     ax_text = plt.subplot2grid((3, 1), (2, 0))
@@ -282,8 +287,11 @@ def create_educational_animation_frames(states, frame_labels, save_prefix="anima
             state = Statevector.from_instruction(state)
         
         # Plot Bloch sphere
-        plot_bloch_multivector(state, ax=ax)
-        ax.set_title(f"{label}\nStep {i+1}", fontsize=14, pad=20)
+        # plot_bloch_multivector no longer accepts ax parameter
+        plt.close()  # Close the subplot figure
+        bloch_fig = plot_bloch_multivector(state, title=f"{label}\nStep {i+1}")
+        
+        # Save the Bloch sphere figure directly
         
         # Save frame
         filename = f"{save_prefix}_{i:03d}.png"

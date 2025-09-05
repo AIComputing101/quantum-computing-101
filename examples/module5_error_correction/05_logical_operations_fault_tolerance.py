@@ -9,7 +9,7 @@ Implementation of fault-tolerant logical operations and analysis of fault tolera
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector, Operator
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error

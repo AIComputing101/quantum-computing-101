@@ -9,7 +9,7 @@ Implementation of quantum generative models including quantum GANs and Born mach
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from sklearn.datasets import make_moons, make_circles, make_blobs

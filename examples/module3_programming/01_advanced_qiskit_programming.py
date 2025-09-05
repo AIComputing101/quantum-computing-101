@@ -19,7 +19,7 @@ License: MIT
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, transpile
+from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister, QuantumRegister, transpile
 from qiskit.circuit import Gate, Parameter, ParameterVector
 from qiskit.circuit.library import RYGate, CXGate, RZGate
 from qiskit.quantum_info import Statevector, Operator
@@ -398,7 +398,14 @@ def demonstrate_advanced_measurements():
         axes = [axes]
     
     for i, (name, counts) in enumerate(results.items()):
-        plot_histogram(counts, ax=axes[i])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i].bar(list(counts.keys()), list(counts.values()))
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i].set_title(f'{name} Measurements')
     
     plt.tight_layout()

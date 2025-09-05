@@ -19,7 +19,7 @@ from pathlib import Path
 # Add utils to path for visualization tools
 sys.path.append(str(Path(__file__).parent.parent / "utils"))
 
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister, transpile
 from qiskit.circuit import Parameter, ParameterVector
 from qiskit.quantum_info import Statevector, Operator
 from qiskit_aer import AerSimulator

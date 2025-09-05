@@ -9,7 +9,7 @@ Implementation of variational quantum classifiers with parameter optimization.
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from qiskit.circuit.library import TwoLocal, EfficientSU2

@@ -9,7 +9,7 @@ Implementation of hardware noise characterization and error analysis techniques.
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, transpile, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error, readout_error
 from qiskit.quantum_info import state_fidelity, process_fidelity, Statevector

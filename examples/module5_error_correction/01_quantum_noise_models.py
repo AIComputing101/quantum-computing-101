@@ -94,7 +94,14 @@ def demonstrate_basic_noise_types():
         axes = [axes]
     
     for i, (noise_name, counts) in enumerate(results.items()):
-        plot_histogram(counts, ax=axes[i])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i].bar(list(counts.keys()), list(counts.values()))
+            axes[i].set_xlabel('Measurement Outcome')
+            axes[i].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i].set_title(f'{noise_name} Noise')
         axes[i].axhline(y=500, color='red', linestyle='--', alpha=0.7, label='Ideal')
         axes[i].legend()
@@ -364,11 +371,25 @@ def characterize_realistic_noise():
     
     for i, (circuit_name, results) in enumerate(comparison_results.items()):
         # Ideal results
-        plot_histogram(results['ideal'], ax=axes[i, 0])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i, 0].bar(list(results['ideal'].keys()), list(results['ideal'].values()))
+            axes[i, 0].set_xlabel('Measurement Outcome')
+            axes[i, 0].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i, 0].set_title(f'{circuit_name} - Ideal')
         
         # Noisy results
-        plot_histogram(results['noisy'], ax=axes[i, 1])
+        # plot_histogram no longer accepts ax parameter in Qiskit 2.x
+        try:
+            # Use matplotlib bar plot instead
+            axes[i, 1].bar(list(results['noisy'].keys()), list(results['noisy'].values()))
+            axes[i, 1].set_xlabel('Measurement Outcome')
+            axes[i, 1].set_ylabel('Counts')
+        except Exception as e:
+            print(f"⚠️ Could not create histogram: {e}")
         axes[i, 1].set_title(f'{circuit_name} - Noisy')
     
     plt.tight_layout()

@@ -9,7 +9,7 @@ Implementation of quantum neural networks with gradient computation and hybrid a
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from sklearn.datasets import make_regression, make_classification, load_boston
