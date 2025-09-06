@@ -258,6 +258,21 @@ python verify_examples.py --module module1_fundamentals
 - **[IBM Quantum Experience](https://quantum-computing.ibm.com/)** - Run on real quantum computers
 - **[Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/)** - Q&A community
 
+## 📖 Citation
+
+If you use this project in your research, education, or publications, please cite it as:
+
+### BibTeX
+```bibtex
+@misc{quantum-computing-101,
+  title={Quantum Computing 101: A Comprehensive Beginner-Friendly Course},
+  author={{Stephen Shao}},
+  year={2025},
+  howpublished={\url{https://github.com/AIComputing101/quantum-computing-101}},
+  note={A complete quantum computing educational resource with production-ready examples covering fundamentals to advanced applications}
+}
+```
+
 ## 📋 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
