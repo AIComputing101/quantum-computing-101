@@ -11,7 +11,7 @@ cirq>=1.1.0
 pennylane>=0.33.0
 
 # Cloud platform SDKs (optional - only needed for Module 7 hardware examples)
-amazon-braket-sdk>=1.73.0
+amazon-braket-sdk>=1.50.0
 azure-quantum>=0.28.0
 
 # Scientific computing and visualization (required)
