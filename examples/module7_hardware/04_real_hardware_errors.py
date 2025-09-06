@@ -11,7 +11,22 @@ import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit, ClassicalRegister, transpile, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error, readout_error
+# Handle different Qiskit Aer versions for noise models
+try:
+    from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error, readout_error
+except ImportError:
+    try:
+        from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
+        from qiskit_aer.noise import ReadoutError as readout_error
+    except ImportError:
+        try:
+            from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
+            # Create a simple readout error class for compatibility
+            def readout_error(probabilities):
+                from qiskit_aer.noise import ReadoutError
+                return ReadoutError(probabilities)
+        except ImportError:
+            print("ℹ️  Noise models not fully available, using simplified simulation")
 from qiskit.quantum_info import state_fidelity, process_fidelity, Statevector
 from qiskit.result import marginal_counts
 from qiskit.circuit.library import XGate, HGate, CXGate

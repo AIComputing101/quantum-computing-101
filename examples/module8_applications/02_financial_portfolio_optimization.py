@@ -13,7 +13,17 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import QAOAAnsatz
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.algorithms.optimizers import COBYLA, SPSA
+# Handle different Qiskit versions for algorithms
+try:
+    from qiskit.algorithms.optimizers import COBYLA, SPSA
+except ImportError:
+    try:
+        from qiskit_algorithms.optimizers import COBYLA, SPSA
+    except ImportError:
+        # Fallback: use scipy optimizers only
+        print("ℹ️  Qiskit optimizers not available, using scipy.optimize only")
+        COBYLA = None
+        SPSA = None
 from scipy.optimize import minimize
 import pandas as pd
 import yfinance as yf

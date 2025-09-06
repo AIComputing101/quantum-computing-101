@@ -13,7 +13,17 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import TwoLocal, EfficientSU2
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp, Statevector
-from qiskit.algorithms.optimizers import SPSA, COBYLA
+# Handle different Qiskit versions for algorithms
+try:
+    from qiskit.algorithms.optimizers import SPSA, COBYLA
+except ImportError:
+    try:
+        from qiskit_algorithms.optimizers import SPSA, COBYLA
+    except ImportError:
+        # Fallback: use scipy optimizers only
+        print("ℹ️  Qiskit optimizers not available, using scipy.optimize only")
+        SPSA = None
+        COBYLA = None
 from scipy.optimize import minimize
 from scipy.spatial.distance import cdist
 import json

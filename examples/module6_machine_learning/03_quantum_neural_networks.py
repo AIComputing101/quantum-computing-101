@@ -12,7 +12,22 @@ import argparse
 from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
-from sklearn.datasets import make_regression, make_classification, load_boston
+# Handle sklearn dataset changes
+from sklearn.datasets import make_regression, make_classification
+try:
+    from sklearn.datasets import load_boston
+except ImportError:
+    # Boston dataset removed in sklearn 1.2+, create alternative
+    def load_boston():
+        print("ℹ️  Boston housing dataset removed from sklearn, using synthetic regression data")
+        X, y = make_regression(n_samples=506, n_features=13, noise=10, random_state=42)
+        # Return in format similar to original boston dataset
+        return type('Dataset', (), {
+            'data': X,
+            'target': y,
+            'feature_names': [f'feature_{i}' for i in range(13)],
+            'DESCR': 'Synthetic regression dataset (replacing Boston housing)'
+        })()
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, accuracy_score

@@ -22,7 +22,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.visualization import plot_histogram, plot_bloch_multivector
-from qiskit.quantum_info import Statevector, DensityMatrix, fidelity
+from qiskit.quantum_info import Statevector, DensityMatrix
+# Handle different Qiskit versions for fidelity
+try:
+    from qiskit.quantum_info import fidelity
+except ImportError:
+    # For older Qiskit versions, use state_fidelity
+    try:
+        from qiskit.quantum_info import state_fidelity as fidelity
+    except ImportError:
+        # Fallback implementation
+        def fidelity(state1, state2):
+            return abs(np.vdot(state1.data, state2.data))**2
 from qiskit_aer import AerSimulator
 import warnings
 import sys

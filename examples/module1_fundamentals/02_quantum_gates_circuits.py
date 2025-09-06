@@ -137,27 +137,59 @@ def visualize_gate_effects(single_qubit_circuits):
     print("=== GATE EFFECTS VISUALIZATION ===")
     print()
     
-    # Create Bloch sphere plots
-    n_gates = len(single_qubit_circuits)
-    fig, axes = plt.subplots(1, n_gates, figsize=(3*n_gates, 3))
-    if n_gates == 1:
-        axes = [axes]
-    
+    # Create individual Bloch sphere plots for each gate
     for i, (gate_name, circuit) in enumerate(single_qubit_circuits.items()):
         state = Statevector.from_instruction(circuit)
         
-        ax = axes[i]
-        # plot_bloch_multivector no longer accepts ax parameter in Qiskit 2.x
+        print(f"{gate_name}:")
+        print(f"  State vector: {state}")
+        print(f"  Probabilities: |0⟩: {abs(state[0])**2:.3f}, |1⟩: {abs(state[1])**2:.3f}")
+        
+        # Create individual Bloch sphere plots
         try:
-            bloch_fig = plot_bloch_multivector(state, title="Qubit State")
-            # Save individual figure instead of using subplot
+            bloch_fig = plot_bloch_multivector(state, title=f"{gate_name} - Qubit State")
+            plt.savefig(f'module1_02_bloch_{i+1}.png', dpi=300, bbox_inches='tight')
+            plt.show()
         except Exception as e:
-            print(f"⚠️ Could not create Bloch sphere: {e}")
-        ax.set_title(gate_name, fontsize=10, pad=10)
+            print(f"⚠️ Could not create Bloch sphere for {gate_name}: {e}")
+            # Provide alternative visualization information
+            print(f"  Alternative: State components - α=({state[0].real:.3f}+{state[0].imag:.3f}i), β=({state[1].real:.3f}+{state[1].imag:.3f}i)")
+        
+        print()
     
-    plt.tight_layout()
-    plt.savefig('module1_02_gate_effects.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    # Create a summary visualization with state information
+    try:
+        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        
+        gate_names = list(single_qubit_circuits.keys())
+        prob_0 = []
+        prob_1 = []
+        
+        for gate_name, circuit in single_qubit_circuits.items():
+            state = Statevector.from_instruction(circuit)
+            prob_0.append(abs(state[0])**2)
+            prob_1.append(abs(state[1])**2)
+        
+        x = range(len(gate_names))
+        width = 0.35
+        
+        ax.bar([i - width/2 for i in x], prob_0, width, label='|0⟩ probability', alpha=0.8)
+        ax.bar([i + width/2 for i in x], prob_1, width, label='|1⟩ probability', alpha=0.8)
+        
+        ax.set_xlabel('Quantum Gates')
+        ax.set_ylabel('Probability')
+        ax.set_title('Gate Effects: Measurement Probabilities')
+        ax.set_xticks(x)
+        ax.set_xticklabels(gate_names, rotation=45, ha='right')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig('module1_02_gate_effects.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+    except Exception as e:
+        print(f"⚠️ Could not create gate effects summary: {e}")
 
 
 def create_quantum_circuit_examples():
@@ -193,25 +225,49 @@ def create_quantum_circuit_examples():
     qc3.h(0)
     circuits['Circuit 3: GHZ preparation'] = qc3
     
-    # Display circuit diagrams
-    fig, axes = plt.subplots(len(circuits), 1, figsize=(12, 3*len(circuits)))
-    if len(circuits) == 1:
-        axes = [axes]
-    
+    # Display circuit information and create diagrams
     for i, (name, circuit) in enumerate(circuits.items()):
         print(f"{name}:")
         print(f"  Depth: {circuit.depth()}")
         print(f"  Gates: {circuit.count_ops()}")
         
-        # Draw circuit
-        circuit_drawer(circuit, output='mpl', ax=axes[i], style={'backgroundcolor': '#EEEEEE'})
-        axes[i].set_title(f'{name} (Depth: {circuit.depth()})', fontsize=12, pad=20)
+        # Draw circuit - create individual figures to avoid ax parameter issues
+        try:
+            fig = circuit.draw(output='mpl', style={'backgroundcolor': '#EEEEEE'})
+            fig.suptitle(f'{name} (Depth: {circuit.depth()})', fontsize=12)
+            # Save individual circuit diagrams
+            plt.figure(fig.number)
+            plt.savefig(f'module1_02_circuit_{i+1}.png', dpi=300, bbox_inches='tight')
+            plt.show()
+        except Exception as e:
+            print(f"⚠️ Could not create circuit diagram: {e}")
+            print(f"  Circuit structure: {circuit.data}")
         
         print()
     
-    plt.tight_layout()
-    plt.savefig('module1_02_circuit_examples.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    # Create combined figure with all circuits
+    try:
+        fig, axes = plt.subplots(len(circuits), 1, figsize=(12, 3*len(circuits)))
+        if len(circuits) == 1:
+            axes = [axes]
+        
+        for i, (name, circuit) in enumerate(circuits.items()):
+            # Use text representation instead of circuit_drawer with ax parameter
+            axes[i].text(0.5, 0.5, f'{name}\nDepth: {circuit.depth()}\nGates: {circuit.count_ops()}', 
+                        ha='center', va='center', transform=axes[i].transAxes, 
+                        fontsize=10, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray"))
+            axes[i].set_xlim(0, 1)
+            axes[i].set_ylim(0, 1)
+            axes[i].set_xticks([])
+            axes[i].set_yticks([])
+            axes[i].set_title(f'{name} (Depth: {circuit.depth()})', fontsize=12, pad=20)
+        
+        plt.tight_layout()
+        plt.savefig('module1_02_circuit_examples.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+    except Exception as e:
+        print(f"⚠️ Could not create combined circuit diagram: {e}")
     
     return circuits
 
