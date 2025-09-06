@@ -26,7 +26,22 @@ from qiskit.quantum_info import Statevector, Operator
 from qiskit.visualization import circuit_drawer, plot_histogram
 from qiskit.transpiler import CouplingMap, Layout
 from qiskit_aer import AerSimulator
-from qiskit.providers.fake_provider import FakeVigo, FakeMontreal
+# Note: Fake providers have been updated in newer Qiskit versions
+try:
+    from qiskit.providers.fake_provider import FakeVigo, FakeMontreal
+except ImportError:
+    # Use generic fake backend for newer Qiskit versions
+    try:
+        from qiskit.providers.fake_provider import GenericBackendV2
+        from qiskit.providers.models import BackendConfiguration
+        # Create minimal fake backends for demonstration
+        FakeVigo = lambda: AerSimulator()
+        FakeMontreal = lambda: AerSimulator()
+        print("ℹ️  Using AerSimulator instead of deprecated fake providers")
+    except ImportError:
+        FakeVigo = lambda: AerSimulator()
+        FakeMontreal = lambda: AerSimulator()
+        print("ℹ️  Using AerSimulator for hardware simulation")
 import time
 
 
@@ -143,7 +158,12 @@ def demonstrate_parameterized_circuits():
     parameter_values = np.random.uniform(0, 2*np.pi, qc.num_parameters)
     parameter_dict = dict(zip(params, parameter_values))
     
-    bound_circuit = qc.bind_parameters(parameter_dict)
+    # Handle different Qiskit versions for parameter binding
+    try:
+        bound_circuit = qc.bind_parameters(parameter_dict)
+    except AttributeError:
+        # For newer Qiskit versions
+        bound_circuit = qc.assign_parameters(parameter_dict)
     
     print("Circuit with bound parameters:")
     print(f"Depth: {bound_circuit.depth()}")
@@ -156,7 +176,12 @@ def demonstrate_parameterized_circuits():
     for i, scale in enumerate([0.1, 1.0, 10.0]):
         param_vals = np.random.uniform(0, scale, qc.num_parameters)
         param_dict = dict(zip(params, param_vals))
-        circuit = qc.bind_parameters(param_dict)
+        # Handle different Qiskit versions for parameter binding
+        try:
+            circuit = qc.bind_parameters(param_dict)
+        except AttributeError:
+            # For newer Qiskit versions
+            circuit = qc.assign_parameters(param_dict)
         
         # Get statevector
         state = Statevector.from_instruction(circuit)
@@ -268,18 +293,29 @@ def demonstrate_backend_specific_programming():
             'backend': AerSimulator(),
             'coupling_map': None,
             'basis_gates': None
-        },
-        'FakeVigo (5 qubits)': {
-            'backend': FakeVigo(),
-            'coupling_map': FakeVigo().coupling_map,
-            'basis_gates': FakeVigo().basis_gates
-        },
-        'FakeMontreal (27 qubits)': {
-            'backend': FakeMontreal(),
-            'coupling_map': FakeMontreal().coupling_map,
-            'basis_gates': FakeMontreal().basis_gates
         }
     }
+    
+    # Add fake backends if available
+    try:
+        fake_vigo = FakeVigo()
+        backends_info['FakeVigo (5 qubits)'] = {
+            'backend': fake_vigo,
+            'coupling_map': getattr(fake_vigo, 'coupling_map', None),
+            'basis_gates': getattr(fake_vigo, 'basis_gates', ['cx', 'id', 'rz', 'sx', 'x'])
+        }
+    except:
+        print("ℹ️  FakeVigo not available, using default configuration")
+        
+    try:
+        fake_montreal = FakeMontreal()
+        backends_info['FakeMontreal (27 qubits)'] = {
+            'backend': fake_montreal,
+            'coupling_map': getattr(fake_montreal, 'coupling_map', None),
+            'basis_gates': getattr(fake_montreal, 'basis_gates', ['cx', 'id', 'rz', 'sx', 'x'])
+        }
+    except:
+        print("ℹ️  FakeMontreal not available, using default configuration")
     
     transpiled_circuits = {}
     

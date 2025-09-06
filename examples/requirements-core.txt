@@ -1,0 +1,20 @@
+# Core Requirements for Quantum Computing 101
+# Minimal dependencies needed to run basic examples (Modules 1-4)
+
+# Core quantum computing framework
+qiskit>=0.45.0
+qiskit-aer>=0.13.0
+
+# Scientific computing and visualization
+numpy>=1.24.0
+scipy>=1.11.0
+matplotlib>=3.7.0
+
+# Essential dependencies for circuit visualization
+pylatexenc>=2.10
+
+# For educational examples that use data
+scikit-learn>=1.3.0
+
+# Optional but recommended for better plots
+seaborn>=0.12.0

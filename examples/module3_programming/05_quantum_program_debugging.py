@@ -26,7 +26,13 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import Statevector, DensityMatrix, process_fidelity, state_fidelity
 from qiskit_aer import AerSimulator
 from qiskit.visualization import plot_histogram
-from qiskit.providers.fake_provider import FakeManila
+# Note: Fake providers have been updated in newer Qiskit versions  
+try:
+    from qiskit.providers.fake_provider import FakeManila
+except ImportError:
+    # Use AerSimulator for newer Qiskit versions
+    FakeManila = lambda: AerSimulator()
+    print("ℹ️  Using AerSimulator instead of deprecated FakeManila provider")
 import logging
 
 class QuantumDebugger:

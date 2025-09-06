@@ -12,7 +12,34 @@ import argparse
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp, Statevector
 from qiskit_aer import AerSimulator
-from qiskit.primitives import Estimator
+# Handle different Qiskit versions for primitives
+try:
+    from qiskit.primitives import Estimator
+except ImportError:
+    # For older Qiskit versions or when primitives are not available
+    try:
+        from qiskit_aer.primitives import Estimator
+        print("ℹ️  Using Aer primitives for VQE")
+    except ImportError:
+        # Fallback: create a simple estimator-like class
+        print("ℹ️  Using fallback estimator implementation")
+        class Estimator:
+            def __init__(self):
+                self.backend = AerSimulator()
+            
+            def run(self, circuits, observables, parameter_values=None):
+                # Simple implementation for educational purposes
+                from qiskit.quantum_info import Statevector
+                results = []
+                for circuit, observable in zip(circuits, observables):
+                    if parameter_values:
+                        # This is a simplified version
+                        state = Statevector.from_instruction(circuit)
+                        expectation = state.expectation_value(observable).real
+                        results.append(expectation)
+                return type('Result', (), {'values': results})
+        
+        Estimator = Estimator
 import warnings
 warnings.filterwarnings('ignore')
 

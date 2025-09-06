@@ -11,16 +11,65 @@ import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit, ClassicalRegister, transpile, QuantumRegister, ClassicalRegister
 from qiskit.transpiler import PassManager, Layout
-from qiskit.transpiler.passes import (
-    BasicSwap, LookaheadSwap, SabreSwap, 
-    Optimize1qGates, CommutativeCancellation,
-    CXCancellation, OptimizeSwapBeforeMeasure
-)
+# Handle different Qiskit versions for transpiler passes
+USING_DUMMY_PASSES = False
+try:
+    from qiskit.transpiler.passes import (
+        BasicSwap, LookaheadSwap, SabreSwap, 
+        Optimize1qGates, CommutativeCancellation,
+        CXCancellation, OptimizeSwapBeforeMeasure
+    )
+except ImportError:
+    # For newer Qiskit versions, some passes may be in different locations
+    try:
+        from qiskit.transpiler.passes.routing import BasicSwap, LookaheadSwap, SabreSwap
+        from qiskit.transpiler.passes.optimization import (
+            Optimize1qGates, CommutativeCancellation, 
+            CXCancellation, OptimizeSwapBeforeMeasure
+        )
+    except ImportError:
+        print("ℹ️  Some transpiler passes not available, using basic transpile instead")
+        # Create dummy classes for educational purposes
+        class DummyPass:
+            def __init__(self, *args, **kwargs): 
+                pass
+            def run(self, dag):
+                return dag
+        
+        BasicSwap = DummyPass
+        LookaheadSwap = DummyPass
+        SabreSwap = DummyPass
+        Optimize1qGates = DummyPass
+        CommutativeCancellation = DummyPass
+        CXCancellation = DummyPass
+        OptimizeSwapBeforeMeasure = DummyPass
+        
+        # Flag that dummy passes are being used
+        USING_DUMMY_PASSES = True
 from qiskit.circuit.library import QFT, QuantumVolume
-from qiskit.providers.fake_provider import FakeBackend
+# Handle FakeBackend import for different Qiskit versions
+try:
+    from qiskit.providers.fake_provider import FakeBackend
+except ImportError:
+    print("ℹ️  FakeBackend not available, using mock backend implementation")
+    # Create a simple mock backend class
+    class FakeBackend:
+        def __init__(self):
+            pass
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import hellinger_fidelity
-from qiskit.visualization import plot_circuit_layout, plot_gate_map
+# Handle visualization imports for different Qiskit versions
+try:
+    from qiskit.visualization import plot_circuit_layout, plot_gate_map
+except ImportError:
+    print("ℹ️  Some visualization functions not available")
+    # Create dummy functions for educational purposes
+    def plot_circuit_layout(*args, **kwargs):
+        print("Circuit layout plotting not available")
+        return None
+    def plot_gate_map(*args, **kwargs):
+        print("Gate map plotting not available")  
+        return None
 import networkx as nx
 import warnings
 warnings.filterwarnings('ignore')
@@ -109,7 +158,12 @@ class HardwareOptimizer:
         # Count gates and analyze connectivity
         for instruction in circuit.data:
             gate_name = instruction[0].name
-            qubits = [q.index for q in instruction[1]]
+            # Handle different Qiskit versions for qubit indexing
+            try:
+                qubits = [q.index for q in instruction[1]]
+            except AttributeError:
+                # For newer Qiskit versions, use find_bit
+                qubits = [circuit.find_bit(q).index for q in instruction[1]]
             
             # Count gates
             if gate_name in analysis['gate_counts']:
@@ -156,9 +210,16 @@ class HardwareOptimizer:
         
         for strategy_name, transpile_options in strategies.items():
             try:
+                # Handle different Qiskit versions for transpile
+                from qiskit.transpiler import CouplingMap
+                if isinstance(coupling_map, list):
+                    coupling_map_obj = CouplingMap(coupling_map)
+                else:
+                    coupling_map_obj = coupling_map
+                    
                 transpiled = transpile(
                     circuit,
-                    coupling_map=coupling_map,
+                    coupling_map=coupling_map_obj,
                     basis_gates=basis_gates,
                     **transpile_options
                 )
@@ -292,30 +353,54 @@ class HardwareOptimizer:
         # Simulate calibration-aware optimization
         optimization_passes = []
         
-        # Custom pass manager
-        pm = PassManager()
-        
-        # Basic optimizations
-        pm.append(Optimize1qGates())
-        pm.append(CommutativeCancellation())
-        pm.append(CXCancellation())
-        
-        # Routing with error-aware mapping
-        if backend_info['coupling_map']:
-            # Choose best routing method based on backend
-            if len(backend_info['coupling_map']) > 20:
-                # Use SABRE for larger devices
-                pm.append(SabreSwap(coupling_map=backend_info['coupling_map']))
+        # Custom pass manager with error handling
+        pm = None
+        try:
+            # Skip PassManager if using dummy passes
+            if USING_DUMMY_PASSES:
+                raise ImportError("Using dummy passes, fall back to transpile")
+                
+            pm = PassManager()
+            
+            # Basic optimizations
+            pm.append(Optimize1qGates())
+            pm.append(CommutativeCancellation())
+            pm.append(CXCancellation())
+            
+            # Routing with error-aware mapping
+            if backend_info['coupling_map']:
+                # Choose best routing method based on backend
+                if len(backend_info['coupling_map']) > 20:
+                    # Use SABRE for larger devices
+                    pm.append(SabreSwap(coupling_map=backend_info['coupling_map']))
+                else:
+                    # Use LookaheadSwap for smaller devices
+                    pm.append(LookaheadSwap(coupling_map=backend_info['coupling_map']))
+            
+            # Final optimizations
+            pm.append(OptimizeSwapBeforeMeasure())
+            pm.append(Optimize1qGates())
+            
+            # Apply optimization
+            optimized_circuit = pm.run(circuit)
+            
+        except Exception as e:
+            print(f"ℹ️  PassManager optimization failed, using basic transpile: {e}")
+            # Fallback to basic transpilation
+            from qiskit.transpiler import CouplingMap
+            coupling_map = backend_info['coupling_map']
+            if isinstance(coupling_map, list):
+                coupling_map_obj = CouplingMap(coupling_map)
             else:
-                # Use LookaheadSwap for smaller devices
-                pm.append(LookaheadSwap(coupling_map=backend_info['coupling_map']))
-        
-        # Final optimizations
-        pm.append(OptimizeSwapBeforeMeasure())
-        pm.append(Optimize1qGates())
-        
-        # Apply optimization
-        optimized_circuit = pm.run(circuit)
+                coupling_map_obj = coupling_map
+                
+            optimized_circuit = transpile(
+                circuit,
+                coupling_map=coupling_map_obj,
+                basis_gates=backend_info['basis_gates'],
+                optimization_level=2
+            )
+            pm = None  # Set pm to None when using fallback
         
         # Calculate expected fidelity
         expected_fidelity = self.estimate_circuit_fidelity(optimized_circuit, backend_info)
