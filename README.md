@@ -3,7 +3,7 @@
 **The most comprehensive, beginner-friendly quantum computing course** with **45 production-ready examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Qiskit](https://img.shields.io/badge/Qiskit-2.x-purple.svg)](https://qiskit.org/)
 [![Beginner Friendly](https://img.shields.io/badge/beginner-friendly-brightgreen.svg)]()
 [![Examples](https://img.shields.io/badge/examples-45_working-brightgreen.svg)]()
@@ -40,7 +40,7 @@ Unlike other courses that oversell quantum computing, we give you an honest asse
 3. **Quantum "Magic"**: Run `python examples/module1_fundamentals/07_no_cloning_theorem.py`
 
 ### Prerequisites (Don't Worry - We Teach Everything!)
-- Python 3.8 or higher (we'll help you set this up)
+- Python 3.11 or higher (3.12+ recommended for best performance)
 - Basic programming knowledge (if/else, loops, functions)
 - Curiosity about the future of computing!
 

@@ -7,7 +7,7 @@ This directory contains comprehensive Python examples for hands-on learning with
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+ 
+- Python 3.11+ (3.12+ recommended) 
 - pip package manager
 
 ### Installation
