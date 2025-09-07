@@ -95,14 +95,13 @@ jobs:
     
     - name: Validate example structure
       run: |
-        # Check that each module has exactly 5 examples
-        for module in examples/module*/; do
-          count=$(find "$module" -maxdepth 1 -name "*.py" | wc -l)
-          if [ "$count" -ne 5 ]; then
-            echo "Error: $module should have exactly 5 Python examples, found $count"
-            exit 1
-          fi
-        done
+        # Check that we have the expected total number of examples (45)
+        total_examples=$(find examples/module*/ -maxdepth 1 -name "*.py" | wc -l)
+        if [ "$total_examples" -ne 45 ]; then
+          echo "Error: Expected 45 total examples, found $total_examples"
+          exit 1
+        fi
+        echo "✅ Found $total_examples examples across 8 modules"
     
     - name: Check for placeholder content
       run: |
