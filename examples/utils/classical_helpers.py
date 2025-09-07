@@ -10,6 +10,7 @@ Functions:
 
 Lightweight and dependency-minimal (numpy optional if available).
 """
+
 from __future__ import annotations
 import time
 from statistics import mean, pstdev
@@ -75,8 +76,9 @@ def probability_distribution(counts: Dict[str, int]) -> Dict[str, float]:
         raise ValueError("Total counts must be > 0")
     return {k: v / total for k, v in counts.items()}
 
+
 if __name__ == "__main__":
-    print("Timing demo:", time_function(sum, [1,2,3,4,5]))
-    print("Stats demo:", basic_stats([1,2,3,4,5]))
+    print("Timing demo:", time_function(sum, [1, 2, 3, 4, 5]))
+    print("Stats demo:", basic_stats([1, 2, 3, 4, 5]))
     print("Hamming demo:", hamming_distance("1010", "1110"))
     print("Prob dist demo:", probability_distribution({"00": 5, "01": 5, "10": 10}))

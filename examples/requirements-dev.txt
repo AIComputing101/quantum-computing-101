@@ -1,12 +1,19 @@
 # Development requirements (extends requirements.txt)
 -r requirements.txt
 
-# Additional development tools
-pytest-cov>=4.1.0
-pytest-xdist>=3.3.0
+# Testing framework
+pytest>=7.4.0
+
+# Code quality and linting tools
+pylint>=2.17.0
+black>=23.0.0
 mypy>=1.5.0
 flake8>=6.0.0
 isort>=5.12.0
+
+# Additional testing tools  
+pytest-cov>=4.1.0
+pytest-xdist>=3.3.0
 
 # Documentation
 sphinx>=7.1.0

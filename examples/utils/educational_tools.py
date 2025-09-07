@@ -12,13 +12,16 @@ Functions:
 
 These keep side-effects minimal (stdout printing) so they are safe in notebooks.
 """
+
 from __future__ import annotations
 from typing import List, Optional, Sequence, Dict
 import textwrap
 from dataclasses import dataclass
 
 
-def explain_concept(name: str, description: str, key_points: Optional[List[str]] = None) -> str:
+def explain_concept(
+    name: str, description: str, key_points: Optional[List[str]] = None
+) -> str:
     """Return a formatted explanation block for a concept."""
     header = f"📘 Concept: {name}\n" + "-" * (len(name) + 11)
     desc = textwrap.fill(description, width=88)
@@ -42,6 +45,7 @@ def checkpoint(progress_log: List[str], label: str) -> None:
     """Append a progress label and print a concise status."""
     progress_log.append(label)
     print(f"✅ Reached checkpoint: {label} (total {len(progress_log)})")
+
 
 # -------------------- Quiz Utilities --------------------
 @dataclass
@@ -82,16 +86,22 @@ def administer_quiz(quiz: Sequence[QuizQuestion]) -> List[int]:
     return responses
 
 
-def grade_quiz(quiz: Sequence[QuizQuestion], responses: Sequence[int]) -> Dict[str, float]:
+def grade_quiz(
+    quiz: Sequence[QuizQuestion], responses: Sequence[int]
+) -> Dict[str, float]:
     """Grade quiz and print per-question feedback.
     Returns summary dict with score and percentage.
     """
     correct = 0
     for i, (q, r) in enumerate(zip(quiz, responses), 1):
-        is_correct = (r == q.answer_index)
+        is_correct = r == q.answer_index
         if is_correct:
             correct += 1
-        status = "✅ Correct" if is_correct else f"❌ Incorrect (correct: {q.choices[q.answer_index]})"
+        status = (
+            "✅ Correct"
+            if is_correct
+            else f"❌ Incorrect (correct: {q.choices[q.answer_index]})"
+        )
         print(f"Q{i}: {status}")
         if q.explanation:
             print("   " + textwrap.fill(q.explanation, width=86))
@@ -100,19 +110,31 @@ def grade_quiz(quiz: Sequence[QuizQuestion], responses: Sequence[int]) -> Dict[s
     print(f"\nScore: {correct}/{total} ({pct:.1f}%)")
     return {"correct": correct, "total": total, "percent": pct}
 
+
 if __name__ == "__main__":
     log: List[str] = []
-    explain_concept("Superposition", "A qubit can exist in a linear combination of |0> and |1> states.", ["Amplitude", "Measurement collapse", "Basis vectors"])
+    explain_concept(
+        "Superposition",
+        "A qubit can exist in a linear combination of |0> and |1> states.",
+        ["Amplitude", "Measurement collapse", "Basis vectors"],
+    )
     format_equation(r"|\psi\rangle = \alpha|0\rangle + \beta|1\rangle")
     checkpoint(log, "Introduced superposition")
 
-    sample_quiz = create_quiz([
-        QuizQuestion(
-            prompt="What does measurement do to a qubit in superposition?",
-            choices=["Leaves it unchanged","Collapses it to a basis state","Clones the superposition","Amplifies amplitudes"],
-            answer_index=1,
-            explanation="Standard projective measurement collapses the state to |0> or |1> proportional to squared amplitudes."
-        )
-    ])
+    sample_quiz = create_quiz(
+        [
+            QuizQuestion(
+                prompt="What does measurement do to a qubit in superposition?",
+                choices=[
+                    "Leaves it unchanged",
+                    "Collapses it to a basis state",
+                    "Clones the superposition",
+                    "Amplifies amplitudes",
+                ],
+                answer_index=1,
+                explanation="Standard projective measurement collapses the state to |0> or |1> proportional to squared amplitudes.",
+            )
+        ]
+    )
     # Skip interactive administer in module self-test to avoid blocking.
     grade_quiz(sample_quiz, [1])
