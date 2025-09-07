@@ -30,7 +30,7 @@ seaborn>=0.12.0
 
 # Specialized quantum libraries (optional - for advanced examples)
 openfermion>=1.5.0
-mitiq>=0.31.0
+# mitiq>=0.25.0  # Currently disabled due to Python 3.13 compatibility issues
 networkx>=3.1.0
 
 # Jupyter support (optional - for notebook development)
