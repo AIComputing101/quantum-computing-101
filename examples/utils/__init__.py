@@ -56,13 +56,33 @@ from .educational_tools import (
 
 __all__ = [
     # visualization
-    'plot_bloch_comparison','plot_measurement_comparison','plot_probability_evolution',
-    'plot_quantum_circuit_with_explanation','plot_correlation_matrix','plot_quantum_vs_classical',
-    'create_educational_animation_frames','plot_algorithm_complexity','save_figure_with_metadata','setup_plot_style',
+    "plot_bloch_comparison",
+    "plot_measurement_comparison",
+    "plot_probability_evolution",
+    "plot_quantum_circuit_with_explanation",
+    "plot_correlation_matrix",
+    "plot_quantum_vs_classical",
+    "create_educational_animation_frames",
+    "plot_algorithm_complexity",
+    "save_figure_with_metadata",
+    "setup_plot_style",
     # quantum helpers
-    'create_bell_state','prepare_plus_state','apply_random_single_qubit_rotation','measure_all','analyze_state',
+    "create_bell_state",
+    "prepare_plus_state",
+    "apply_random_single_qubit_rotation",
+    "measure_all",
+    "analyze_state",
     # classical helpers
-    'time_function','basic_stats','hamming_distance','probability_distribution',
+    "time_function",
+    "basic_stats",
+    "hamming_distance",
+    "probability_distribution",
     # educational tools
-    'explain_concept','format_equation','checkpoint','QuizQuestion','create_quiz','administer_quiz','grade_quiz'
+    "explain_concept",
+    "format_equation",
+    "checkpoint",
+    "QuizQuestion",
+    "create_quiz",
+    "administer_quiz",
+    "grade_quiz",
 ]
