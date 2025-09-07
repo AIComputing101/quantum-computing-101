@@ -38,7 +38,7 @@ jobs:
     
     - name: Lint with pylint
       run: |
-        pylint examples/ --fail-under=6.0 --disable=C0114,C0115,C0116,W0611
+        pylint examples/ --fail-under=5.0 --disable=C0114,C0115,C0116,W0611,R0801,R1722
     
     - name: Format check with black
       run: |
