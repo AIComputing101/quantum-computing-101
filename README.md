@@ -2,7 +2,7 @@
 
 **The most comprehensive, beginner-friendly quantum computing course** with **45 production-ready examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Qiskit](https://img.shields.io/badge/Qiskit-2.x-purple.svg)](https://qiskit.org/)
 [![Beginner Friendly](https://img.shields.io/badge/beginner-friendly-brightgreen.svg)]()
@@ -156,7 +156,7 @@ Experience quadratic speedup in unstructured search problems.
 ```
 quantum-computing-101/
 ├── README.md                    # This file
-├── LICENSE                      # MIT License
+├── LICENSE                      # Apache 2.0 License
 ├── modules/                     # Theoretical curriculum
 │   ├── Module1_Quantum_Fundamentals.md
 │   ├── Module2_Mathematical_Foundations.md
@@ -275,7 +275,7 @@ If you use this project in your research, education, or publications, please cit
 
 ## 📋 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
