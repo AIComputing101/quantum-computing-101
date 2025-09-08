@@ -103,7 +103,7 @@ Welcome to your quantum computing journey! This guide will help you navigate the
 
 ### Quick Start (5 minutes):
 ```bash
-# Install Python 3.8+ if not already installed
+# Install Python 3.11+ if not already installed (3.12+ recommended)
 # Clone this repository first
 git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
@@ -121,7 +121,7 @@ python verify_examples.py --quick
 ```
 
 ### Recommended Development Environment:
-- **Python 3.8+** (required)
+- **Python 3.11+** (required, 3.12+ recommended for best performance)
 - **Jupyter Notebook** (optional but helpful for experimentation)
 - **VS Code** with Python extension (great for beginners)
 - **Git** (for version control)
