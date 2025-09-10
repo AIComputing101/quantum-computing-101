@@ -1,0 +1,42 @@
+QUANTUM COMPUTING 101 EDUCATIONAL PROJECT
+==========================================
+
+Copyright 2025 AI Computing 101
+
+This product includes software developed for educational purposes in quantum computing.
+
+EDUCATIONAL PURPOSE DISCLAIMER:
+This project is exclusively designed for educational, learning, and research purposes. All content, algorithms, code examples, and documentation are derived from publicly available sources, academic literature, open-source frameworks, and standard educational materials.
+
+SOURCE ATTRIBUTION:
+- Quantum algorithms: Based on published academic papers and textbooks
+- Code examples: Derived from official documentation of open-source frameworks
+- Mathematical foundations: Standard quantum mechanics and linear algebra
+- Industry applications: Public knowledge and published research
+
+THIRD-PARTY COMPONENTS:
+This project uses the following major open-source quantum computing frameworks:
+- Qiskit (Apache License 2.0) - IBM Quantum
+- Cirq (Apache License 2.0) - Google Quantum AI  
+- PennyLane (Apache License 2.0) - Xanadu
+- NumPy, SciPy, Matplotlib (BSD/MIT Licenses)
+- Scikit-learn (BSD License)
+
+DISCLAIMERS:
+- NO CONFIDENTIAL INFORMATION: This project contains no proprietary, confidential, or classified information
+- NO TRADE SECRETS: All algorithms and techniques are from the public domain or published research
+- EDUCATIONAL ONLY: Not intended for production quantum computing systems without proper review
+- COST AWARENESS: Cloud quantum computing examples may incur costs - users are responsible
+- AS-IS BASIS: Provided for educational purposes without warranties
+
+COMPLIANCE:
+- Export Control: Contains no controlled technology or restricted information
+- Patent Safety: All algorithms are either patent-free, expired patents, or public domain
+- Academic Integrity: Appropriate for use in educational and research institutions
+- Open Source: Complies with all dependency licenses and open source standards
+
+For questions about this project, licensing, or legal compliance, please contact:
+Repository: https://github.com/AIComputing101/quantum-computing-101
+Issues: https://github.com/AIComputing101/quantum-computing-101/issues
+
+This notice must be included in all copies or substantial portions of the software.
