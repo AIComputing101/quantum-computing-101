@@ -40,9 +40,10 @@ Unlike other courses that oversell quantum computing, we give you an honest asse
 3. **Quantum "Magic"**: Run `python examples/module1_fundamentals/07_no_cloning_theorem.py`
 
 ### Prerequisites (Don't Worry - We Teach Everything!)
-- Python 3.11 or higher (3.12+ recommended for best performance)
+- Python 3.11 or higher (3.12+ recommended for best performance) 
 - Basic programming knowledge (if/else, loops, functions)
 - Curiosity about the future of computing!
+- **New**: Docker (optional) for containerized environments with GPU support
 
 **You do NOT need:**
 - ❌ PhD in quantum physics
@@ -51,6 +52,22 @@ Unlike other courses that oversell quantum computing, we give you an honest asse
 
 ### Installation
 
+#### Option 1: Docker (Recommended - Zero Setup!)
+```bash
+# Clone the repository
+git clone https://github.com/AIComputing101/quantum-computing-101.git
+cd quantum-computing-101
+
+# Build and run CPU container
+cd docker
+./build.sh cpu
+./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
+
+# Or start interactive session
+./run.sh -v cpu -i
+```
+
+#### Option 2: Local Python Installation
 ```bash
 # Clone the repository
 git clone https://github.com/AIComputing101/quantum-computing-101.git
@@ -64,6 +81,18 @@ python examples/module1_fundamentals/01_classical_vs_quantum_bits.py
 
 # Verify all examples work (optional)
 python verify_examples.py --quick
+```
+
+#### Option 3: GPU-Accelerated (For Advanced Users)
+```bash
+# NVIDIA GPU acceleration (5-8x speedup with CUDA 12.6)
+cd docker
+./build.sh gpu-nvidia
+./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py
+
+# AMD ROCm GPU acceleration (ROCm 6.x with MI300 series support)
+./build.sh gpu-amd
+./run.sh -v gpu-amd -e module6_machine_learning/01_quantum_neural_network.py
 ```
 
 
@@ -107,27 +136,52 @@ Real-world applications and quantum cryptography:
 
 ### 🔬 **Quantum Chemistry & Drug Discovery**
 ```bash
+# Local installation
 python examples/module8_applications/01_quantum_chemistry_drug_discovery.py
+
+# Docker
+./docker/run.sh -v cpu -e module8_applications/01_quantum_chemistry_drug_discovery.py
 ```
 Simulate molecular systems for drug discovery using VQE (Variational Quantum Eigensolver).
 
 ### 💰 **Financial Portfolio Optimization**  
 ```bash
+# Local installation
 python examples/module8_applications/02_financial_portfolio_optimization.py
+
+# Docker with NVIDIA GPU acceleration
+./docker/run.sh -v gpu-nvidia -e module8_applications/02_financial_portfolio_optimization.py
 ```
 Optimize investment portfolios using QAOA (Quantum Approximate Optimization Algorithm).
 
 ### 🔐 **Quantum Cryptography**
 ```bash
+# Local installation
 python examples/module8_applications/04_cryptography_cybersecurity.py
+
+# Docker
+./docker/run.sh -v cpu -e module8_applications/04_cryptography_cybersecurity.py
 ```
 Implement quantum key distribution protocols (BB84, E91) and post-quantum cryptography.
 
 ### 🎯 **Grover's Search Algorithm**
 ```bash
+# Local installation
 python examples/module4_algorithms/02_grovers_search_algorithm.py
+
+# Docker
+./docker/run.sh -v cpu -e module4_algorithms/02_grovers_search_algorithm.py
 ```
 Experience quadratic speedup in unstructured search problems.
+
+### 🐳 **Docker Benefits (New v2.0!)**
+- **🎯 Advanced GPU Support**: NVIDIA CUDA 12.6 + AMD ROCm 6.x
+- **⚡ Zero Setup**: No Python installation required
+- **🚀 GPU Acceleration**: 5-8x speedup for large simulations  
+- **🔄 Reproducible**: Identical environment across all machines
+- **☁️ Cloud Ready**: Easy deployment to AWS/GCP/Azure
+- **📊 Three Variants**: CPU (1.2GB), NVIDIA GPU (3.5GB), AMD ROCm (3.2GB)
+- **🏗️ Latest Hardware**: Supports NVIDIA H100/A100 and AMD MI300A/MI300X GPUs
 
 ## 🛠️ Features
 
@@ -156,7 +210,8 @@ Experience quadratic speedup in unstructured search problems.
 ```
 quantum-computing-101/
 ├── README.md                    # This file
-├── LICENSE                      # Apache 2.0 License
+├── LICENSE                      # Apache 2.0 License  
+├── CHANGELOG.md                 # Version history and updates
 ├── modules/                     # Theoretical curriculum
 │   ├── Module1_Quantum_Fundamentals.md
 │   ├── Module2_Mathematical_Foundations.md
@@ -164,8 +219,9 @@ quantum-computing-101/
 │   └── REFERENCE.md            # Comprehensive reference guide
 ├── examples/                    # Hands-on implementations (45 examples)
 │   ├── README.md               # Examples overview
-│   ├── requirements-core.txt   # Core dependencies for beginners
-│   ├── requirements.txt        # All dependencies
+│   ├── requirements-core.txt   # Core dependencies for beginners (Updated v2.0)
+│   ├── requirements.txt        # All dependencies (Updated v2.0)
+│   ├── requirements-dev.txt    # Development tools
 │   ├── module1_fundamentals/   # 8 beginner examples
 │   ├── module2_mathematics/    # 5 math examples
 │   ├── module3_programming/    # 6 programming examples
@@ -175,8 +231,22 @@ quantum-computing-101/
 │   ├── module7_hardware/       # 5 hardware examples
 │   ├── module8_applications/   # 6 industry examples
 │   └── utils/                  # Shared utilities
+├── docker/                      # **NEW v2.0** - Complete containerization
+│   ├── README.md               # Docker setup guide
+│   ├── requirements/           # Modular requirements for Docker
+│   │   ├── base.txt            # Core frameworks for all variants
+│   │   ├── cpu.txt             # CPU optimizations
+│   │   ├── gpu-nvidia.txt      # NVIDIA CUDA 12.6 packages
+│   │   └── gpu-amd.txt         # AMD ROCm 6.x packages with MI300 support
+│   ├── Dockerfile.cpu          # Lightweight CPU container (1.2GB)
+│   ├── Dockerfile.gpu-nvidia   # NVIDIA CUDA 12.6 container (3.5GB)  
+│   ├── Dockerfile.gpu-amd      # AMD ROCm 6.x container with MI300 support (3.2GB)
+│   ├── Dockerfile.base         # Multi-stage base image
+│   ├── docker-compose.yml      # Complete orchestration
+│   ├── build.sh               # Smart build script with GPU detection
+│   └── run.sh                 # Comprehensive container runner
 ├── verify_examples.py          # Quality assurance tool
-├── BEGINNERS_GUIDE.md          # Complete learning pathway
+├── BEGINNERS_GUIDE.md          # Complete learning pathway (Updated v2.0)
 └── docs/                       # Additional documentation
     ├── CONTRIBUTING.md         # Contribution guidelines
     ├── CODE_OF_CONDUCT.md      # Community standards

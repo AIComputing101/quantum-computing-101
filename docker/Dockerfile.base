@@ -1,0 +1,69 @@
+# Base Dockerfile for Quantum Computing 101
+# Multi-stage build for optimized container sizes
+
+# Stage 1: Base Python environment with system dependencies
+FROM python:3.12-slim as base
+
+# Set labels for metadata
+LABEL maintainer="Quantum Computing 101"
+LABEL version="1.0"
+LABEL description="Base image for quantum computing educational examples"
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MPLBACKEND=Agg
+ENV QC101_CONTAINER=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc6-dev \
+    libffi-dev \
+    libssl-dev \
+    make \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash qc101
+WORKDIR /home/qc101/quantum-computing-101
+
+# Stage 2: Dependencies installation
+FROM base as dependencies
+
+# Copy requirements files
+COPY examples/requirements-core.txt /tmp/requirements-core.txt
+COPY examples/requirements.txt /tmp/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install core dependencies (for lightweight builds)
+RUN pip install --no-cache-dir -r /tmp/requirements-core.txt
+
+# Stage 3: Full dependencies (for complete builds)
+FROM dependencies as full-deps
+
+# Install all dependencies including cloud SDKs
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Stage 4: Application code
+FROM dependencies as app-base
+
+# Copy application code
+COPY --chown=qc101:qc101 . /home/qc101/quantum-computing-101/
+
+# Install the package
+RUN pip install --no-cache-dir -e .
+
+# Switch to non-root user
+USER qc101
+
+# Set default working directory
+WORKDIR /home/qc101/quantum-computing-101/examples
+
+# Default command
+CMD ["python", "--version"]

@@ -101,17 +101,39 @@ Welcome to your quantum computing journey! This guide will help you navigate the
 
 ## 🛠️ Setup Instructions
 
-### Quick Start (5 minutes):
+### 🐳 **Option 1: Docker (Recommended - Zero Setup!)**
+```bash
+# Clone this repository first
+git clone https://github.com/AIComputing101/quantum-computing-101.git
+cd quantum-computing-101
+
+# Build and run with Docker (handles all dependencies automatically)
+cd docker
+./build.sh cpu                    # Build lightweight CPU container (1.2GB)
+./run.sh -v cpu -i               # Start interactive session
+
+# Or run specific examples directly
+./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
+
+# Start Jupyter Lab for experimentation
+./run.sh -v cpu -j               # Access at http://localhost:8888
+```
+
+**🌟 Docker Benefits:**
+- **Zero Setup**: No Python installation or dependency management required
+- **Consistent Environment**: Same setup across Windows, Mac, Linux
+- **GPU Ready**: Easy GPU acceleration when you're ready for advanced examples
+- **Latest Software**: Pre-configured with optimized quantum computing stack
+
+### 💻 **Option 2: Native Installation (Traditional)**
 ```bash
 # Install Python 3.11+ if not already installed (3.12+ recommended)
 # Clone this repository first
 git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 
-# Install required packages
+# Install required packages (Updated v2.0)
 pip install -r examples/requirements-core.txt
-# OR install individual packages:
-pip install qiskit>=0.45.0 qiskit-aer>=0.13.0 matplotlib>=3.7.0 numpy>=1.24.0 pylatexenc>=2.10
 
 # Test your setup
 python examples/module1_fundamentals/01_classical_vs_quantum_bits.py
@@ -119,6 +141,28 @@ python examples/module1_fundamentals/01_classical_vs_quantum_bits.py
 # Verify all examples work (optional)
 python verify_examples.py --quick
 ```
+
+### 🚀 **Option 3: GPU Acceleration (Advanced)**
+```bash
+# NVIDIA GPU setup (CUDA 12.6 with latest H100/A100 support)
+cd docker
+./build.sh gpu-nvidia            # Build NVIDIA GPU container (3.5GB)
+./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py
+
+# AMD ROCm setup (ROCm 6.x with MI300A/MI300X support)
+./build.sh gpu-amd               # Build AMD ROCm container (3.2GB)
+./run.sh -v gpu-amd -i
+
+# GPU Jupyter Lab with acceleration
+./run.sh -v gpu-nvidia -j        # NVIDIA accelerated Jupyter
+./run.sh -v gpu-amd -j           # AMD ROCm accelerated Jupyter
+```
+
+**🏎️ GPU Performance Benefits:**
+- **5-8x Speedup**: Large quantum simulations and ML workloads
+- **Latest Hardware**: Supports newest NVIDIA H100/A100 and AMD MI300 series
+- **Automatic Detection**: Build scripts detect your GPU hardware
+- **Optimized Libraries**: Pre-built Qiskit-Aer GPU backends for quantum acceleration
 
 ### Recommended Development Environment:
 - **Python 3.11+** (required, 3.12+ recommended for best performance)

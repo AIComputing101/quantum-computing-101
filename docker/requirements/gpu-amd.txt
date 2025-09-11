@@ -1,0 +1,35 @@
+# AMD ROCm GPU requirements for Quantum Computing 101
+# Optimized for AMD GPU acceleration with ROCm 6.x
+
+# Include base requirements
+-r base.txt
+
+# AMD ROCm specific packages
+# Note: PyTorch with ROCm is included in the base ROCm/PyTorch Docker image
+# Additional ROCm packages for enhanced performance
+# CuPy ROCm support (ROCm 6.x compatible)
+cupy-rocm-5-0>=13.0.0
+
+# GPU monitoring and utilities for ROCm
+rocm-smi>=6.0.0
+
+# Memory and performance profiling for ROCm
+py3nvml>=0.2.7
+psutil>=5.9.0
+memory-profiler>=0.60.0
+
+# Additional ML and visualization tools
+tensorboard>=2.15.0
+tensorboard-plugin-profile>=2.15.0
+
+# IBM Quantum cloud access (for Module 7)
+qiskit-ibm-runtime>=0.18.0
+qiskit-ibm-provider>=0.8.0
+
+# Cloud platform SDKs
+amazon-braket-sdk>=1.74.0
+boto3>=1.34.0
+
+# Note: Qiskit-Aer with ROCm support is built from source in Dockerfile
+# PyTorch with ROCm comes pre-installed in the rocm/pytorch base image
+# Most quantum acceleration comes from optimized linear algebra libraries

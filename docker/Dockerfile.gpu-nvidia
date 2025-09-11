@@ -1,0 +1,132 @@
+# NVIDIA CUDA GPU Dockerfile for Quantum Computing 101
+# Multi-stage build optimized for NVIDIA GPU acceleration
+
+# Stage 1: Base CUDA environment (Updated to latest CUDA 12.6)
+FROM nvidia/cuda:12.6.1-devel-ubuntu22.04 as cuda-base
+
+# Set labels for metadata
+LABEL maintainer="Quantum Computing 101"
+LABEL version="2.0"
+LABEL variant="gpu-nvidia"
+LABEL description="NVIDIA CUDA-accelerated quantum computing examples"
+
+# Set environment variables for CUDA optimization
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MPLBACKEND=Agg
+ENV QC101_CONTAINER=1
+ENV QC101_VARIANT=gpu-nvidia
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV CUDA_VISIBLE_DEVICES=all
+ENV QISKIT_IN_PARALLEL=TRUE
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-dev \
+    python3.12-distutils \
+    python3-pip \
+    gcc \
+    g++ \
+    libc6-dev \
+    libffi-dev \
+    libssl-dev \
+    libcublas-dev-12-6 \
+    libcusparse-dev-12-6 \
+    libcurand-dev-12-6 \
+    libcusolver-dev-12-6 \
+    libcufft-dev-12-6 \
+    libnccl-dev \
+    make \
+    git \
+    curl \
+    htop \
+    vim \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create symbolic links for python
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python && \
+    ln -sf /usr/bin/python3.12 /usr/bin/python3
+
+# Stage 2: Python dependencies
+FROM cuda-base as python-deps
+
+# Upgrade pip and install build tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Copy requirements files
+COPY docker/requirements/ /tmp/requirements/
+
+# Install Python dependencies in optimal order for layer caching
+# Install base requirements first (most stable) - excluding qiskit-aer to avoid conflicts
+RUN sed '/^qiskit-aer/d' /tmp/requirements/base.txt > /tmp/requirements/base-no-aer.txt && \
+    pip install --no-cache-dir -r /tmp/requirements/base-no-aer.txt
+
+# Install NVIDIA-specific requirements (includes qiskit-aer-gpu)
+RUN pip install --no-cache-dir -r /tmp/requirements/gpu-nvidia.txt
+
+# Stage 3: Application setup
+FROM python-deps as app-setup
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash --uid 1000 qc101
+
+# Set working directory
+WORKDIR /home/qc101/quantum-computing-101
+
+# Copy application code (use .dockerignore to optimize)
+COPY --chown=qc101:qc101 . /home/qc101/quantum-computing-101/
+
+# Install the package in development mode
+RUN pip install --no-cache-dir -e .
+
+# Create output directory for results
+RUN mkdir -p /home/qc101/quantum-computing-101/outputs && \
+    chown -R qc101:qc101 /home/qc101/quantum-computing-101/outputs
+
+# Stage 4: Final runtime image
+FROM app-setup as runtime
+
+# Switch to non-root user
+USER qc101
+
+# Set default working directory to examples
+WORKDIR /home/qc101/quantum-computing-101/examples
+
+# Create startup script for GPU info display
+RUN echo '#!/bin/bash\n\
+echo "🐳 Quantum Computing 101 - NVIDIA GPU Container"\n\
+echo "================================================"\n\
+echo "CUDA Version: $(nvcc --version | grep "release" | awk "{print \$6}" | cut -c2-)"\n\
+echo "GPU Count: $(nvidia-smi --query-gpu=count --format=csv,noheader,nounits | head -1)"\n\
+nvidia-smi --query-gpu=name,memory.total,utilization.gpu --format=csv,noheader\n\
+echo "PyTorch CUDA: $(python -c \"import torch; print(torch.cuda.is_available())\")"\n\
+echo "Qiskit Version: $(python -c \"import qiskit; print(qiskit.__version__)\")"\n\
+echo "Qiskit-Aer GPU: $(python -c \"from qiskit_aer import AerSimulator; sim = AerSimulator(method=\"statevector\", device=\"GPU\"); print(\"Available\" if \"GPU\" in str(sim.options.device) else \"CPU fallback\")\")"\n\
+echo "================================================"\n\
+echo "Available examples:"\n\
+find . -name "*.py" -type f | grep -E "module[0-9]_" | head -5 | sed "s/^/  /"\n\
+echo "  ... and $(find . -name "*.py" -type f | grep -E "module[0-9]_" | wc -l | tr -d " ") total examples"\n\
+echo ""\n\
+echo "Quick start:"\n\
+echo "  python module1_fundamentals/01_classical_vs_quantum_bits.py"\n\
+echo "  python module6_machine_learning/01_quantum_neural_network.py"\n\
+echo ""' > /home/qc101/startup.sh && chmod +x /home/qc101/startup.sh
+
+# Health check to verify GPU and quantum computing stack
+HEALTHCHECK --interval=30s --timeout=15s --start-period=10s --retries=3 \
+    CMD python -c "import qiskit; import torch; import cupy; \
+    assert torch.cuda.is_available(), 'CUDA not available'; \
+    assert torch.cuda.device_count() > 0, 'No CUDA devices'; \
+    print('✅ GPU container healthy')" || exit 1
+
+# Set resource limits and optimizations
+ENV OMP_NUM_THREADS=8
+ENV MKL_NUM_THREADS=8
+ENV CUDA_CACHE_PATH=/tmp/cuda_cache
+
+# Default command - show GPU info and available examples
+CMD ["/home/qc101/startup.sh"]
