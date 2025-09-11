@@ -1,0 +1,19 @@
+# CPU-specific requirements for Quantum Computing 101
+# Optimized for CPU-only quantum simulations
+
+# Include base requirements
+-r base.txt
+
+# CPU version of qiskit-aer (standard package)
+qiskit-aer>=0.14.0
+
+# CPU-optimized BLAS libraries (will be handled at system level in Dockerfile)
+# Additional CPU performance packages could go here
+
+# CPU-only PyTorch for basic ML examples (if needed)
+# torch>=2.1.0+cpu --index-url https://download.pytorch.org/whl/cpu
+# torchvision>=0.16.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
+# Memory profiling and performance tools
+psutil>=5.9.0
+memory-profiler>=0.60.0

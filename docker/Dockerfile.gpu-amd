@@ -1,0 +1,164 @@
+# AMD ROCm GPU Dockerfile for Quantum Computing 101
+# Multi-stage build optimized for AMD GPU acceleration with ROCm
+
+# Stage 1: Base ROCm environment (Updated to latest ROCm 6.x with PyTorch)
+FROM rocm/pytorch:latest as rocm-base
+
+# Set labels for metadata
+LABEL maintainer="Quantum Computing 101"
+LABEL version="2.0"
+LABEL variant="gpu-amd"
+LABEL description="AMD ROCm-accelerated quantum computing examples"
+
+# Set environment variables for ROCm optimization
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MPLBACKEND=Agg
+ENV QC101_CONTAINER=1
+ENV QC101_VARIANT=gpu-amd
+ENV ROCm_HOME=/opt/rocm
+ENV HIP_VISIBLE_DEVICES=all
+ENV ROCR_VISIBLE_DEVICES=all
+ENV HSA_OVERRIDE_GFX_VERSION=10.3.0
+
+# Update system and install development dependencies for Qiskit-Aer ROCm build
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc6-dev \
+    libffi-dev \
+    libssl-dev \
+    make \
+    git \
+    curl \
+    htop \
+    vim \
+    wget \
+    cmake \
+    ninja-build \
+    rocm-dev \
+    rocm-libs \
+    rccl-dev \
+    hip-dev \
+    rocthrust-dev \
+    rocprim-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# The latest ROCm/PyTorch image should already have Python 3.11+
+# Set up environment and verify Python version
+RUN python --version && pip install --upgrade pip
+
+# Stage 2: Python dependencies
+FROM rocm-base as python-deps
+
+# Upgrade pip and install build tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Copy requirements files
+COPY docker/requirements/ /tmp/requirements/
+
+# Install Python dependencies in optimal order for layer caching
+# Install base requirements first (most stable) - excluding qiskit-aer for custom build
+RUN sed '/^qiskit-aer/d' /tmp/requirements/base.txt > /tmp/requirements/base-no-aer.txt && \
+    pip install --no-cache-dir -r /tmp/requirements/base-no-aer.txt
+
+# Install AMD-specific requirements (excluding qiskit-aer for custom build)
+RUN sed '/^qiskit-aer/d; /^cupy-rocm/d' /tmp/requirements/gpu-amd.txt > /tmp/requirements/gpu-amd-no-aer.txt && \
+    pip install --no-cache-dir -r /tmp/requirements/gpu-amd-no-aer.txt || \
+    echo "⚠️  Some ROCm packages failed to install - using CPU fallbacks"
+
+# Set ROCm environment variables for building
+ENV ROCM_PATH=/opt/rocm
+ENV HCC_AMDGPU_TARGET=gfx803,gfx900,gfx906,gfx908,gfx90a,gfx942,gfx1030,gfx1100
+ENV AMDGPU_TARGETS=gfx803,gfx900,gfx906,gfx908,gfx90a,gfx942,gfx1030,gfx1100
+
+# Clone and build Qiskit-Aer with ROCm support from source
+RUN git clone https://github.com/Qiskit/qiskit-aer.git /tmp/qiskit-aer && \
+    cd /tmp/qiskit-aer && \
+    QISKIT_AER_PACKAGE_NAME='qiskit-aer-gpu-rocm' \
+    python setup.py bdist_wheel -- \
+    -DAER_THRUST_BACKEND=ROCM \
+    -DAER_MPI=OFF \
+    -DAER_ROCM_ARCH="gfx906 gfx908 gfx90a gfx942 gfx1030" \
+    -DCMAKE_BUILD_TYPE=Release && \
+    pip install --force-reinstall dist/qiskit_aer_gpu_rocm-*.whl && \
+    rm -rf /tmp/qiskit-aer
+
+# Stage 3: Application setup
+FROM python-deps as app-setup
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash --uid 1000 qc101
+
+# Set working directory
+WORKDIR /home/qc101/quantum-computing-101
+
+# Copy application code (use .dockerignore to optimize)
+COPY --chown=qc101:qc101 . /home/qc101/quantum-computing-101/
+
+# Install the package in development mode
+RUN pip install --no-cache-dir -e .
+
+# Create output directory for results
+RUN mkdir -p /home/qc101/quantum-computing-101/outputs && \
+    chown -R qc101:qc101 /home/qc101/quantum-computing-101/outputs
+
+# Stage 4: Final runtime image
+FROM app-setup as runtime
+
+# Switch to non-root user
+USER qc101
+
+# Set default working directory to examples
+WORKDIR /home/qc101/quantum-computing-101/examples
+
+# Create startup script for GPU info display
+RUN echo '#!/bin/bash\n\
+echo "🐳 Quantum Computing 101 - AMD ROCm GPU Container"\n\
+echo "=================================================="\n\
+echo "ROCm Version: $(cat /opt/rocm/.info/version 2>/dev/null || echo \"Unknown\")"\n\
+if command -v rocm-smi &> /dev/null; then\n\
+    echo "GPU Info:"\n\
+    rocm-smi --showproductname --showmeminfo --showuse 2>/dev/null | head -10\n\
+else\n\
+    echo "⚠️  rocm-smi not available - run with --device=/dev/kfd --device=/dev/dri"\n\
+fi\n\
+echo "PyTorch ROCm: $(python -c \"import torch; print(\"Available\" if torch.cuda.is_available() else \"Not Available\")\")"\n\
+echo "Qiskit-Aer ROCm: $(python -c \"from qiskit_aer import AerSimulator; sim = AerSimulator(method=\"statevector\", device=\"GPU\"); print(\"Available\" if \"GPU\" in str(sim.options.device) else \"CPU fallback\")\")"\n\
+echo "Qiskit Version: $(python -c \"import qiskit; print(qiskit.__version__)\")"\n\
+echo "=================================================="\n\
+echo "⚠️  Note: ROCm support is experimental in quantum computing"\n\
+echo "    Most acceleration comes from PyTorch ML examples"\n\
+echo "    Quantum simulations may fall back to optimized CPU"\n\
+echo "=================================================="\n\
+echo "Available examples:"\n\
+find . -name "*.py" -type f | grep -E "module[0-9]_" | head -5 | sed "s/^/  /"\n\
+echo "  ... and $(find . -name "*.py" -type f | grep -E "module[0-9]_" | wc -l | tr -d " ") total examples"\n\
+echo ""\n\
+echo "Quick start:"\n\
+echo "  python module1_fundamentals/01_classical_vs_quantum_bits.py"\n\
+echo "  python module6_machine_learning/01_quantum_neural_network.py"\n\
+echo ""\n\
+echo "ROCm GPU Docker run command:"\n\
+echo "  docker run --device=/dev/kfd --device=/dev/dri --group-add video quantum101:gpu-amd"\n\
+echo ""' > /home/qc101/startup.sh && chmod +x /home/qc101/startup.sh
+
+# Health check to verify ROCm and quantum computing stack
+HEALTHCHECK --interval=30s --timeout=15s --start-period=10s --retries=3 \
+    CMD python -c "import qiskit; import torch; \
+    print('✅ ROCm container healthy'); \
+    print(f'PyTorch ROCm available: {torch.cuda.is_available()}'); \
+    print(f'Qiskit version: {qiskit.__version__}')" || exit 1
+
+# Set resource limits and optimizations
+ENV OMP_NUM_THREADS=8
+ENV MKL_NUM_THREADS=8
+ENV HCC_AMDGPU_TARGET=gfx906,gfx908,gfx90a,gfx942,gfx1030
+
+# Add ROCm to PATH
+ENV PATH=$PATH:/opt/rocm/bin
+
+# Default command - show GPU info and available examples
+CMD ["/home/qc101/startup.sh"]

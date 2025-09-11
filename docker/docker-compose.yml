@@ -1,0 +1,238 @@
+version: '3.8'
+
+services:
+  # CPU-only variant for lightweight usage and learning
+  quantum101-cpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cpu
+    image: quantum101:cpu
+    container_name: qc101-cpu
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - MPLBACKEND=Agg
+      - QC101_VARIANT=cpu
+    networks:
+      - quantum-net
+    restart: unless-stopped
+    # CPU resource limits for fair sharing
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          memory: 1G
+
+  # NVIDIA CUDA GPU variant for maximum acceleration
+  quantum101-gpu-nvidia:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu-nvidia
+    image: quantum101:gpu-nvidia
+    container_name: qc101-gpu-nvidia
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - MPLBACKEND=Agg
+      - QC101_VARIANT=gpu-nvidia
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=all
+    networks:
+      - quantum-net
+    restart: unless-stopped
+    # NVIDIA GPU resource configuration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: 8G
+    runtime: nvidia
+
+  # AMD ROCm GPU variant for AMD GPU acceleration
+  quantum101-gpu-amd:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu-amd
+    image: quantum101:gpu-amd
+    container_name: qc101-gpu-amd
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - MPLBACKEND=Agg
+      - QC101_VARIANT=gpu-amd
+      - ROCm_HOME=/opt/rocm
+      - HIP_VISIBLE_DEVICES=all
+    networks:
+      - quantum-net
+    restart: unless-stopped
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # Jupyter development environment (CPU)
+  jupyter-cpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cpu
+    image: quantum101:cpu
+    container_name: qc101-jupyter-cpu
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+      - jupyter-cpu-workspace:/home/qc101/workspace
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - JUPYTER_ENABLE_LAB=yes
+    command: >
+      bash -c "pip install --quiet jupyter jupyterlab ipywidgets &&
+               echo 'Starting Jupyter Lab on http://localhost:8888' &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser 
+               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    networks:
+      - quantum-net
+    restart: unless-stopped
+
+  # Jupyter development environment (NVIDIA GPU)
+  jupyter-gpu-nvidia:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu-nvidia
+    image: quantum101:gpu-nvidia
+    container_name: qc101-jupyter-gpu-nvidia
+    ports:
+      - "8889:8888"
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+      - jupyter-gpu-nvidia-workspace:/home/qc101/workspace
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - JUPYTER_ENABLE_LAB=yes
+      - NVIDIA_VISIBLE_DEVICES=all
+    command: >
+      bash -c "pip install --quiet jupyter jupyterlab ipywidgets &&
+               echo 'Starting GPU-accelerated Jupyter Lab on http://localhost:8889' &&
+               echo 'CUDA Available:' $(python -c 'import torch; print(torch.cuda.is_available())') &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser 
+               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    networks:
+      - quantum-net
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Jupyter development environment (AMD ROCm GPU)
+  jupyter-gpu-amd:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu-amd
+    image: quantum101:gpu-amd
+    container_name: qc101-jupyter-gpu-amd
+    ports:
+      - "8890:8888"
+    volumes:
+      - ../examples:/home/qc101/quantum-computing-101/examples
+      - ../outputs:/home/qc101/quantum-computing-101/outputs
+      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+      - jupyter-gpu-amd-workspace:/home/qc101/workspace
+    working_dir: /home/qc101/quantum-computing-101/examples
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+      - JUPYTER_ENABLE_LAB=yes
+      - ROCm_HOME=/opt/rocm
+      - HIP_VISIBLE_DEVICES=all
+    command: >
+      bash -c "pip install --quiet jupyter jupyterlab ipywidgets &&
+               echo 'Starting ROCm-accelerated Jupyter Lab on http://localhost:8890' &&
+               echo 'PyTorch ROCm Available:' $(python -c 'import torch; print(torch.cuda.is_available())') &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser 
+               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    networks:
+      - quantum-net
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    restart: unless-stopped
+
+  # Development container with all tools (based on NVIDIA GPU)
+  quantum101-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu-nvidia
+    image: quantum101:gpu-nvidia
+    container_name: qc101-dev
+    volumes:
+      - ..:/home/qc101/quantum-computing-101
+    working_dir: /home/qc101/quantum-computing-101
+    environment:
+      - PYTHONPATH=/home/qc101/quantum-computing-101
+    networks:
+      - quantum-net
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+
+networks:
+  quantum-net:
+    driver: bridge
+    name: quantum-computing-network
+
+volumes:
+  quantum-outputs:
+    name: qc101-outputs
+    driver: local
+  jupyter-cpu-workspace:
+    name: qc101-jupyter-cpu-workspace
+    driver: local
+  jupyter-gpu-nvidia-workspace:
+    name: qc101-jupyter-gpu-nvidia-workspace
+    driver: local
+  jupyter-gpu-amd-workspace:
+    name: qc101-jupyter-gpu-amd-workspace
+    driver: local

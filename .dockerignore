@@ -1,0 +1,134 @@
+# Docker ignore file for Quantum Computing 101
+# Optimize build context and reduce image size
+
+# Version control
+.git
+.gitignore
+.github/
+.gitmodules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Documentation
+docs/
+*.md
+!README.md
+!CLAUDE.md
+
+# Output directories
+outputs/
+results/
+plots/
+figures/
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+
+# Package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large data files (if any)
+*.hdf5
+*.h5
+*.npz
+*.pkl
+*.pickle
+
+# Compiled files
+*.o
+*.so
+*.dylib
+*.dll
+
+# Docker related (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Local development
+local/
+scratch/
+sandbox/
+
+# Cloud credentials (should never be in repo anyway)
+*.json
+*.pem
+*.key
+!examples/requirements*.txt
