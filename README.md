@@ -1,6 +1,6 @@
 # Quantum Computing 101 🚀⚛️
 
-**The most comprehensive, beginner-friendly quantum computing course** with **45 production-ready examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
+**The most comprehensive, beginner-friendly quantum computing course** with **45 examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
@@ -352,7 +352,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 - **IBM Qiskit Team**: For the excellent quantum computing framework
 - **Quantum Computing Community**: For inspiration and feedback
 - **Open Source Contributors**: For making this project better
-- **Educational Institutions**: For testing and validation
 
 ---
 
