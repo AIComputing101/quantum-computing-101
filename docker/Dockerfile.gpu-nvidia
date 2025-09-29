@@ -1,14 +1,14 @@
-# NVIDIA CUDA GPU Dockerfile for Quantum Computing 101
+# NVIDIA CLABEL description="NVIDIA CUDA 12.9.1 with cuDNN accelerated quantum computing examples"DA GPU Dockerfile for Quantum Computing 101
 # Multi-stage build optimized for NVIDIA GPU acceleration
 
-# Stage 1: Base CUDA environment (Updated to latest CUDA 12.6)
-FROM nvidia/cuda:12.6.1-devel-ubuntu22.04 as cuda-base
+# Stage 1: Base CUDA environment
+FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04 as cuda-base
 
 # Set labels for metadata
 LABEL maintainer="Quantum Computing 101"
-LABEL version="2.0"
+LABEL version="2.1"
 LABEL variant="gpu-nvidia"
-LABEL description="NVIDIA CUDA-accelerated quantum computing examples"
+LABEL description="NVIDIA CUDA 12.9.1 with cuDNN accelerated quantum computing examples"
 
 # Set environment variables for CUDA optimization
 ENV DEBIAN_FRONTEND=noninteractive
@@ -26,7 +26,7 @@ ENV QISKIT_IN_PARALLEL=TRUE
 RUN apt-get update && apt-get install -y \
     python3.12 \
     python3.12-dev \
-    python3.12-distutils \
+    python3.12-venv \
     python3-pip \
     gcc \
     g++ \
@@ -55,7 +55,7 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python && \
 FROM cuda-base as python-deps
 
 # Upgrade pip and install build tools
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir --break-system-packages --ignore-installed --upgrade pip setuptools wheel
 
 # Copy requirements files
 COPY docker/requirements/ /tmp/requirements/
@@ -63,10 +63,10 @@ COPY docker/requirements/ /tmp/requirements/
 # Install Python dependencies in optimal order for layer caching
 # Install base requirements first (most stable) - excluding qiskit-aer to avoid conflicts
 RUN sed '/^qiskit-aer/d' /tmp/requirements/base.txt > /tmp/requirements/base-no-aer.txt && \
-    pip install --no-cache-dir -r /tmp/requirements/base-no-aer.txt
+    pip install --no-cache-dir --break-system-packages -r /tmp/requirements/base-no-aer.txt
 
 # Install NVIDIA-specific requirements (includes qiskit-aer-gpu)
-RUN pip install --no-cache-dir -r /tmp/requirements/gpu-nvidia.txt
+RUN pip install --no-cache-dir --break-system-packages -r /tmp/requirements/gpu-nvidia.txt
 
 # Stage 3: Application setup
 FROM python-deps as app-setup
@@ -81,7 +81,7 @@ WORKDIR /home/qc101/quantum-computing-101
 COPY --chown=qc101:qc101 . /home/qc101/quantum-computing-101/
 
 # Install the package in development mode
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir --break-system-packages -e .
 
 # Create output directory for results
 RUN mkdir -p /home/qc101/quantum-computing-101/outputs && \
