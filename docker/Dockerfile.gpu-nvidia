@@ -1,4 +1,4 @@
-# NVIDIA CLABEL description="NVIDIA CUDA 12.9.1 with cuDNN accelerated quantum computing examples"DA GPU Dockerfile for Quantum Computing 101
+# NVIDIA CUDA GPU Dockerfile for Quantum Computing 101
 # Multi-stage build optimized for NVIDIA GPU acceleration
 
 # Stage 1: Base CUDA environment
@@ -33,12 +33,11 @@ RUN apt-get update && apt-get install -y \
     libc6-dev \
     libffi-dev \
     libssl-dev \
-    libcublas-dev-12-6 \
-    libcusparse-dev-12-6 \
-    libcurand-dev-12-6 \
-    libcusolver-dev-12-6 \
-    libcufft-dev-12-6 \
-    libnccl-dev \
+    libcublas-dev-12-9 \
+    libcusparse-dev-12-9 \
+    libcurand-dev-12-9 \
+    libcusolver-dev-12-9 \
+    libcufft-dev-12-9 \
     make \
     git \
     curl \
