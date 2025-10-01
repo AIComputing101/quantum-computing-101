@@ -61,13 +61,18 @@ All examples have been updated and tested for **Qiskit 2.x compatibility** and *
 git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 
-# Build and run CPU container
+# Build CPU container using unified build script
 cd docker
-./build.sh cpu
-./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
+./build-unified.sh cpu
 
-# Or start interactive session
-./run.sh -v cpu -i
+# Run with docker-compose (recommended)
+docker-compose up -d qc101-cpu
+
+# Or run specific example directly
+docker run -it --rm \
+  -v $(pwd)/../examples:/home/qc101/quantum-computing-101/examples \
+  quantum-computing-101:cpu \
+  python examples/module1_fundamentals/01_classical_vs_quantum_bits.py
 ```
 
 #### Option 2: Local Python Installation
@@ -88,14 +93,18 @@ python verify_examples.py --quick
 
 #### Option 3: GPU-Accelerated (For Advanced Users)
 ```bash
-# NVIDIA GPU acceleration (5-8x speedup with CUDA 12.6)
+# NVIDIA GPU acceleration (PyTorch 2.8.0 + CUDA 12.9)
 cd docker
-./build.sh gpu-nvidia
-./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py
+./build-unified.sh nvidia
+docker-compose up -d qc101-nvidia
 
-# AMD ROCm GPU acceleration (ROCm 6.x with MI300 series support)
-./build.sh gpu-amd
-./run.sh -v gpu-amd -e module6_machine_learning/01_quantum_neural_network.py
+# AMD ROCm GPU acceleration (latest ROCm PyTorch)
+./build-unified.sh amd
+docker-compose up -d qc101-amd
+
+# Run specific example with GPU
+docker exec -it qc101-nvidia \
+  python /home/qc101/quantum-computing-101/examples/module6_machine_learning/01_quantum_neural_network.py
 ```
 
 
@@ -142,8 +151,10 @@ Real-world applications and quantum cryptography:
 # Local installation
 python examples/module8_applications/01_quantum_chemistry_drug_discovery.py
 
-# Docker
-./docker/run.sh -v cpu -e module8_applications/01_quantum_chemistry_drug_discovery.py
+# Docker (with docker-compose)
+cd docker && docker-compose up -d qc101-cpu
+docker exec -it qc101-cpu python \
+  /home/qc101/quantum-computing-101/examples/module8_applications/01_quantum_chemistry_drug_discovery.py
 ```
 Simulate molecular systems for drug discovery using VQE (Variational Quantum Eigensolver).
 
@@ -153,7 +164,9 @@ Simulate molecular systems for drug discovery using VQE (Variational Quantum Eig
 python examples/module8_applications/02_financial_portfolio_optimization.py
 
 # Docker with NVIDIA GPU acceleration
-./docker/run.sh -v gpu-nvidia -e module8_applications/02_financial_portfolio_optimization.py
+cd docker && docker-compose up -d qc101-nvidia
+docker exec -it qc101-nvidia python \
+  /home/qc101/quantum-computing-101/examples/module8_applications/02_financial_portfolio_optimization.py
 ```
 Optimize investment portfolios using QAOA (Quantum Approximate Optimization Algorithm).
 
@@ -162,8 +175,10 @@ Optimize investment portfolios using QAOA (Quantum Approximate Optimization Algo
 # Local installation
 python examples/module8_applications/04_cryptography_cybersecurity.py
 
-# Docker
-./docker/run.sh -v cpu -e module8_applications/04_cryptography_cybersecurity.py
+# Docker (with docker-compose)
+cd docker && docker-compose up -d qc101-cpu
+docker exec -it qc101-cpu python \
+  /home/qc101/quantum-computing-101/examples/module8_applications/04_cryptography_cybersecurity.py
 ```
 Implement quantum key distribution protocols (BB84, E91) and post-quantum cryptography.
 
@@ -172,20 +187,72 @@ Implement quantum key distribution protocols (BB84, E91) and post-quantum crypto
 # Local installation
 python examples/module4_algorithms/02_grovers_search_algorithm.py
 
-# Docker
-./docker/run.sh -v cpu -e module4_algorithms/02_grovers_search_algorithm.py
+# Docker (with docker-compose)
+cd docker && docker-compose up -d qc101-cpu
+docker exec -it qc101-cpu python \
+  /home/qc101/quantum-computing-101/examples/module4_algorithms/02_grovers_search_algorithm.py
 ```
 Experience quadratic speedup in unstructured search problems.
 
-### 🐳 **Docker Benefits (New v2.0!)**
-- **🎯 Advanced GPU Support**: NVIDIA CUDA 12.6 + AMD ROCm 6.x
+### 🐳 **Docker Benefits (Unified v2.0 Architecture!)**
+- **🎯 Advanced GPU Support**: NVIDIA CUDA 12.9 + AMD ROCm latest
 - **⚡ Zero Setup**: No Python installation required
 - **🚀 GPU Acceleration**: 5-8x speedup for large simulations  
 - **🔄 Reproducible**: Identical environment across all machines
 - **☁️ Cloud Ready**: Easy deployment to AWS/GCP/Azure
-- **📊 Three Variants**: CPU (1.2GB), NVIDIA GPU (3.5GB), AMD ROCm (3.2GB)
-- **🏗️ Latest Hardware**: Supports NVIDIA H100/A100 and AMD MI300A/MI300X GPUs
+- **📊 Three Variants**: CPU, NVIDIA GPU, AMD ROCm
+- **🏗️ Latest Hardware**: PyTorch 2.8.0 + CUDA 12.9, ROCm PyTorch latest
 - **🖥️ Headless Ready**: All examples work in non-interactive/remote environments
+- **🔧 Unified Architecture**: Single Dockerfile with multi-stage builds
+- **📦 Volume Mounts**: Live code editing with instant container sync
+
+### 🔄 **Docker Development Workflow**
+
+The Docker setup supports seamless development with volume mounting:
+
+```bash
+# Start container with volume mounts (via docker-compose)
+cd docker
+docker-compose up -d qc101-cpu
+
+# Edit examples on your host machine
+cd ../examples/module1_fundamentals
+# Edit files in your favorite editor - changes sync instantly!
+
+# Run in container - sees your edits immediately
+docker exec -it qc101-cpu python \
+  /home/qc101/quantum-computing-101/examples/module1_fundamentals/01_classical_vs_quantum_bits.py
+
+# Output files appear in your host's outputs/ directory
+ls ../outputs/
+```
+
+**Volume Mount Benefits:**
+- ✅ Edit files on host → Changes appear instantly in container
+- ✅ Container outputs save to host → Results immediately visible
+- ✅ No rebuild needed → Instant feedback loop
+- ✅ Use any IDE → VS Code, PyCharm, Vim, etc.
+
+### 📊 **Jupyter Lab Access**
+
+Each Docker variant runs Jupyter Lab on different ports to avoid conflicts:
+
+```bash
+# CPU variant - Port 8888
+cd docker
+docker-compose up qc101-cpu
+# Access at: http://localhost:8888
+
+# NVIDIA variant - Port 8889
+docker-compose up qc101-nvidia
+# Access at: http://localhost:8889
+
+# AMD variant - Port 8890
+docker-compose up qc101-amd
+# Access at: http://localhost:8890
+```
+
+For detailed Docker setup, volume mounting, and advanced configuration, see [docker/README.md](docker/README.md).
 
 ## 🛠️ Features
 
@@ -238,20 +305,17 @@ quantum-computing-101/
 │   ├── module7_hardware/       # 5 hardware examples
 │   ├── module8_applications/   # 6 industry examples
 │   └── utils/                  # Shared utilities
-├── docker/                      # **NEW v2.0** - Complete containerization
-│   ├── README.md               # Docker setup guide
+├── docker/                      # **v2.0 Unified Architecture** - Complete containerization
+│   ├── README.md               # Comprehensive Docker setup guide
+│   ├── Dockerfile              # Unified multi-variant Dockerfile
+│   ├── build-unified.sh        # New unified build script
+│   ├── docker-compose.yml      # Multi-service orchestration (qc101-cpu/nvidia/amd)
+│   ├── entrypoint.sh          # Container entry point
 │   ├── requirements/           # Modular requirements for Docker
 │   │   ├── base.txt            # Core frameworks for all variants
-│   │   ├── cpu.txt             # CPU optimizations
-│   │   ├── gpu-nvidia.txt      # NVIDIA CUDA 12.6 packages
-│   │   └── gpu-amd.txt         # AMD ROCm 6.x packages with MI300 support
-│   ├── Dockerfile.cpu          # Lightweight CPU container (1.2GB)
-│   ├── Dockerfile.gpu-nvidia   # NVIDIA CUDA 12.6 container (3.5GB)  
-│   ├── Dockerfile.gpu-amd      # AMD ROCm 6.x container with MI300 support (3.2GB)
-│   ├── Dockerfile.base         # Multi-stage base image
-│   ├── docker-compose.yml      # Complete orchestration
-│   ├── build.sh               # Smart build script with GPU detection
-│   └── run.sh                 # Comprehensive container runner
+│   │   ├── cpu.txt             # CPU-specific dependencies
+│   │   ├── gpu-nvidia.txt      # NVIDIA CUDA 12.9 packages
+│   │   └── gpu-amd.txt         # AMD ROCm packages
 ├── verify_examples.py          # Quality assurance tool
 ├── BEGINNERS_GUIDE.md          # Complete learning pathway (Updated v2.0)
 ├── QISKIT_2X_MIGRATION.md      # Qiskit 2.x compatibility and headless setup
