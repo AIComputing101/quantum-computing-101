@@ -1,134 +1,265 @@
-version: '3.8'
+version: '3.8'version: '3.8'
 
-services:
-  # CPU-only variant for lightweight usage and learning
+
+
+# Quantum Computing 101 - Docker Compose Configurationservices:
+
+# Supports CPU, NVIDIA GPU, and AMD GPU variants  # CPU-only variant for lightweight usage and learning
+
   quantum101-cpu:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.cpu
-    image: quantum101:cpu
-    container_name: qc101-cpu
-    volumes:
-      - ../examples:/home/qc101/quantum-computing-101/examples
-      - ../outputs:/home/qc101/quantum-computing-101/outputs
-      - ../modules:/home/qc101/quantum-computing-101/modules:ro
-    working_dir: /home/qc101/quantum-computing-101/examples
-    environment:
-      - PYTHONPATH=/home/qc101/quantum-computing-101
-      - MPLBACKEND=Agg
-      - QC101_VARIANT=cpu
-    networks:
-      - quantum-net
-    restart: unless-stopped
-    # CPU resource limits for fair sharing
-    deploy:
-      resources:
-        limits:
-          cpus: '4.0'
-          memory: 4G
-        reservations:
-          memory: 1G
 
-  # NVIDIA CUDA GPU variant for maximum acceleration
-  quantum101-gpu-nvidia:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.gpu-nvidia
-    image: quantum101:gpu-nvidia
-    container_name: qc101-gpu-nvidia
-    volumes:
-      - ../examples:/home/qc101/quantum-computing-101/examples
-      - ../outputs:/home/qc101/quantum-computing-101/outputs
-      - ../modules:/home/qc101/quantum-computing-101/modules:ro
-    working_dir: /home/qc101/quantum-computing-101/examples
-    environment:
-      - PYTHONPATH=/home/qc101/quantum-computing-101
-      - MPLBACKEND=Agg
-      - QC101_VARIANT=gpu-nvidia
-      - NVIDIA_VISIBLE_DEVICES=all
-      - CUDA_VISIBLE_DEVICES=all
-    networks:
-      - quantum-net
-    restart: unless-stopped
-    # NVIDIA GPU resource configuration
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-        limits:
-          memory: 8G
-    runtime: nvidia
+services:    build:
 
-  # AMD ROCm GPU variant for AMD GPU acceleration
-  quantum101-gpu-amd:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.gpu-amd
-    image: quantum101:gpu-amd
-    container_name: qc101-gpu-amd
-    volumes:
-      - ../examples:/home/qc101/quantum-computing-101/examples
-      - ../outputs:/home/qc101/quantum-computing-101/outputs
-      - ../modules:/home/qc101/quantum-computing-101/modules:ro
-    working_dir: /home/qc101/quantum-computing-101/examples
-    environment:
-      - PYTHONPATH=/home/qc101/quantum-computing-101
-      - MPLBACKEND=Agg
-      - QC101_VARIANT=gpu-amd
-      - ROCm_HOME=/opt/rocm
-      - HIP_VISIBLE_DEVICES=all
-    networks:
-      - quantum-net
-    restart: unless-stopped
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    group_add:
-      - video
-    deploy:
-      resources:
-        limits:
-          memory: 8G
+  # =============================================================================      context: ..
 
-  # Jupyter development environment (CPU)
-  jupyter-cpu:
+  # CPU-Only Service      dockerfile: docker/Dockerfile.cpu
+
+  # =============================================================================    image: quantum101:cpu
+
+  qc101-cpu:    container_name: qc101-cpu
+
+    build:    volumes:
+
+      context: ..      - ../examples:/home/qc101/quantum-computing-101/examples
+
+      dockerfile: docker/Dockerfile      - ../outputs:/home/qc101/quantum-computing-101/outputs
+
+      args:      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+
+        VARIANT: cpu    working_dir: /home/qc101/quantum-computing-101/examples
+
+      target: runtime    environment:
+
+    image: quantum-computing-101:cpu      - PYTHONPATH=/home/qc101/quantum-computing-101
+
+    container_name: qc101-cpu      - MPLBACKEND=Agg
+
+    hostname: qc101-cpu      - QC101_VARIANT=cpu
+
+    environment:    networks:
+
+      - QC101_VARIANT=cpu      - quantum-net
+
+    volumes:    restart: unless-stopped
+
+      - ../examples:/home/qc101/quantum-computing-101/examples    # CPU resource limits for fair sharing
+
+      - ../outputs:/home/qc101/quantum-computing-101/outputs    deploy:
+
+      - qc101-cache:/home/qc101/.cache      resources:
+
+    ports:        limits:
+
+      - "8888:8888"  # Jupyter Lab          cpus: '4.0'
+
+      - "6006:6006"  # TensorBoard          memory: 4G
+
+    networks:        reservations:
+
+      - qc101-network          memory: 1G
+
+    restart: unless-stopped
+
+    stdin_open: true  # NVIDIA CUDA GPU variant for maximum acceleration
+
+    tty: true  quantum101-gpu-nvidia:
+
     build:
-      context: ..
-      dockerfile: docker/Dockerfile.cpu
-    image: quantum101:cpu
-    container_name: qc101-jupyter-cpu
-    ports:
-      - "8888:8888"
-    volumes:
-      - ../examples:/home/qc101/quantum-computing-101/examples
-      - ../outputs:/home/qc101/quantum-computing-101/outputs
+
+  # =============================================================================      context: ..
+
+  # NVIDIA GPU Service      dockerfile: docker/Dockerfile.gpu-nvidia
+
+  # =============================================================================    image: quantum101:gpu-nvidia
+
+  qc101-nvidia:    container_name: qc101-gpu-nvidia
+
+    build:    volumes:
+
+      context: ..      - ../examples:/home/qc101/quantum-computing-101/examples
+
+      dockerfile: docker/Dockerfile      - ../outputs:/home/qc101/quantum-computing-101/outputs
+
+      args:      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+
+        VARIANT: nvidia    working_dir: /home/qc101/quantum-computing-101/examples
+
+        PYTORCH_VERSION: "2.8.0"    environment:
+
+        CUDA_VERSION: "12.9"      - PYTHONPATH=/home/qc101/quantum-computing-101
+
+        CUDNN_VERSION: "9"      - MPLBACKEND=Agg
+
+      target: runtime      - QC101_VARIANT=gpu-nvidia
+
+    image: quantum-computing-101:nvidia-gpu      - NVIDIA_VISIBLE_DEVICES=all
+
+    container_name: qc101-nvidia      - CUDA_VISIBLE_DEVICES=all
+
+    hostname: qc101-nvidia    networks:
+
+    environment:      - quantum-net
+
+      - QC101_VARIANT=gpu-nvidia    restart: unless-stopped
+
+      - NVIDIA_VISIBLE_DEVICES=all    # NVIDIA GPU resource configuration
+
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility    deploy:
+
+    volumes:      resources:
+
+      - ../examples:/home/qc101/quantum-computing-101/examples        reservations:
+
+      - ../outputs:/home/qc101/quantum-computing-101/outputs          devices:
+
+      - qc101-cache-nvidia:/home/qc101/.cache            - driver: nvidia
+
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw              count: all
+
+    ports:              capabilities: [gpu]
+
+      - "8889:8888"  # Jupyter Lab (different port to avoid conflict)        limits:
+
+      - "6007:6006"  # TensorBoard          memory: 8G
+
+    networks:    runtime: nvidia
+
+      - qc101-network
+
+    deploy:  # AMD ROCm GPU variant for AMD GPU acceleration
+
+      resources:  quantum101-gpu-amd:
+
+        reservations:    build:
+
+          devices:      context: ..
+
+            - driver: nvidia      dockerfile: docker/Dockerfile.gpu-amd
+
+              count: all    image: quantum101:gpu-amd
+
+              capabilities: [gpu]    container_name: qc101-gpu-amd
+
+    restart: unless-stopped    volumes:
+
+    stdin_open: true      - ../examples:/home/qc101/quantum-computing-101/examples
+
+    tty: true      - ../outputs:/home/qc101/quantum-computing-101/outputs
+
       - ../modules:/home/qc101/quantum-computing-101/modules:ro
-      - jupyter-cpu-workspace:/home/qc101/workspace
-    working_dir: /home/qc101/quantum-computing-101/examples
-    environment:
-      - PYTHONPATH=/home/qc101/quantum-computing-101
+
+  # =============================================================================    working_dir: /home/qc101/quantum-computing-101/examples
+
+  # AMD GPU Service (ROCm)    environment:
+
+  # =============================================================================      - PYTHONPATH=/home/qc101/quantum-computing-101
+
+  qc101-amd:      - MPLBACKEND=Agg
+
+    build:      - QC101_VARIANT=gpu-amd
+
+      context: ..      - ROCm_HOME=/opt/rocm
+
+      dockerfile: docker/Dockerfile      - HIP_VISIBLE_DEVICES=all
+
+      args:    networks:
+
+        VARIANT: amd      - quantum-net
+
+      target: runtime    restart: unless-stopped
+
+    image: quantum-computing-101:amd-gpu    devices:
+
+    container_name: qc101-amd      - /dev/kfd:/dev/kfd
+
+    hostname: qc101-amd      - /dev/dri:/dev/dri
+
+    environment:    group_add:
+
+      - QC101_VARIANT=gpu-amd      - video
+
+      - ROCM_VISIBLE_DEVICES=all    deploy:
+
+      - HIP_VISIBLE_DEVICES=all      resources:
+
+    volumes:        limits:
+
+      - ../examples:/home/qc101/quantum-computing-101/examples          memory: 8G
+
+      - ../outputs:/home/ysha/aicomputing101/quantum-computing-101/outputs
+
+      - qc101-cache-amd:/home/qc101/.cache  # Jupyter development environment (CPU)
+
+      - /dev/kfd:/dev/kfd  jupyter-cpu:
+
+      - /dev/dri:/dev/dri    build:
+
+    ports:      context: ..
+
+      - "8890:8888"  # Jupyter Lab (different port)      dockerfile: docker/Dockerfile.cpu
+
+      - "6008:6006"  # TensorBoard    image: quantum101:cpu
+
+    networks:    container_name: qc101-jupyter-cpu
+
+      - qc101-network    ports:
+
+    devices:      - "8888:8888"
+
+      - /dev/kfd    volumes:
+
+      - /dev/dri      - ../examples:/home/qc101/quantum-computing-101/examples
+
+    group_add:      - ../outputs:/home/qc101/quantum-computing-101/outputs
+
+      - video      - ../modules:/home/qc101/quantum-computing-101/modules:ro
+
+      - render      - jupyter-cpu-workspace:/home/qc101/workspace
+
+    restart: unless-stopped    working_dir: /home/qc101/quantum-computing-101/examples
+
+    stdin_open: true    environment:
+
+    tty: true      - PYTHONPATH=/home/qc101/quantum-computing-101
+
       - JUPYTER_ENABLE_LAB=yes
-    command: >
-      bash -c "pip install --quiet jupyter jupyterlab ipywidgets &&
-               echo 'Starting Jupyter Lab on http://localhost:8888' &&
-               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser 
-               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
-    networks:
-      - quantum-net
+
+# =============================================================================    command: >
+
+# Networks      bash -c "pip install --quiet jupyter jupyterlab ipywidgets &&
+
+# =============================================================================               echo 'Starting Jupyter Lab on http://localhost:8888' &&
+
+networks:               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser 
+
+  qc101-network:               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+
+    driver: bridge    networks:
+
+    name: qc101-network      - quantum-net
+
     restart: unless-stopped
 
-  # Jupyter development environment (NVIDIA GPU)
-  jupyter-gpu-nvidia:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.gpu-nvidia
-    image: quantum101:gpu-nvidia
-    container_name: qc101-jupyter-gpu-nvidia
-    ports:
-      - "8889:8888"
+# =============================================================================
+
+# Volumes (for persistent cache)  # Jupyter development environment (NVIDIA GPU)
+
+# =============================================================================  jupyter-gpu-nvidia:
+
+volumes:    build:
+
+  qc101-cache:      context: ..
+
+    name: qc101-cache-cpu      dockerfile: docker/Dockerfile.gpu-nvidia
+
+  qc101-cache-nvidia:    image: quantum101:gpu-nvidia
+
+    name: qc101-cache-nvidia    container_name: qc101-jupyter-gpu-nvidia
+
+  qc101-cache-amd:    ports:
+
+    name: qc101-cache-amd      - "8889:8888"
+
     volumes:
       - ../examples:/home/qc101/quantum-computing-101/examples
       - ../outputs:/home/qc101/quantum-computing-101/outputs

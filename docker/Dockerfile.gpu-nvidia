@@ -2,7 +2,7 @@
 # Multi-stage build optimized for NVIDIA GPU acceleration
 
 # Stage 1: Base CUDA environment
-FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04 as cuda-base
+FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04 AS cuda-base
 
 # Set labels for metadata
 LABEL maintainer="Quantum Computing 101"
@@ -51,7 +51,7 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python && \
     ln -sf /usr/bin/python3.12 /usr/bin/python3
 
 # Stage 2: Python dependencies
-FROM cuda-base as python-deps
+FROM cuda-base AS python-deps
 
 # Upgrade pip and install build tools
 RUN pip install --no-cache-dir --break-system-packages --ignore-installed --upgrade pip setuptools wheel
@@ -68,7 +68,7 @@ RUN sed '/^qiskit-aer/d' /tmp/requirements/base.txt > /tmp/requirements/base-no-
 RUN pip install --no-cache-dir --break-system-packages -r /tmp/requirements/gpu-nvidia.txt
 
 # Stage 3: Application setup
-FROM python-deps as app-setup
+FROM python-deps AS app-setup
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash --uid 1000 qc101
@@ -87,7 +87,7 @@ RUN mkdir -p /home/qc101/quantum-computing-101/outputs && \
     chown -R qc101:qc101 /home/qc101/quantum-computing-101/outputs
 
 # Stage 4: Final runtime image
-FROM app-setup as runtime
+FROM app-setup AS runtime
 
 # Switch to non-root user
 USER qc101
