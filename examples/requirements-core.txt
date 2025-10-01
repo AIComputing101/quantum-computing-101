@@ -1,5 +1,8 @@
-# Core Requirements for Quantum Computing 101
-# Minimal dependencies needed to run basic examples (Modules 1-4)
+# Core Requirements for Quantum Computing 101 (Minimal Install)
+# Purpose: Minimal dependencies needed to run basic examples (Modules 1-4 only)
+# Used by: Users who want lightweight installation without advanced features
+# Note: Does not include ML frameworks, cloud SDKs, or Jupyter
+# For full features, use requirements.txt instead
 
 # Core quantum computing framework
 qiskit>=1.0.0

@@ -17,7 +17,13 @@ def read_readme():
 # Read requirements from file
 def read_requirements(filename):
     with open(os.path.join("examples", filename), "r", encoding="utf-8") as fh:
-        return [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+        return [
+            line.strip() 
+            for line in fh 
+            if line.strip() 
+            and not line.startswith("#") 
+            and not line.startswith("-r")
+        ]
 
 setup(
     name="quantum-computing-101",

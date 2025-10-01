@@ -1,4 +1,8 @@
-# Requirements for Quantum Computing 101 Examples
+# Local Development Requirements for Quantum Computing 101 Examples
+# Purpose: Complete package set for running ALL examples WITHOUT Docker
+# Used by: Local pip installation, CI/CD pipelines, manual setup
+# Sync: Keep core packages aligned with docker/requirements/base.txt
+# Note: Some packages (Jupyter, cloud SDKs) intentionally overlap with Docker for flexibility
 
 # Core quantum computing frameworks (required)
 qiskit>=1.0.0
@@ -38,9 +42,10 @@ boto3>=1.34.0
 # azure-quantum>=0.28.0  # Optional - not actively used in current examples
 
 # Jupyter support (optional - for notebook development)
-jupyter>=1.0.0
-ipywidgets>=8.1.0
-jupyterlab>=4.1.0
+# Note: Already included in Docker images. Uncomment for local Jupyter development:
+# jupyter>=1.0.0
+# ipywidgets>=8.1.0
+# jupyterlab>=4.1.0
 
 # Development and testing utilities (moved to requirements-dev.txt)
 # pytest>=7.4.0

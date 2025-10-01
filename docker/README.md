@@ -1,385 +1,540 @@
-# 🐳 Docker Setup for Quantum Computing 101 v2.0
+# Quantum Computing 101 - Docker Setup Guide
 
-This directory contains Docker configurations for running Quantum Computing 101 examples with comprehensive GPU support including both NVIDIA CUDA and AMD ROCm acceleration.
+## Table of Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Volume Mounting & Development Workflow](#volume-mounting--development-workflow)
+- [Directory Structure](#directory-structure)
+- [Environment Variables](#environment-variables)
+- [Jupyter Lab Access](#jupyter-lab-access)
+- [Advanced Configuration](#advanced-configuration)
+- [Troubleshooting](#troubleshooting)
+- [Migration Guide](#migration-guide)
 
-## 🚀 Quick Start
+## Overview
 
-### Prerequisites
-- Docker installed and running
-- For NVIDIA GPU: NVIDIA Docker runtime and CUDA-compatible drivers  
-- For AMD GPU: ROCm drivers and /dev/kfd, /dev/dri device access
+This Docker setup provides a unified, flexible solution for running Quantum Computing 101 across different hardware configurations:
 
-### CPU-Only (Recommended for Learning)
+- **CPU Only**: Lightweight container for systems without GPU
+- **NVIDIA GPU**: CUDA-accelerated quantum computing with PyTorch 2.8.0 + CUDA 12.9
+- **AMD GPU**: ROCm-accelerated quantum computing with latest ROCm PyTorch
+
+## Architecture
+
+### Unified Dockerfile Approach
+
+The new `Dockerfile` uses multi-stage builds with build arguments to create different variants from a single source:
+
+```
+Base Images:
+├── CPU:    python:3.12-slim
+├── NVIDIA: pytorch/pytorch:2.8.0-cuda12.9-cudnn9-devel
+└── AMD:    rocm/pytorch:latest
+
+Build Stages:
+1. base           → Select base image variant
+2. system-deps    → Install common system dependencies
+3. python-setup   → Setup Python environment
+4. deps-{variant} → Install variant-specific dependencies
+5. app-setup      → Copy application code
+6. runtime        → Final optimized image
+```
+
+### Benefits
+
+✅ **Single Source of Truth**: One Dockerfile for all variants
+✅ **Reduced Duplication**: Shared stages minimize maintenance
+✅ **Build Arguments**: Flexible version control
+✅ **Layer Caching**: Optimized build times
+✅ **Best Practices**: Multi-stage, minimal layers, non-root user
+
+## Quick Start
+
+### Building Images
+
 ```bash
-# Build and run CPU container
+# Build CPU variant
+./build-unified.sh cpu
+
+# Build NVIDIA GPU variant
+./build-unified.sh nvidia
+
+# Build AMD GPU variant
+./build-unified.sh amd
+
+# Build all variants
+./build-unified.sh all
+
+# Build without cache
+./build-unified.sh nvidia --no-cache
+```
+
+### Using Docker Compose
+
+```bash
+# Start CPU container
+docker-compose up -d qc101-cpu
+
+# Start NVIDIA GPU container
+docker-compose up -d qc101-nvidia
+
+# Start AMD GPU container
+docker-compose up -d qc101-amd
+
+# View logs
+docker-compose logs -f qc101-nvidia
+
+# Stop containers
+docker-compose down
+```
+
+### Manual Docker Run
+
+```bash
+# CPU variant
+docker run -it --rm \
+  -v $(pwd)/../examples:/home/qc101/quantum-computing-101/examples \
+  quantum-computing-101:cpu
+
+# NVIDIA GPU variant
+docker run -it --rm \
+  --gpus all \
+  -v $(pwd)/../examples:/home/qc101/quantum-computing-101/examples \
+  quantum-computing-101:nvidia
+
+# AMD GPU variant
+docker run -it --rm \
+  --device=/dev/kfd --device=/dev/dri \
+  --group-add video --group-add render \
+  -v $(pwd)/../examples:/home/qc101/quantum-computing-101/examples \
+  quantum-computing-101:amd
+```
+
+## Volume Mounting & Development Workflow
+
+### Current Setup
+
+The `docker-compose.yml` configures volume mounts for seamless host-container development:
+
+```yaml
+volumes:
+  - ../examples:/home/qc101/quantum-computing-101/examples
+  - ../outputs:/home/qc101/quantum-computing-101/outputs
+  - ../modules:/home/qc101/quantum-computing-101/modules:ro
+```
+
+**What this means:**
+- ✅ Edit files in `examples/` on host → Changes appear instantly in container
+- ✅ Container outputs save to `outputs/` → Visible on host immediately
+- ✅ `modules/` mounted read-only (`:ro`) → Protected from container modifications
+
+### Development Workflows
+
+#### 1. Using Docker Compose (Recommended)
+
+```bash
+# Start container with volume mounts
 cd docker
-./build.sh cpu
-./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
+docker compose up qc101-nvidia
 
-# Interactive session
-./run.sh -v cpu -i
+# In another terminal, edit files on host
+cd ../examples/module1_fundamentals
+vim 01_classical_vs_quantum_bits.py
+
+# Changes are instantly available in container!
 ```
 
-### NVIDIA GPU Acceleration
+#### 2. Interactive Development Workflow
+
 ```bash
-# Build NVIDIA GPU container
-cd docker
-./build.sh gpu-nvidia
+# Start container in background
+docker compose up -d qc101-nvidia
 
-# Run GPU-accelerated ML example
-./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py
+# Exec into container
+docker exec -it qc101-nvidia bash
 
-# Interactive GPU session
-./run.sh -v gpu-nvidia -i
+# Inside container - your edits from host are visible
+cd /home/qc101/quantum-computing-101/examples
+python module1_fundamentals/01_classical_vs_quantum_bits.py
 ```
 
-### AMD ROCm GPU Acceleration
+#### 3. Jupyter Notebook with Volume Mounts
+
 ```bash
-# Build AMD ROCm container
-cd docker
-./build.sh gpu-amd
+# Start with Jupyter
+docker compose up qc101-nvidia
 
-# Run with ROCm acceleration
-./run.sh -v gpu-amd -e module6_machine_learning/01_quantum_neural_network.py
-
-# Interactive ROCm session
-./run.sh -v gpu-amd -i
+# Access Jupyter at http://localhost:8889
+# All notebooks saved in container → Synced to host examples/
 ```
 
-## 📦 Container Variants
+### Advanced Volume Configurations
 
-### 1. **quantum101:cpu** - Lightweight CPU-only
-- **Base**: Python 3.12 slim  
-- **Size**: ~1.2GB
-- **Hardware**: Any x86_64 with Docker
-- **Use cases**: Learning, basic examples, development
-- **Optimizations**: OpenBLAS, CPU-tuned linear algebra
-- **Memory**: 1-4GB recommended
+#### Option A: Mount Entire Project (Full Development Mode)
 
-### 2. **quantum101:gpu-nvidia** - NVIDIA CUDA Acceleration
-- **Base**: NVIDIA CUDA 12.2 Ubuntu 22.04
-- **Size**: ~3.5GB  
-- **Hardware**: NVIDIA GPU + CUDA drivers + nvidia-docker
-- **Use cases**: Large simulations (>15 qubits), quantum ML, research
-- **GPU Memory**: 4GB+ recommended
-- **Features**:
-  - CUDA 12.2+ with cuDNN
-  - GPU-accelerated Qiskit Aer simulator
-  - PyTorch with CUDA support
-  - CuPy for GPU array operations
-  - TensorBoard for ML visualization
+Edit `docker-compose.yml`:
 
-### 3. **quantum101:gpu-amd** - AMD ROCm Acceleration  
-- **Base**: ROCm 5.6 Ubuntu 22.04
-- **Size**: ~3.2GB
-- **Hardware**: AMD GPU + ROCm drivers + device access
-- **Use cases**: AMD GPU ML acceleration, ROCm development
-- **GPU Memory**: 4GB+ recommended  
-- **Features**:
-  - ROCm 5.6 with HIP support
-  - PyTorch with ROCm support
-  - Limited Qiskit GPU acceleration (CPU fallback for most quantum ops)
-  - Experimental CuPy ROCm support
+```yaml
+volumes:
+  # Mount entire project for maximum flexibility
+  - ..:/home/qc101/quantum-computing-101
+  # But exclude certain directories
+  - /home/qc101/quantum-computing-101/.git
+  - /home/qc101/quantum-computing-101/__pycache__
+```
 
-### 4. **quantum101:base** - Development Base
-- **Base**: Multi-stage optimized build
-- **Use cases**: Custom extensions, advanced development
+**Use when:** Developing library code, not just examples
 
-## 🎯 Performance Comparisons
+#### Option B: Selective File Mounting
 
-### Quantum Simulation Benchmarks
-| Operation | CPU (8 cores) | NVIDIA RTX 4080 | AMD RX 7900XT | Speedup (NVIDIA) |
-|-----------|---------------|-----------------|---------------|------------------|
-| 20-qubit simulation | 45s | 8s | 42s* | 5.6x |
-| VQE optimization | 120s | 22s | 115s* | 5.5x |
-| Quantum ML training | 300s | 35s | 85s | 8.6x |
-| Grover's (15 qubits) | 12s | 3s | 11s* | 4x |
+```yaml
+volumes:
+  # Mount specific files/directories only
+  - ../examples:/home/qc101/quantum-computing-101/examples
+  - ../outputs:/home/qc101/quantum-computing-101/outputs
+  - ../src:/home/qc101/quantum-computing-101/src
+  - ../tests:/home/qc101/quantum-computing-101/tests
+```
 
-*AMD ROCm acceleration limited by quantum computing framework support
+**Use when:** You want precise control over what's mounted
 
-### Memory Usage by Variant
-| Variant | Base Image | Dependencies | Runtime Peak | GPU Memory |
-|---------|------------|--------------|--------------|------------|
-| cpu | 120MB | 1.2GB | 2-4GB | N/A |
-| gpu-nvidia | 2.1GB | 3.5GB | 4-8GB | 2-8GB |
-| gpu-amd | 1.8GB | 3.2GB | 4-8GB | 2-8GB |
+#### Option C: Using .dockerignore
 
-## 🔧 Advanced Usage
+Create `docker/.dockerignore`:
 
-### Docker Compose (Multi-Service)
+```
+.git
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+node_modules
+*.log
+```
+
+Then mount entire project:
+```yaml
+volumes:
+  - ..:/home/qc101/quantum-computing-101
+```
+
+### Docker Run Command with Volume Mounts
+
+If not using docker-compose:
+
 ```bash
-# Start all services
-docker-compose up -d
+# NVIDIA GPU variant
+docker run -it --rm \
+  --gpus all \
+  -v "$(pwd)/../examples:/home/qc101/quantum-computing-101/examples" \
+  -v "$(pwd)/../outputs:/home/qc101/quantum-computing-101/outputs" \
+  -p 8889:8888 \
+  quantum-computing-101:nvidia
 
-# Start specific variant
-docker-compose up quantum101-gpu-nvidia
-
-# Jupyter environments
-docker-compose up jupyter-cpu        # http://localhost:8888
-docker-compose up jupyter-gpu-nvidia # http://localhost:8889
-docker-compose up jupyter-gpu-amd    # http://localhost:8890
-
-# Development container
-docker-compose up quantum101-dev
+# CPU variant
+docker run -it --rm \
+  -v "$(pwd)/../examples:/home/qc101/quantum-computing-101/examples" \
+  -v "$(pwd)/../outputs:/home/qc101/quantum-computing-101/outputs" \
+  -p 8888:8888 \
+  quantum-computing-101:cpu
 ```
 
-### Build Script Options
+### VS Code Dev Container Integration
+
+Create `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "Quantum Computing 101",
+  "dockerComposeFile": "../docker/docker-compose.yml",
+  "service": "qc101-nvidia",
+  "workspaceFolder": "/home/qc101/quantum-computing-101",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true
+      }
+    }
+  },
+  
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/home/qc101/quantum-computing-101,type=bind,consistency=cached"
+  ],
+  
+  "remoteUser": "qc101"
+}
+```
+
+Then in VS Code: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+
+### Performance Considerations
+
+#### Linux/Mac (Native Docker)
+- Volume mounts are fast (native filesystem)
+- Use `consistency=cached` for better performance (macOS)
+
+#### Windows (WSL2)
+- Store project in WSL2 filesystem (`/home/user/project`)
+- Avoid mounting from `/mnt/c/` (slow)
+
+#### Example for Mac (Performance Tuning)
+```yaml
+volumes:
+  - ../examples:/home/qc101/quantum-computing-101/examples:cached
+  - ../outputs:/home/qc101/quantum-computing-101/outputs:delegated
+```
+
+- `:cached` - Host writes, container reads (good for code)
+- `:delegated` - Container writes, host reads (good for outputs)
+
+### Volume Mounting Best Practices
+
+1. **Use Docker Compose** for consistent volume configuration
+2. **Mount only what you need** to avoid clutter
+3. **Use read-only (`:ro`)** for reference materials
+4. **Separate data volumes** for outputs and cache
+5. **Add .dockerignore** to exclude unnecessary files
+6. **Test both directions**: Host→Container and Container→Host writes
+
+### Quick Reference Table
+
+| Scenario | Volume Mount | Description |
+|----------|--------------|-------------|
+| Edit examples | `../examples:/container/examples` | Live code editing |
+| Save outputs | `../outputs:/container/outputs` | Persist results |
+| Read-only docs | `../docs:/container/docs:ro` | Reference only |
+| Full project | `..:/container/project` | Complete access |
+| Named volume | `cache:/home/user/.cache` | Persistent cache |
+
+### Testing Your Volume Setup
+
 ```bash
-# Build specific variants
-./build.sh cpu           # CPU-only (always available)
-./build.sh gpu-nvidia    # NVIDIA CUDA (requires nvidia-docker)
-./build.sh gpu-amd       # AMD ROCm (requires ROCm drivers)
-./build.sh base          # Development base
-./build.sh all           # All available variants
-./build.sh clean         # Remove all images
+# Test host → container
+echo "test from host" > ../examples/test.txt
+docker exec qc101-nvidia cat /home/qc101/quantum-computing-101/examples/test.txt
 
-# Build with hardware detection
-./build.sh               # Auto-detects available hardware
+# Test container → host
+docker exec qc101-nvidia bash -c "echo 'test from container' > /home/qc101/quantum-computing-101/outputs/test.txt"
+cat ../outputs/test.txt
+
+# Cleanup
+rm ../examples/test.txt ../outputs/test.txt
 ```
 
-### Run Script Options
+## Directory Structure
+
+```
+docker/
+├── Dockerfile              # Unified multi-variant Dockerfile
+├── docker-compose.yml      # Multi-service compose configuration
+├── build-unified.sh        # Unified build script
+├── entrypoint.sh          # Container entry point
+├── requirements/
+│   ├── base.txt           # Common dependencies
+│   ├── cpu.txt            # CPU-specific dependencies
+│   ├── gpu-nvidia.txt     # NVIDIA GPU dependencies
+│   └── gpu-amd.txt        # AMD GPU dependencies
+├── build.sh               # [DEPRECATED] Old build script
+├── Dockerfile.base        # [DEPRECATED] Old base Dockerfile
+├── Dockerfile.cpu         # [DEPRECATED] Old CPU Dockerfile
+├── Dockerfile.gpu-nvidia  # [DEPRECATED] Old NVIDIA Dockerfile
+└── Dockerfile.gpu-amd     # [DEPRECATED] Old AMD Dockerfile
+```
+
+## Requirements Files Structure
+
+### base.txt
+Common dependencies for all variants:
+- Qiskit core frameworks
+- Scientific computing (NumPy, SciPy, Matplotlib)
+- Machine learning (scikit-learn)
+- Jupyter Lab
+
+### cpu.txt
+CPU-optimized packages:
+- PyTorch CPU version
+- TensorFlow CPU version
+
+### gpu-nvidia.txt
+NVIDIA GPU-optimized packages:
+- CuPy (CUDA arrays)
+- qiskit-aer-gpu (GPU-accelerated quantum simulation)
+- PyTorch CUDA support
+- CUDA tools and monitoring
+
+### gpu-amd.txt
+AMD GPU-optimized packages:
+- ROCm-specific tools
+- qiskit-aer (with ROCm support)
+
+## Environment Variables
+
+### Common
+- `QC101_VARIANT`: cpu|gpu-nvidia|gpu-amd
+- `PYTHONUNBUFFERED=1`: Real-time Python output
+- `MPLBACKEND=Agg`: Non-interactive matplotlib backend
+
+### NVIDIA-Specific
+- `NVIDIA_VISIBLE_DEVICES=all`: Expose all GPUs
+- `NVIDIA_DRIVER_CAPABILITIES=compute,utility`: GPU capabilities
+- `CUDA_VISIBLE_DEVICES=all`: CUDA device visibility
+
+### AMD-Specific
+- `ROCM_VISIBLE_DEVICES=all`: Expose all ROCm devices
+- `HIP_VISIBLE_DEVICES=all`: HIP device visibility
+
+## Jupyter Lab Access
+
+Each variant runs Jupyter Lab on different ports to avoid conflicts:
+
+- CPU: http://localhost:8888
+- NVIDIA: http://localhost:8889
+- AMD: http://localhost:8890
+
+Start Jupyter Lab inside container:
 ```bash
-# Basic usage
-./run.sh [OPTIONS]
-
-# Variants
-./run.sh -v cpu                    # CPU-only
-./run.sh -v gpu-nvidia            # NVIDIA GPU
-./run.sh -v gpu-amd               # AMD ROCm
-
-# Modes
-./run.sh -i                       # Interactive shell
-./run.sh -j                       # Jupyter Lab
-./run.sh -e MODULE/EXAMPLE.py     # Run example
-./run.sh -l                       # List examples
-./run.sh --info                   # Hardware info
-
-# Examples with arguments
-./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py --epochs 50
-./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py --shots 10000
+jupyter lab --ip=0.0.0.0 --port=8888 --no-browser
 ```
 
-## 🛠️ Requirements Architecture
+## Advanced Configuration
 
-The new requirements system uses a modular approach for optimal Docker layer caching:
+### Custom PyTorch/CUDA Versions
 
-```
-docker/requirements/
-├── base.txt          # Core quantum frameworks (Qiskit, Cirq, PennyLane)
-├── cpu.txt           # CPU optimizations + base requirements
-├── gpu-nvidia.txt    # NVIDIA CUDA packages + base requirements  
-└── gpu-amd.txt       # AMD ROCm packages + base requirements
-```
+Edit `build-unified.sh` or pass build args:
 
-**Benefits:**
-- **Layer Caching**: Base requirements cached separately from GPU-specific packages
-- **Faster Builds**: Only GPU layers rebuilt when GPU requirements change
-- **Smaller Images**: No unnecessary packages in each variant
-- **Maintainability**: Clear separation of concerns
-
-## 🎓 Educational Benefits
-
-### For Students
-- **Zero Setup**: Docker handles all dependencies
-- **Consistent Results**: Identical environment across all machines
-- **Hardware Scaling**: Progress from CPU to GPU as needed
-- **Cloud Ready**: Easy deployment to cloud GPU instances
-
-### For Educators  
-- **Classroom Deployment**: Students only need Docker
-- **Resource Management**: CPU limits prevent system overload
-- **Multi-Platform**: Works on Windows/Mac/Linux
-- **Scalable**: Deploy to cloud for entire classes
-
-### For Researchers
-- **GPU Acceleration**: 5-8x speedup for large quantum simulations
-- **Reproducible Research**: Exact environment sharing
-- **Multi-GPU Support**: NVIDIA and AMD compatibility
-- **Cloud Integration**: Easy scaling to cloud GPU clusters
-
-## 🚨 Hardware Requirements & Setup
-
-### NVIDIA GPU Setup
 ```bash
-# Install NVIDIA Docker (Ubuntu)
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-sudo apt-get update && sudo apt-get install -y nvidia-docker2
-sudo systemctl restart docker
-
-# Test NVIDIA Docker
-docker run --rm --gpus all nvidia/cuda:12.2-base-ubuntu22.04 nvidia-smi
+docker build \
+  --build-arg VARIANT=nvidia \
+  --build-arg PYTORCH_VERSION=2.9.0 \
+  --build-arg CUDA_VERSION=12.9 \
+  --build-arg CUDNN_VERSION=9 \
+  -t quantum-computing-101:nvidia-custom \
+  -f docker/Dockerfile .
 ```
 
-### AMD ROCm Setup
-```bash
-# Install ROCm (Ubuntu 22.04)
-wget -q -O - https://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
-echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/5.6/ ubuntu main' | sudo tee /etc/apt/sources.list.d/rocm.list
-sudo apt update && sudo apt install -y rocm-dev
+### Multi-GPU Configuration
 
-# Add user to render group
-sudo usermod -a -G render,video $USER
-newgrp render
-
-# Test ROCm access
-ls -la /dev/kfd /dev/dri
+```yaml
+# docker-compose.yml
+deploy:
+  resources:
+    reservations:
+      devices:
+        - driver: nvidia
+          device_ids: ['0', '1']  # Specific GPUs
+          capabilities: [gpu]
 ```
 
-### Minimum Hardware Specifications
-| Component | CPU Variant | NVIDIA GPU | AMD ROCm |
-|-----------|-------------|------------|----------|
-| RAM | 4GB | 8GB | 8GB |
-| Storage | 5GB | 15GB | 12GB |
-| CPU | 2 cores | 4+ cores | 4+ cores |
-| GPU | None | 4GB+ VRAM | 4GB+ VRAM |
+## Troubleshooting
 
-## 🛡️ Security Features
+### NVIDIA GPU not detected
 
-- **Non-root Execution**: All containers run as user `qc101` (UID 1000)
-- **Read-only Mounts**: Modules and examples mounted read-only by default
-- **Resource Limits**: Memory and CPU constraints in docker-compose
-- **Health Checks**: Automatic container health monitoring
-- **Network Isolation**: Custom Docker network for service communication
-- **Secure Defaults**: No hardcoded passwords or keys
-
-## 🐛 Troubleshooting Guide
-
-### Common Build Issues
 ```bash
-# Docker out of space
-docker system prune -a
-docker builder prune
-
-# Permission denied
-sudo chown -R $USER:$USER outputs/
-sudo usermod -a -G docker $USER
-
-# NVIDIA Docker not found
-sudo systemctl restart docker
-docker run --rm --gpus all nvidia/cuda:12.2-base-ubuntu22.04 nvidia-smi
-```
-
-### GPU Detection Issues
-```bash
-# NVIDIA: Check drivers and runtime
+# Check NVIDIA driver
 nvidia-smi
-docker run --rm --gpus all nvidia/cuda:12.2-base-ubuntu22.04 nvidia-smi
 
-# AMD: Check device access
-ls -la /dev/kfd /dev/dri
-groups | grep -E 'render|video'
+# Check Docker NVIDIA runtime
+docker run --rm --gpus all nvidia/cuda:12.9.1-base nvidia-smi
+
+# Install nvidia-container-toolkit if missing
+sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
 ```
 
-### Performance Issues
+### AMD GPU issues
+
 ```bash
-# Monitor container resources
-docker stats
+# Check ROCm installation
+rocm-smi
 
-# Check GPU usage
-nvidia-smi  # NVIDIA
-rocm-smi    # AMD
+# Verify device permissions
+ls -l /dev/kfd /dev/dri
 
-# Container hardware info
-./run.sh -v gpu-nvidia --info
+# Add user to video/render groups
+sudo usermod -a -G video,render $USER
 ```
 
-### Port Conflicts
+### Build failures
+
 ```bash
-# Find running services
-netstat -tlnp | grep :888
-lsof -i :8888
+# Clean Docker cache
+docker builder prune -a
 
-# Use alternative ports
-./run.sh -j  # Will auto-detect and use alternative port
+# Rebuild without cache
+./build-unified.sh nvidia --no-cache
+
+# Check disk space
+df -h
 ```
 
-## 📊 Container Orchestration Examples
+### Volume Mount Issues
 
-### Development Workflow
+#### Permission Problems
 ```bash
-# Terminal 1: Build all variants
-./build.sh all
-
-# Terminal 2: Start Jupyter for development
-./run.sh -v gpu-nvidia -j
-
-# Terminal 3: Run tests in CPU container
-./run.sh -v cpu -e verify_examples.py
-
-# Terminal 4: Interactive debugging
-./run.sh -v cpu -i
+# Fix ownership if needed
+docker exec -it qc101-nvidia chown -R qc101:qc101 /home/qc101/quantum-computing-101
 ```
 
-### Classroom Deployment
+#### Files Not Syncing
 ```bash
-# Teacher setup (cloud VM)
-git clone https://github.com/your-repo/quantum-computing-101.git
-cd quantum-computing-101/docker
-./build.sh all
+# Restart container to remount volumes
+docker compose restart qc101-nvidia
 
-# Deploy Jupyter for each student
-for student in {1..30}; do
-  docker run -d --name qc101-student-$student \
-    -p $((8888 + student)):8888 \
-    -v ./student-$student:/home/qc101/workspace \
-    quantum101:cpu \
-    jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
-done
+# Or recreate container
+docker compose down
+docker compose up qc101-nvidia
 ```
 
-### Research Scaling  
+#### Check Mount Points
 ```bash
-# Multi-GPU research setup
-docker-compose -f docker-compose.yml -f docker-compose.research.yml up -d
-
-# Run parameter sweep across containers
-for params in param1 param2 param3; do
-  ./run.sh -v gpu-nvidia -e module6_machine_learning/research_experiment.py --params $params &
-done
+# Inside container, verify mounts
+docker exec -it qc101-nvidia df -h
+docker exec -it qc101-nvidia mount | grep qc101
 ```
 
-## 📚 Additional Resources
+## Migration Guide
 
-### Documentation
-- **[Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)**
-- **[NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker)**  
-- **[AMD ROCm Docker](https://rocmdocs.amd.com/en/latest/Installation_Guide/Docker.html)**
+### From Old Structure to New
 
-### Quantum Computing Frameworks
-- **[Qiskit GPU Backend](https://qiskit.org/documentation/apidoc/aer_gpu.html)**
-- **[Cirq Simulation](https://quantumai.google/cirq/simulate/simulation)**
-- **[PennyLane Devices](https://pennylane.readthedocs.io/en/stable/introduction/devices.html)**
+1. **Backup old files** (already done as `.old` files)
+2. **Use new build script**: `./build-unified.sh` instead of `./build.sh`
+3. **Update compose commands**: Use service names `qc101-cpu`, `qc101-nvidia`, `qc101-amd`
+4. **Check requirements**: Verify your dependencies in consolidated `requirements/` files
 
-### Performance Optimization
-- **[Docker BuildKit](https://docs.docker.com/develop/dev-best-practices/#use-multi-stage-builds)**
-- **[GPU Memory Management](https://pytorch.org/docs/stable/notes/cuda.html#memory-management)**
-- **[Quantum Circuit Optimization](https://qiskit.org/textbook/ch-quantum-hardware/error-correction-repetition-code.html)**
+### Key Changes
 
----
+- ✅ Single `Dockerfile` instead of 4 separate files
+- ✅ Unified `build-unified.sh` script
+- ✅ Updated `docker-compose.yml` with 3 services
+- ✅ Centralized `entrypoint.sh` for all variants
+- ✅ Improved layer caching and build times
 
-## 🎯 Quick Reference Commands
+## Performance Tips
 
-### Essential Commands
-```bash
-# Build and run CPU variant
-./build.sh cpu && ./run.sh -v cpu -i
+1. **Use BuildKit**: `DOCKER_BUILDKIT=1 ./build-unified.sh nvidia`
+2. **Parallel builds**: Build multiple variants simultaneously
+3. **Volume mounts**: Use volumes for `examples/` and `outputs/` for hot-reloading
+4. **Cache volumes**: Persistent pip cache across rebuilds
 
-# Build and run NVIDIA GPU variant  
-./build.sh gpu-nvidia && ./run.sh -v gpu-nvidia -i
+## Contributing
 
-# Start Jupyter Lab (auto-detects available GPU)
-./run.sh -j
+When adding new dependencies:
 
-# Run example with GPU acceleration
-./run.sh -v gpu-nvidia -e module6_machine_learning/01_quantum_neural_network.py
+1. Add to appropriate `requirements/*.txt` file
+2. Test build: `./build-unified.sh <variant> --no-cache`
+3. Verify in container: `docker run -it quantum-computing-101:<variant>`
+4. Update this README if needed
 
-# List all available examples
-./run.sh -l
+## License
 
-# Clean up everything
-./build.sh clean
-```
-
-Ready to explore quantum computing with Docker! 🚀⚛️
+This Docker setup is part of the Quantum Computing 101 project.
+See main project LICENSE for details.
