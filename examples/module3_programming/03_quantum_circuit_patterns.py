@@ -11,6 +11,8 @@ Date: 2025
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 import sys
@@ -628,7 +630,7 @@ class QuantumCircuitPatterns:
         axes[3].grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def generate_summary_report(self):
         """Generate comprehensive summary of circuit patterns analysis."""

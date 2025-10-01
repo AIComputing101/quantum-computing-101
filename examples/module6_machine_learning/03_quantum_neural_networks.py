@@ -7,9 +7,11 @@ Implementation of quantum neural networks with gradient computation and hybrid a
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 
@@ -109,8 +111,9 @@ class QuantumNeuralNetwork:
         for obs in observables:
             if obs == "Z0":
                 # Measure Z expectation on first qubit
-                meas_circuit = circuit.copy()
-                meas_circuit.add_register(ClassicalRegister(1))
+                from qiskit.circuit import QuantumCircuit
+                meas_circuit = QuantumCircuit(circuit.num_qubits, 1)
+                meas_circuit.compose(circuit, inplace=True)
                 meas_circuit.measure(0, 0)
 
                 simulator = AerSimulator()
@@ -127,8 +130,9 @@ class QuantumNeuralNetwork:
                 # Measure Z on specified qubit
                 qubit_idx = int(obs[1:])
                 if qubit_idx < self.n_qubits:
-                    meas_circuit = circuit.copy()
-                    meas_circuit.add_register(ClassicalRegister(1))
+                    from qiskit.circuit import QuantumCircuit
+                    meas_circuit = QuantumCircuit(circuit.num_qubits, 1)
+                    meas_circuit.compose(circuit, inplace=True)
                     meas_circuit.measure(qubit_idx, 0)
 
                     simulator = AerSimulator()
@@ -645,7 +649,7 @@ class QNNAnalyzer:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

@@ -7,6 +7,8 @@ Implementation of hardware noise characterization and error analysis techniques.
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import (
@@ -826,7 +828,7 @@ def visualize_error_analysis(
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():
@@ -910,7 +912,6 @@ def main():
 
             qft = QFT(3)
             test_circuit = qft.decompose()
-            test_circuit.add_register(ClassicalRegister(3))
             test_circuit.measure_all()
         else:  # random
             test_circuit = QuantumCircuit(3, 3)

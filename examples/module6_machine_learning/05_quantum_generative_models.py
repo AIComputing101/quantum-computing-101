@@ -7,9 +7,11 @@ Implementation of quantum generative models including quantum GANs and Born mach
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
 from sklearn.datasets import make_moons, make_circles, make_blobs
@@ -670,7 +672,7 @@ class GenerativeModelAnalyzer:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

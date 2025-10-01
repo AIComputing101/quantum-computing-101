@@ -21,6 +21,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.visualization import plot_bloch_multivector, plot_histogram
@@ -285,7 +287,7 @@ Step 4: Bob applies corrections → Gets |ψ⟩!
     plt.savefig(
         "module1_06_teleportation_explanation.png", dpi=300, bbox_inches="tight"
     )
-    plt.show()
+    plt.close()
 
     print("💾 Saved: module1_06_teleportation_explanation.png")
     return True

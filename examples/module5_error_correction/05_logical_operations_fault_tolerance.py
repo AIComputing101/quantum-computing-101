@@ -7,9 +7,11 @@ Implementation of fault-tolerant logical operations and analysis of fault tolera
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from qiskit.quantum_info import Statevector, Operator
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
@@ -362,7 +364,7 @@ class FaultTolerantOperations:
         ax4_twin.legend(loc="upper right")
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

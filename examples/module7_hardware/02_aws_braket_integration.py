@@ -7,6 +7,8 @@ Implementation of Amazon Braket integration with multiple quantum providers.
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 import os
@@ -722,7 +724,7 @@ class BraketAnalyzer:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

@@ -21,6 +21,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.visualization import plot_histogram
@@ -431,7 +433,7 @@ def visualize_bb84_protocol():
         "BB84 Quantum Key Distribution Protocol", fontsize=16, fontweight="bold"
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

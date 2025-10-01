@@ -18,6 +18,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import (
     QuantumCircuit,
@@ -204,7 +206,7 @@ def demonstrate_parameterized_circuits():
 
     plt.tight_layout()
     plt.savefig("module3_01_parameterized_circuits.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return qc, parameter_dict
 
@@ -271,7 +273,7 @@ def demonstrate_circuit_optimization():
 
     plt.tight_layout()
     plt.savefig("module3_01_circuit_optimization.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return optimized_circuits
 
@@ -464,7 +466,7 @@ def demonstrate_advanced_measurements():
 
     plt.tight_layout()
     plt.savefig("module3_01_advanced_measurements.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return results
 
@@ -581,7 +583,7 @@ def benchmark_circuit_construction():
 
     plt.tight_layout()
     plt.savefig("module3_01_construction_benchmark.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return times, circuits
 

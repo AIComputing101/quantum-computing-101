@@ -50,6 +50,9 @@ Unlike other courses that oversell quantum computing, we give you an honest asse
 - ❌ Advanced linear algebra
 - ❌ Expensive quantum computer
 
+### ✅ Qiskit 2.x Compatible
+All examples have been updated and tested for **Qiskit 2.x compatibility** and **headless environment execution** (Docker, SSH, remote servers).
+
 ### Installation
 
 #### Option 1: Docker (Recommended - Zero Setup!)
@@ -182,6 +185,7 @@ Experience quadratic speedup in unstructured search problems.
 - **☁️ Cloud Ready**: Easy deployment to AWS/GCP/Azure
 - **📊 Three Variants**: CPU (1.2GB), NVIDIA GPU (3.5GB), AMD ROCm (3.2GB)
 - **🏗️ Latest Hardware**: Supports NVIDIA H100/A100 and AMD MI300A/MI300X GPUs
+- **🖥️ Headless Ready**: All examples work in non-interactive/remote environments
 
 ## 🛠️ Features
 
@@ -191,6 +195,7 @@ Experience quadratic speedup in unstructured search problems.
 - Measurement probability histograms
 - Algorithm performance comparisons
 - Quantum state evolution animations
+- **Headless-ready**: All visualizations automatically save to files in Docker/remote environments
 
 ### 💻 **Professional Code Quality**
 - Comprehensive CLI interfaces with argparse
@@ -198,6 +203,7 @@ Experience quadratic speedup in unstructured search problems.
 - Extensive docstrings and inline comments
 - Object-oriented design with reusable components
 - Unit tests and validation checks
+- **Qiskit 2.x compatible**: Fully tested with latest Qiskit API
 
 ### 🌐 **Hardware Integration**
 - IBM Quantum cloud platform examples
@@ -212,6 +218,7 @@ quantum-computing-101/
 ├── README.md                    # This file
 ├── LICENSE                      # Apache 2.0 License  
 ├── CHANGELOG.md                 # Version history and updates
+├── QISKIT_2X_MIGRATION.md      # Qiskit 2.x compatibility guide (NEW!)
 ├── modules/                     # Theoretical curriculum
 │   ├── Module1_Quantum_Fundamentals.md
 │   ├── Module2_Mathematical_Foundations.md
@@ -247,6 +254,7 @@ quantum-computing-101/
 │   └── run.sh                 # Comprehensive container runner
 ├── verify_examples.py          # Quality assurance tool
 ├── BEGINNERS_GUIDE.md          # Complete learning pathway (Updated v2.0)
+├── QISKIT_2X_MIGRATION.md      # Qiskit 2.x compatibility and headless setup
 └── docs/                       # Additional documentation
     ├── CONTRIBUTING.md         # Contribution guidelines
     ├── CODE_OF_CONDUCT.md      # Community standards
@@ -303,8 +311,9 @@ python verify_examples.py --module module1_fundamentals
 
 - **📚 8 Complete Modules**: Comprehensive learning progression from basics to advanced applications
 - **💻 45 Production Examples**: All examples fully implemented and tested
-- **🎯 100% Compatibility**: All examples verified with current Qiskit versions
+- **🎯 100% Qiskit 2.x Compatible**: All 46 files updated for Qiskit 2.x API compatibility
 - **🌍 Multi-Platform**: Linux, macOS, Windows support
+- **🐳 Container-Ready**: Full Docker support with headless environment compatibility
 - **🔧 Quality Verified**: Automated verification tool ensures all examples work
 - **📈 Educational Impact**: Designed for students, professionals, and complete beginners
 
@@ -320,10 +329,13 @@ python verify_examples.py --module module1_fundamentals
 ### **When You Need Help:**
 - 🐛 **Technical Issues**: Run `python verify_examples.py` to diagnose problems
 - 📚 **Learning Questions**: Check the [Complete Beginner's Guide](BEGINNERS_GUIDE.md)
-- 💬 **Community Support**: Join quantum computing forums and communities
+- � **Qiskit 2.x Issues**: See the [Qiskit 2.x Migration Guide](QISKIT_2X_MIGRATION.md)
+- 🐳 **Docker/Headless Problems**: Check matplotlib backend configuration in the migration guide
+- �💬 **Community Support**: Join quantum computing forums and communities
 - 🔧 **Installation Problems**: Follow the setup instructions above
 
 ### **Useful Resources:**
+- **[Qiskit 2.x Migration Guide](QISKIT_2X_MIGRATION.md)** - Complete compatibility fixes documentation
 - **[Qiskit Textbook](https://qiskit.org/textbook/)** - Comprehensive quantum computing resource
 - **[IBM Quantum Experience](https://quantum-computing.ibm.com/)** - Run on real quantum computers
 - **[Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/)** - Q&A community

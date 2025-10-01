@@ -22,6 +22,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.visualization import plot_bloch_multivector, plot_histogram
@@ -104,8 +106,9 @@ def attempt_quantum_copying_naive():
     print()
 
     # Demonstrate measurement destroying superposition
-    qc_measure = qc.copy()
-    qc_measure.add_register(ClassicalRegister(1, "c"))
+    from qiskit.circuit import ClassicalRegister
+    qc_measure = QuantumCircuit(1, 1)
+    qc_measure.h(0)  # Recreate the superposition
     qc_measure.measure(0, 0)
 
     print("After measurement, we get either:")
@@ -352,7 +355,7 @@ def visualize_no_cloning():
         fontweight="bold",
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

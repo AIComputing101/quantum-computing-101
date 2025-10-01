@@ -7,9 +7,11 @@ Implementation of quantum error correction protocols and fault-tolerant operatio
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from qiskit.quantum_info import Statevector, random_statevector
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
@@ -410,7 +412,7 @@ class QuantumErrorCorrectionProtocols:
         ax6.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

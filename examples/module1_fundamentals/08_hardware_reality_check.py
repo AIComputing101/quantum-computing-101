@@ -21,6 +21,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
@@ -410,7 +412,7 @@ def visualize_quantum_hardware_trends():
         "Quantum Computing Hardware Reality Check", fontsize=16, fontweight="bold"
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

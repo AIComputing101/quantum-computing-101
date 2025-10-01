@@ -19,6 +19,8 @@ License: MIT
 import argparse
 import time
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
 from qiskit.visualization import plot_histogram, circuit_drawer
@@ -88,8 +90,9 @@ class QuantumRandomNumberGenerator:
         for i in range(n_bits):
             qc.h(i)
 
-        # Measure all qubits
-        qc.measure_all()
+        # Measure all qubits explicitly
+        for i in range(n_bits):
+            qc.measure(i, i)
 
         # Execute the circuit
         job = self.backend.run(transpile(qc, self.backend), shots=1)
@@ -97,7 +100,8 @@ class QuantumRandomNumberGenerator:
         counts = result.get_counts()
 
         # Convert binary string to integer
-        binary_string = list(counts.keys())[0]
+        # Remove any spaces that might be in the binary string
+        binary_string = list(counts.keys())[0].replace(' ', '')
         integer_value = int(binary_string, 2)
 
         self.history.append(integer_value)
@@ -260,7 +264,7 @@ def compare_quantum_classical_randomness():
 
     plt.tight_layout()
     plt.savefig("module1_05_randomness_comparison.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key differences:")
     print("• Quantum: True randomness from quantum measurement")
@@ -365,7 +369,7 @@ def build_practical_qrng_application():
 
     plt.tight_layout()
     plt.savefig("module1_05_quantum_dice.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return rolls
 

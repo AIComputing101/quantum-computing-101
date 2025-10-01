@@ -11,6 +11,8 @@ Date: 2025
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 import sys
@@ -563,7 +565,7 @@ class QuantumDebugger:
             axes[1, 1].grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

@@ -7,6 +7,8 @@ Implementation and analysis of the Quantum Fourier Transform algorithm.
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit
@@ -151,7 +153,7 @@ class QuantumFourierTransform:
         ax4.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

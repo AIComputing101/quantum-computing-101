@@ -27,6 +27,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
 from qiskit.visualization import plot_bloch_multivector, plot_histogram
@@ -172,22 +174,12 @@ def explore_measurement_bases():
 
     # Z-basis measurement (computational basis)
     qc_z = base_circuit.copy()
-    qc_z.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_z.measure_all()
     measurements["Z-basis (|0⟩, |1⟩)"] = qc_z
 
     # X-basis measurement
     qc_x = base_circuit.copy()
     qc_x.h(0)  # Rotate to X-basis
-    qc_x.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_x.measure_all()
     measurements["X-basis (|+⟩, |-⟩)"] = qc_x
 
@@ -195,11 +187,6 @@ def explore_measurement_bases():
     qc_y = base_circuit.copy()
     qc_y.sdg(0)  # S† gate
     qc_y.h(0)  # Rotate to Y-basis
-    qc_y.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_y.measure_all()
     measurements["Y-basis (|+i⟩, |-i⟩)"] = qc_y
 
@@ -238,7 +225,7 @@ def explore_measurement_bases():
 
     plt.tight_layout()
     plt.savefig("module1_03_measurement_bases.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key insights:")
     print("• Same quantum state gives different results in different bases")
@@ -352,7 +339,7 @@ def analyze_superposition_parameters():
 
     plt.tight_layout()
     plt.savefig("module1_03_superposition_analysis.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key insights:")
     print("• θ = 0: Pure |0⟩ state")

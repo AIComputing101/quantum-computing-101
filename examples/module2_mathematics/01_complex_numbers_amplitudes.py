@@ -18,6 +18,8 @@ License: MIT
 
 import argparse
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
@@ -128,7 +130,7 @@ def visualize_complex_plane(complex_numbers, labels=None):
 
     plt.tight_layout()
     plt.savefig("module2_01_complex_plane.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 def demonstrate_quantum_amplitudes():
@@ -260,7 +262,7 @@ def visualize_quantum_amplitudes(states):
 
     plt.tight_layout()
     plt.savefig("module2_01_quantum_amplitudes.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 def explore_phase_relationships():
@@ -331,7 +333,7 @@ def explore_phase_relationships():
 
     plt.tight_layout()
     plt.savefig("module2_01_phase_relationships.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key insight: Global phase doesn't affect measurement probabilities!")
     print("But relative phases between amplitudes do matter.")
@@ -420,7 +422,7 @@ def demonstrate_euler_formula():
 
     plt.tight_layout()
     plt.savefig("module2_01_euler_formula.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 def main():

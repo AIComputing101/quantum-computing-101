@@ -7,6 +7,8 @@ Implementation of quantum algorithms for materials simulation and manufacturing 
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit, transpile
@@ -1180,7 +1182,7 @@ def visualize_materials_results(materials_data, manufacturing_results, analysis_
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

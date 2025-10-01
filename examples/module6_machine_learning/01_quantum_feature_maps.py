@@ -7,6 +7,8 @@ Implementation of quantum feature maps for encoding classical data into quantum 
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit
@@ -384,7 +386,7 @@ class QuantumFeatureMaps:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

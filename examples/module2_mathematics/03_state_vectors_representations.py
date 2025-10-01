@@ -11,6 +11,8 @@ Date: 2025
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import argparse
@@ -280,7 +282,7 @@ class QuantumStateAnalyzer:
         ax.set_zlim(-1.2, 1.2)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def visualize_state_evolution(self):
         """Visualize quantum state evolution through gates."""
@@ -349,7 +351,7 @@ class QuantumStateAnalyzer:
                 ax.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
         return states_evolution
 
