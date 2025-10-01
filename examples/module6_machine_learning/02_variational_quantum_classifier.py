@@ -84,8 +84,9 @@ class VariationalQuantumClassifier:
     def measure_expectation(self, circuit, observable="Z0"):
         """Measure expectation value of observable."""
         # Add measurement
-        meas_circuit = circuit.copy()
-        meas_circuit.add_register(ClassicalRegister(1))
+        from qiskit.circuit import ClassicalRegister, QuantumCircuit
+        meas_circuit = QuantumCircuit(circuit.num_qubits, 1)
+        meas_circuit.compose(circuit, inplace=True)
         meas_circuit.measure(0, 0)  # Measure first qubit for Z0 observable
 
         # Simulate

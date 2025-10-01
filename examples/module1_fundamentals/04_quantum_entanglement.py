@@ -164,8 +164,8 @@ def demonstrate_entanglement_creation():
             rho_B = partial_trace(state, [0])  # Trace out qubit 0
 
             # Check purity (pure states have purity = 1, mixed states < 1)
-            purity_A = np.trace(rho_A @ rho_A).real
-            purity_B = np.trace(rho_B @ rho_B).real
+            purity_A = np.trace(rho_A.data @ rho_A.data).real
+            purity_B = np.trace(rho_B.data @ rho_B.data).real
 
             entangled = purity_A < 0.99 or purity_B < 0.99
             print(f"  Entangled: {entangled}")
@@ -243,11 +243,6 @@ def demonstrate_measurement_basis_effects():
 
     # Z-Z measurement (computational basis)
     qc_zz = base_circuit.copy()
-    qc_zz.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 2)[0]
-    )
     qc_zz.measure_all()
     measurement_setups["Z-Z (computational)"] = qc_zz
 
@@ -255,22 +250,12 @@ def demonstrate_measurement_basis_effects():
     qc_xx = base_circuit.copy()
     qc_xx.h(0)  # Rotate to X-basis
     qc_xx.h(1)  # Rotate to X-basis
-    qc_xx.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 2)[0]
-    )
     qc_xx.measure_all()
     measurement_setups["X-X (Hadamard basis)"] = qc_xx
 
     # Z-X measurement (mixed bases)
     qc_zx = base_circuit.copy()
     qc_zx.h(1)  # Rotate second qubit to X-basis
-    qc_zx.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 2)[0]
-    )
     qc_zx.measure_all()
     measurement_setups["Z-X (mixed bases)"] = qc_zx
 
@@ -360,8 +345,8 @@ def demonstrate_separable_vs_entangled():
         rho_B = partial_trace(state, [0])  # Second qubit
 
         # Check if qubits are in pure states
-        purity_A = np.trace(rho_A @ rho_A).real
-        purity_B = np.trace(rho_B @ rho_B).real
+        purity_A = np.trace(rho_A.data @ rho_A.data).real
+        purity_B = np.trace(rho_B.data @ rho_B.data).real
 
         print(f"  First qubit purity: {purity_A:.3f}")
         print(f"  Second qubit purity: {purity_B:.3f}")

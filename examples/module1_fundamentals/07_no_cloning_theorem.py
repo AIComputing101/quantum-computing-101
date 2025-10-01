@@ -104,8 +104,9 @@ def attempt_quantum_copying_naive():
     print()
 
     # Demonstrate measurement destroying superposition
-    qc_measure = qc.copy()
-    qc_measure.add_register(ClassicalRegister(1, "c"))
+    from qiskit.circuit import ClassicalRegister
+    qc_measure = QuantumCircuit(1, 1)
+    qc_measure.h(0)  # Recreate the superposition
     qc_measure.measure(0, 0)
 
     print("After measurement, we get either:")

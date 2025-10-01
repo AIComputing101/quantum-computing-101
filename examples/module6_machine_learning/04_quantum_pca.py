@@ -9,7 +9,7 @@ Implementation of quantum PCA algorithms for dimensionality reduction.
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from qiskit.quantum_info import Statevector, Operator
 from qiskit_aer import AerSimulator
 from qiskit.circuit.library import QFT

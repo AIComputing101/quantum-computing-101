@@ -9,7 +9,7 @@ Implementation of quantum cryptography protocols and post-quantum security analy
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, transpile, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import random_statevector, Statevector
 from scipy.stats import entropy

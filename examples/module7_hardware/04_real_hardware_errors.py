@@ -910,7 +910,6 @@ def main():
 
             qft = QFT(3)
             test_circuit = qft.decompose()
-            test_circuit.add_register(ClassicalRegister(3))
             test_circuit.measure_all()
         else:  # random
             test_circuit = QuantumCircuit(3, 3)

@@ -9,7 +9,7 @@ Implementation and analysis of the 7-qubit Steane code for quantum error correct
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from qiskit.quantum_info import Statevector, random_statevector
 from qiskit_aer import AerSimulator
 import itertools
