@@ -7,6 +7,8 @@ Implementation of quantum neural networks with gradient computation and hybrid a
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit, ClassicalRegister

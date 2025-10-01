@@ -7,6 +7,8 @@ Implementation of various quantum error mitigation techniques.
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit

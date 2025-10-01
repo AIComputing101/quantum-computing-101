@@ -9,14 +9,20 @@ This directory contains comprehensive Python examples for hands-on learning with
 ### Prerequisites
 - Python 3.11+ (3.12+ recommended) 
 - pip package manager
+- **NEW**: All examples are Qiskit 2.x compatible and headless-ready
 
 ### Installation
 ```bash
-# Install required packages
+# Install required packages (Updated for Qiskit 2.x)
 pip install -r requirements.txt
 
 # For development with additional tools
 pip install -r requirements-dev.txt
+
+# Docker (Recommended for headless/remote environments)
+cd ../docker
+./build.sh cpu
+./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
 ```
 
 ### Running Examples
@@ -30,6 +36,8 @@ python 01_classical_vs_quantum_bits.py --verbose --shots 5000
 
 # Most examples include help
 python 01_classical_vs_quantum_bits.py --help
+
+# All visualizations automatically save to files (headless-compatible)
 ```
 
 ## 📁 Complete Structure - All Modules Implemented ✅
@@ -112,6 +120,17 @@ Most scripts produce educational visualizations including:
 
 ## 🔧 Troubleshooting
 
+### ✅ Qiskit 2.x and Headless Environment Fixes
+
+**All examples have been updated for Qiskit 2.x compatibility and headless execution!**
+- ✅ Fixed `DensityMatrix` @ operator issues (use `.data` attribute)
+- ✅ Fixed `add_register()` parameter errors (use proper circuit composition)
+- ✅ Added matplotlib `Agg` backend for Docker/remote environments
+- ✅ Replaced blocking `plt.show()` with `plt.savefig()` and `plt.close()`
+- ✅ All visualizations automatically save to files
+
+**For detailed technical information, see**: `../QISKIT_2X_MIGRATION.md`
+
 ### Common Issues
 
 **1. Import Errors (Qiskit 2.x Compatibility)**
@@ -125,7 +144,7 @@ pip install qiskit-algorithms
 
 **2. Module Dependencies**
 ```bash
-# Make sure you've installed all requirements
+# Make sure you've installed all requirements (Updated for Qiskit 2.x)
 pip install -r requirements.txt
 
 # For specific modules, install optional dependencies:
@@ -133,14 +152,17 @@ pip install openfermion  # For chemistry examples
 pip install networkx    # For logistics optimization
 ```
 
-**3. Visualization Issues**
+**3. Docker/Headless Execution (FIXED!)**
 ```bash
-# For headless systems, use Agg backend
-export MPLBACKEND=Agg
-python script_name.py
+# All examples now work perfectly in headless environments
+cd ../docker
+./build.sh cpu
+./run.sh -v cpu -e module1_fundamentals/01_classical_vs_quantum_bits.py
 
-# Or disable plots entirely
-python script_name.py --no-plots  # (where supported)
+# Scripts automatically:
+# - Use matplotlib 'Agg' backend (non-interactive)
+# - Save all plots to files
+# - Don't block on plt.show()
 ```
 
 **4. Hardware Access**

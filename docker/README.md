@@ -20,6 +20,14 @@ This Docker setup provides a unified, flexible solution for running Quantum Comp
 - **NVIDIA GPU**: CUDA-accelerated quantum computing with PyTorch 2.8.0 + CUDA 12.9
 - **AMD GPU**: ROCm-accelerated quantum computing with latest ROCm PyTorch
 
+### ✅ Headless Environment Ready
+
+All examples are fully compatible with headless Docker environments:
+- **Non-interactive matplotlib backend** (Agg) configured automatically
+- **No display server required** - runs perfectly on remote servers
+- **All visualizations save to files** - outputs available in mounted volumes
+- **No blocking on plt.show()** - scripts complete without manual intervention
+
 ## Architecture
 
 ### Unified Dockerfile Approach

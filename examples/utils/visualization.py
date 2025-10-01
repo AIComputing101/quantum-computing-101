@@ -9,6 +9,8 @@ License: MIT
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from mpl_toolkits.mplot3d import Axes3D

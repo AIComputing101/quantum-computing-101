@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Qiskit 2.x Compatibility**: Updated all 46 example files for full Qiskit 2.x compatibility
+  - Fixed `DensityMatrix` operator usage: Replaced `rho @ rho` with `rho.data @ rho.data` for NumPy array access
+  - Fixed `add_register()` calls: Replaced with proper `measure_all()` or circuit composition patterns
+  - Removed duplicate imports: Cleaned up 7 files with redundant `ClassicalRegister` imports
+- **Headless Environment Support**: Added matplotlib non-interactive backend configuration
+  - Added `matplotlib.use('Agg')` before pyplot imports in all 46 examples
+  - Ensures proper execution in Docker containers and remote/headless environments
+  - Replaced blocking `plt.show()` calls with `plt.close()` for proper resource cleanup
+  - All visualization outputs now saved to files automatically
+- **Binary String Parsing**: Fixed quantum measurement result parsing in random number generation examples
+  - Removed spaces from binary strings returned by `measure_all()`
+  - Ensures proper integer conversion from quantum measurement results
+
 ## [2.0.0] - 2025-09-10
 
 ### Added

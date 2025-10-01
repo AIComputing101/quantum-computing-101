@@ -7,6 +7,8 @@ Implementation of hybrid classical-quantum workflows across multiple cloud platf
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 import time

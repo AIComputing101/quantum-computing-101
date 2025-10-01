@@ -123,7 +123,8 @@ cd docker
 - **Zero Setup**: No Python installation or dependency management required
 - **Consistent Environment**: Same setup across Windows, Mac, Linux
 - **GPU Ready**: Easy GPU acceleration when you're ready for advanced examples
-- **Latest Software**: Pre-configured with optimized quantum computing stack
+- **Latest Software**: Pre-configured with optimized quantum computing stack (Qiskit 2.x)
+- **Headless Compatible**: All examples work perfectly in remote/SSH environments
 
 ### 💻 **Option 2: Native Installation (Traditional)**
 ```bash

@@ -7,6 +7,8 @@ Implementation of fault-tolerant logical operations and analysis of fault tolera
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import argparse
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
