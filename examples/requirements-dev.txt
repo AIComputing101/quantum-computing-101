@@ -1,4 +1,9 @@
-# Development requirements (extends requirements.txt)
+# Development Requirements for Quantum Computing 101 Contributors
+# Purpose: Testing, linting, documentation, and development tools
+# Used by: Contributors, CI/CD testing pipelines, documentation builds
+# Extends: requirements.txt (includes all runtime dependencies)
+# Note: Not needed for running examples, only for development work
+
 -r requirements.txt
 
 # Testing framework

@@ -1,5 +1,8 @@
-# AMD ROCm GPU requirements for Quantum Computing 101
-# Note: PyTorch with ROCm is already included in the base image (rocm/pytorch:latest)
+# Docker AMD ROCm GPU Requirements for Quantum Computing 101
+# Purpose: AMD ROCm-accelerated packages
+# Base Image: rocm/pytorch:latest
+# Note: PyTorch with ROCm is already included in the base image
+# Extends: base.txt
 
 # Include base quantum computing requirements
 -r base.txt

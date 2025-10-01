@@ -1,5 +1,8 @@
-# Base requirements for all Quantum Computing 101 variants
-# Core quantum computing frameworks and scientific computing stack
+# Docker Base Requirements for Quantum Computing 101
+# Purpose: Common dependencies for ALL Docker container variants (CPU, NVIDIA, AMD)
+# Used by: docker/Dockerfile (all variants via multi-stage build)
+# Sync: Keep version numbers aligned with examples/requirements.txt
+# Note: Do not add variant-specific packages here (use cpu.txt, gpu-nvidia.txt, gpu-amd.txt)
 
 # Core quantum computing frameworks
 qiskit>=1.0.0

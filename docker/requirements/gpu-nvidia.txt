@@ -1,5 +1,9 @@
-# NVIDIA GPU requirements for Quantum Computing 101
-# Note: PyTorch with CUDA is already included in the base image (pytorch/pytorch:2.8.0-cuda12.9-cudnn9-devel)
+# Docker NVIDIA GPU Requirements for Quantum Computing 101
+# Purpose: NVIDIA CUDA-accelerated packages
+# Base Image: pytorch/pytorch:2.8.0-cuda12.9-cudnn9-devel
+# CUDA Version: 12.9.1 with cuDNN 9
+# Note: PyTorch with CUDA is already included in the base image
+# Extends: base.txt
 
 # Include base quantum computing requirements
 -r base.txt

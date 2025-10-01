@@ -1,5 +1,8 @@
-# CPU-only requirements for Quantum Computing 101
+# Docker CPU-Only Requirements for Quantum Computing 101
+# Purpose: CPU-specific packages (no GPU acceleration)
+# Base Image: python:3.12-slim
 # Note: PyTorch CPU version is already included in the base image
+# Extends: base.txt
 
 # Include base quantum computing requirements
 -r base.txt
