@@ -68,15 +68,15 @@ detect_gpu() {
     
     # Check for NVIDIA GPU
     if command -v nvidia-smi &> /dev/null && nvidia-smi &> /dev/null; then
-        local gpu_count=$(nvidia-smi --list-gpus | wc -l)
-        print_success "NVIDIA GPU detected (${gpu_count} GPU(s))"
+        local gpu_count=$(nvidia-smi --list-gpus 2>/dev/null | wc -l)
+        print_success "NVIDIA GPU detected (${gpu_count} GPU(s))" >&2
         gpu_type="nvidia"
     # Check for AMD GPU
     elif [ -d "/opt/rocm" ] || command -v rocm-smi &> /dev/null; then
-        print_success "AMD ROCm GPU detected"
+        print_success "AMD ROCm GPU detected" >&2
         gpu_type="amd"
     else
-        print_info "No GPU detected, CPU-only mode available"
+        print_info "No GPU detected, CPU-only mode available" >&2
         gpu_type="cpu"
     fi
     
