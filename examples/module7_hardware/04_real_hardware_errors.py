@@ -826,7 +826,7 @@ def visualize_error_analysis(
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

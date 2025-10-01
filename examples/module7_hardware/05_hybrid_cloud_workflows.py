@@ -810,7 +810,7 @@ def visualize_workflow_results(workflow_results, resource_stats):
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

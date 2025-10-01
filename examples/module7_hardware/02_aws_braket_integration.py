@@ -722,7 +722,7 @@ class BraketAnalyzer:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

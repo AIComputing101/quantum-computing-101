@@ -306,7 +306,7 @@ def demonstrate_measurement_basis_effects():
     plt.savefig(
         "module1_04_entanglement_measurements.png", dpi=300, bbox_inches="tight"
     )
-    plt.show()
+    plt.close()
 
     print("Key insights:")
     print("• Entangled states show correlations in any measurement basis")

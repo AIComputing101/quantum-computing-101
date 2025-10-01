@@ -692,7 +692,7 @@ class IBMQuantumAnalyzer:
         )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

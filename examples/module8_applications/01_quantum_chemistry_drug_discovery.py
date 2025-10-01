@@ -761,7 +761,7 @@ def visualize_drug_discovery_results(simulator, discovery_platform, analyzer_rep
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

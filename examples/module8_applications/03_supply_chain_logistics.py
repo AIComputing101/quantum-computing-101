@@ -942,7 +942,7 @@ def visualize_supply_chain_results(supply_chain, vrp_results, inventory_results,
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

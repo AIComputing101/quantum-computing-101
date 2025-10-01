@@ -116,7 +116,7 @@ def demonstrate_basic_noise_types():
 
     plt.tight_layout()
     plt.savefig("module5_01_noise_types.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return results
 
@@ -190,7 +190,7 @@ def analyze_error_rates():
 
     plt.tight_layout()
     plt.savefig("module5_01_error_rate_analysis.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return error_rates, fidelities
 
@@ -289,7 +289,7 @@ def demonstrate_algorithm_degradation():
 
     plt.tight_layout()
     plt.savefig("module5_01_algorithm_degradation.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return results
 
@@ -423,7 +423,7 @@ def characterize_realistic_noise():
 
     plt.tight_layout()
     plt.savefig("module5_01_realistic_noise.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return comparison_results
 

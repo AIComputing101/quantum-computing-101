@@ -353,7 +353,7 @@ def visualize_no_cloning():
         fontweight="bold",
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

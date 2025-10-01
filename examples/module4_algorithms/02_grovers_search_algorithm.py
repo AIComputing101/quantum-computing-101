@@ -477,7 +477,7 @@ class GroverSearchAlgorithm:
             )
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def generate_summary_report(self):
         """Generate comprehensive summary of Grover search analysis."""

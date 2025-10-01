@@ -285,7 +285,7 @@ Step 4: Bob applies corrections → Gets |ψ⟩!
     plt.savefig(
         "module1_06_teleportation_explanation.png", dpi=300, bbox_inches="tight"
     )
-    plt.show()
+    plt.close()
 
     print("💾 Saved: module1_06_teleportation_explanation.png")
     return True

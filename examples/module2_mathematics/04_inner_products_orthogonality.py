@@ -350,7 +350,7 @@ class InnerProductAnalyzer:
             ax4.set_title("Orthogonality Analysis")
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def advanced_inner_product_properties(self):
         """Explore advanced properties of inner products."""

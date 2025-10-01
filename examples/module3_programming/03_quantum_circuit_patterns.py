@@ -628,7 +628,7 @@ class QuantumCircuitPatterns:
         axes[3].grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def generate_summary_report(self):
         """Generate comprehensive summary of circuit patterns analysis."""

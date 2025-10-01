@@ -1049,7 +1049,7 @@ def visualize_cryptography_results(qkd_metrics, pq_security, security_report):
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

@@ -223,7 +223,7 @@ def explore_measurement_bases():
 
     plt.tight_layout()
     plt.savefig("module1_03_measurement_bases.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key insights:")
     print("• Same quantum state gives different results in different bases")
@@ -337,7 +337,7 @@ def analyze_superposition_parameters():
 
     plt.tight_layout()
     plt.savefig("module1_03_superposition_analysis.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     print("Key insights:")
     print("• θ = 0: Pure |0⟩ state")

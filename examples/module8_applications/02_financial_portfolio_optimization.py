@@ -771,7 +771,7 @@ def visualize_portfolio_results(
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

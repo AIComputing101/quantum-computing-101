@@ -431,7 +431,7 @@ def visualize_bb84_protocol():
         "BB84 Quantum Key Distribution Protocol", fontsize=16, fontweight="bold"
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

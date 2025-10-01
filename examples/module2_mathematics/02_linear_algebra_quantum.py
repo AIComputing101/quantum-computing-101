@@ -337,7 +337,7 @@ def visualize_matrix_operations():
 
     plt.tight_layout()
     plt.savefig("module2_02_matrix_operations.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 def demonstrate_quantum_state_evolution():
@@ -426,7 +426,7 @@ def demonstrate_quantum_state_evolution():
 
     plt.tight_layout()
     plt.savefig("module2_02_state_evolution.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return states_evolution
 

@@ -410,7 +410,7 @@ def visualize_quantum_hardware_trends():
         "Quantum Computing Hardware Reality Check", fontsize=16, fontweight="bold"
     )
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

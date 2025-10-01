@@ -122,7 +122,7 @@ def visualize_qubit_states(circuits, verbose=False):
             print(f"⚠️ Could not create Bloch sphere for {label}: {e}")
 
     if bloch_figures:
-        plt.show()
+        plt.close()
 
     return states
 
@@ -178,7 +178,7 @@ def measure_qubits(circuits, shots=1000):
 
     plt.tight_layout()
     plt.savefig("module1_01_measurements.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return results
 

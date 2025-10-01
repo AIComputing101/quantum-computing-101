@@ -1180,7 +1180,7 @@ def visualize_materials_results(materials_data, manufacturing_results, analysis_
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

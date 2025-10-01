@@ -309,7 +309,7 @@ class VariationalQuantumEigensolver:
         ax4.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():

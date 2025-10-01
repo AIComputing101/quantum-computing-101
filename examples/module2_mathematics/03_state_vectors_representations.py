@@ -280,7 +280,7 @@ class QuantumStateAnalyzer:
         ax.set_zlim(-1.2, 1.2)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
     def visualize_state_evolution(self):
         """Visualize quantum state evolution through gates."""
@@ -349,7 +349,7 @@ class QuantumStateAnalyzer:
                 ax.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
         return states_evolution
 

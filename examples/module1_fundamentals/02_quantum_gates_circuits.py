@@ -155,7 +155,7 @@ def visualize_gate_effects(single_qubit_circuits):
                 state, title=f"{gate_name} - Qubit State"
             )
             plt.savefig(f"module1_02_bloch_{i+1}.png", dpi=300, bbox_inches="tight")
-            plt.show()
+            plt.close()
         except Exception as e:
             print(f"⚠️ Could not create Bloch sphere for {gate_name}: {e}")
             # Provide alternative visualization information
@@ -206,7 +206,7 @@ def visualize_gate_effects(single_qubit_circuits):
 
         plt.tight_layout()
         plt.savefig("module1_02_gate_effects.png", dpi=300, bbox_inches="tight")
-        plt.show()
+        plt.close()
 
     except Exception as e:
         print(f"⚠️ Could not create gate effects summary: {e}")
@@ -258,7 +258,7 @@ def create_quantum_circuit_examples():
             # Save individual circuit diagrams
             plt.figure(fig.number)
             plt.savefig(f"module1_02_circuit_{i+1}.png", dpi=300, bbox_inches="tight")
-            plt.show()
+            plt.close()
         except Exception as e:
             print(f"⚠️ Could not create circuit diagram: {e}")
             print(f"  Circuit structure: {circuit.data}")
@@ -291,7 +291,7 @@ def create_quantum_circuit_examples():
 
         plt.tight_layout()
         plt.savefig("module1_02_circuit_examples.png", dpi=300, bbox_inches="tight")
-        plt.show()
+        plt.close()
 
     except Exception as e:
         print(f"⚠️ Could not create combined circuit diagram: {e}")

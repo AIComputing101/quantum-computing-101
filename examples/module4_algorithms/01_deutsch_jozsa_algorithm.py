@@ -314,7 +314,7 @@ def demonstrate_quantum_advantage():
 
     plt.tight_layout()
     plt.savefig("module4_01_quantum_advantage.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return speedup
 
@@ -370,7 +370,7 @@ def test_different_functions():
 
     plt.tight_layout()
     plt.savefig("module4_01_function_types.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return results
 
@@ -470,7 +470,7 @@ def analyze_success_probability():
 
     plt.tight_layout()
     plt.savefig("module4_01_success_probability.png", dpi=300, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
     return success_rates
 

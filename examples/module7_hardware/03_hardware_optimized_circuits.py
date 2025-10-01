@@ -896,7 +896,7 @@ def visualize_optimization_results(optimizer, benchmark_results, analysis):
     )
 
     plt.tight_layout()
-    plt.show()
+    plt.close()
 
 
 def main():

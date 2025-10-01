@@ -362,7 +362,7 @@ class FaultTolerantOperations:
         ax4_twin.legend(loc="upper right")
 
         plt.tight_layout()
-        plt.show()
+        plt.close()
 
 
 def main():
