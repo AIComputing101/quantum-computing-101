@@ -172,22 +172,12 @@ def explore_measurement_bases():
 
     # Z-basis measurement (computational basis)
     qc_z = base_circuit.copy()
-    qc_z.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_z.measure_all()
     measurements["Z-basis (|0⟩, |1⟩)"] = qc_z
 
     # X-basis measurement
     qc_x = base_circuit.copy()
     qc_x.h(0)  # Rotate to X-basis
-    qc_x.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_x.measure_all()
     measurements["X-basis (|+⟩, |-⟩)"] = qc_x
 
@@ -195,11 +185,6 @@ def explore_measurement_bases():
     qc_y = base_circuit.copy()
     qc_y.sdg(0)  # S† gate
     qc_y.h(0)  # Rotate to Y-basis
-    qc_y.add_register(
-        base_circuit.cregs[0]
-        if base_circuit.cregs
-        else base_circuit.add_register("c", 1)[0]
-    )
     qc_y.measure_all()
     measurements["Y-basis (|+i⟩, |-i⟩)"] = qc_y
 
