@@ -1,5 +1,17 @@
 # Quantum Computing 101 - Docker Setup Guide
 
+## Table of Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Volume Mounting & Development Workflow](#volume-mounting--development-workflow)
+- [Directory Structure](#directory-structure)
+- [Environment Variables](#environment-variables)
+- [Jupyter Lab Access](#jupyter-lab-access)
+- [Advanced Configuration](#advanced-configuration)
+- [Troubleshooting](#troubleshooting)
+- [Migration Guide](#migration-guide)
+
 ## Overview
 
 This Docker setup provides a unified, flexible solution for running Quantum Computing 101 across different hardware configurations:
@@ -97,6 +109,225 @@ docker run -it --rm \
   --group-add video --group-add render \
   -v $(pwd)/../examples:/home/qc101/quantum-computing-101/examples \
   quantum-computing-101:amd
+```
+
+## Volume Mounting & Development Workflow
+
+### Current Setup
+
+The `docker-compose.yml` configures volume mounts for seamless host-container development:
+
+```yaml
+volumes:
+  - ../examples:/home/qc101/quantum-computing-101/examples
+  - ../outputs:/home/qc101/quantum-computing-101/outputs
+  - ../modules:/home/qc101/quantum-computing-101/modules:ro
+```
+
+**What this means:**
+- ✅ Edit files in `examples/` on host → Changes appear instantly in container
+- ✅ Container outputs save to `outputs/` → Visible on host immediately
+- ✅ `modules/` mounted read-only (`:ro`) → Protected from container modifications
+
+### Development Workflows
+
+#### 1. Using Docker Compose (Recommended)
+
+```bash
+# Start container with volume mounts
+cd docker
+docker compose up qc101-nvidia
+
+# In another terminal, edit files on host
+cd ../examples/module1_fundamentals
+vim 01_classical_vs_quantum_bits.py
+
+# Changes are instantly available in container!
+```
+
+#### 2. Interactive Development Workflow
+
+```bash
+# Start container in background
+docker compose up -d qc101-nvidia
+
+# Exec into container
+docker exec -it qc101-nvidia bash
+
+# Inside container - your edits from host are visible
+cd /home/qc101/quantum-computing-101/examples
+python module1_fundamentals/01_classical_vs_quantum_bits.py
+```
+
+#### 3. Jupyter Notebook with Volume Mounts
+
+```bash
+# Start with Jupyter
+docker compose up qc101-nvidia
+
+# Access Jupyter at http://localhost:8889
+# All notebooks saved in container → Synced to host examples/
+```
+
+### Advanced Volume Configurations
+
+#### Option A: Mount Entire Project (Full Development Mode)
+
+Edit `docker-compose.yml`:
+
+```yaml
+volumes:
+  # Mount entire project for maximum flexibility
+  - ..:/home/qc101/quantum-computing-101
+  # But exclude certain directories
+  - /home/qc101/quantum-computing-101/.git
+  - /home/qc101/quantum-computing-101/__pycache__
+```
+
+**Use when:** Developing library code, not just examples
+
+#### Option B: Selective File Mounting
+
+```yaml
+volumes:
+  # Mount specific files/directories only
+  - ../examples:/home/qc101/quantum-computing-101/examples
+  - ../outputs:/home/qc101/quantum-computing-101/outputs
+  - ../src:/home/qc101/quantum-computing-101/src
+  - ../tests:/home/qc101/quantum-computing-101/tests
+```
+
+**Use when:** You want precise control over what's mounted
+
+#### Option C: Using .dockerignore
+
+Create `docker/.dockerignore`:
+
+```
+.git
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+node_modules
+*.log
+```
+
+Then mount entire project:
+```yaml
+volumes:
+  - ..:/home/qc101/quantum-computing-101
+```
+
+### Docker Run Command with Volume Mounts
+
+If not using docker-compose:
+
+```bash
+# NVIDIA GPU variant
+docker run -it --rm \
+  --gpus all \
+  -v "$(pwd)/../examples:/home/qc101/quantum-computing-101/examples" \
+  -v "$(pwd)/../outputs:/home/qc101/quantum-computing-101/outputs" \
+  -p 8889:8888 \
+  quantum-computing-101:nvidia
+
+# CPU variant
+docker run -it --rm \
+  -v "$(pwd)/../examples:/home/qc101/quantum-computing-101/examples" \
+  -v "$(pwd)/../outputs:/home/qc101/quantum-computing-101/outputs" \
+  -p 8888:8888 \
+  quantum-computing-101:cpu
+```
+
+### VS Code Dev Container Integration
+
+Create `.devcontainer/devcontainer.json`:
+
+```json
+{
+  "name": "Quantum Computing 101",
+  "dockerComposeFile": "../docker/docker-compose.yml",
+  "service": "qc101-nvidia",
+  "workspaceFolder": "/home/qc101/quantum-computing-101",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true
+      }
+    }
+  },
+  
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/home/qc101/quantum-computing-101,type=bind,consistency=cached"
+  ],
+  
+  "remoteUser": "qc101"
+}
+```
+
+Then in VS Code: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+
+### Performance Considerations
+
+#### Linux/Mac (Native Docker)
+- Volume mounts are fast (native filesystem)
+- Use `consistency=cached` for better performance (macOS)
+
+#### Windows (WSL2)
+- Store project in WSL2 filesystem (`/home/user/project`)
+- Avoid mounting from `/mnt/c/` (slow)
+
+#### Example for Mac (Performance Tuning)
+```yaml
+volumes:
+  - ../examples:/home/qc101/quantum-computing-101/examples:cached
+  - ../outputs:/home/qc101/quantum-computing-101/outputs:delegated
+```
+
+- `:cached` - Host writes, container reads (good for code)
+- `:delegated` - Container writes, host reads (good for outputs)
+
+### Volume Mounting Best Practices
+
+1. **Use Docker Compose** for consistent volume configuration
+2. **Mount only what you need** to avoid clutter
+3. **Use read-only (`:ro`)** for reference materials
+4. **Separate data volumes** for outputs and cache
+5. **Add .dockerignore** to exclude unnecessary files
+6. **Test both directions**: Host→Container and Container→Host writes
+
+### Quick Reference Table
+
+| Scenario | Volume Mount | Description |
+|----------|--------------|-------------|
+| Edit examples | `../examples:/container/examples` | Live code editing |
+| Save outputs | `../outputs:/container/outputs` | Persist results |
+| Read-only docs | `../docs:/container/docs:ro` | Reference only |
+| Full project | `..:/container/project` | Complete access |
+| Named volume | `cache:/home/user/.cache` | Persistent cache |
+
+### Testing Your Volume Setup
+
+```bash
+# Test host → container
+echo "test from host" > ../examples/test.txt
+docker exec qc101-nvidia cat /home/qc101/quantum-computing-101/examples/test.txt
+
+# Test container → host
+docker exec qc101-nvidia bash -c "echo 'test from container' > /home/qc101/quantum-computing-101/outputs/test.txt"
+cat ../outputs/test.txt
+
+# Cleanup
+rm ../examples/test.txt ../outputs/test.txt
 ```
 
 ## Directory Structure
@@ -243,6 +474,31 @@ docker builder prune -a
 
 # Check disk space
 df -h
+```
+
+### Volume Mount Issues
+
+#### Permission Problems
+```bash
+# Fix ownership if needed
+docker exec -it qc101-nvidia chown -R qc101:qc101 /home/qc101/quantum-computing-101
+```
+
+#### Files Not Syncing
+```bash
+# Restart container to remount volumes
+docker compose restart qc101-nvidia
+
+# Or recreate container
+docker compose down
+docker compose up qc101-nvidia
+```
+
+#### Check Mount Points
+```bash
+# Inside container, verify mounts
+docker exec -it qc101-nvidia df -h
+docker exec -it qc101-nvidia mount | grep qc101
 ```
 
 ## Migration Guide
