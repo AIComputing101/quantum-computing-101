@@ -1,7 +1,7 @@
 # Module 5: Quantum Error Correction & Noise
 *Intermediate Tier*
 
-> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (November 2025)
 > 
 > **Recent Updates:**
 > - Fixed noise model configuration for 1-qubit vs 2-qubit gates

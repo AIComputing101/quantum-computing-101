@@ -1,7 +1,7 @@
 # Module 6: Quantum Machine Learning (QML)
 *Intermediate Tier*
 
-> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (November 2025)
 > 
 > **Recent Updates:**
 > - Updated `bind_parameters` → `assign_parameters` in all QML examples

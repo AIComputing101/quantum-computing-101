@@ -1,7 +1,7 @@
 # Module 7: Quantum Hardware & Cloud Platforms
 *Advanced Tier*
 
-> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (November 2025)
 > 
 > **Recent Updates:**
 > - Made networkx dependency optional with graceful fallback

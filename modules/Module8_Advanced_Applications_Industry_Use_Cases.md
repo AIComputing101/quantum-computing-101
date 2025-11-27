@@ -3,7 +3,7 @@
 
 *Bringing quantum theory into practical domain-driven workflows.*
 
-> **✅ Qiskit 2.x Compatible** - Examples updated and tested (Dec 2024)
+> **✅ Qiskit 2.x Compatible** - Examples updated and tested (November 2025)
 > 
 > **Recent Updates:**
 > - Updated `bind_parameters` → `assign_parameters` in all application examples

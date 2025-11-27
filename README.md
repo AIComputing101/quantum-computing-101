@@ -58,7 +58,7 @@ All examples have been updated and tested for **Qiskit 2.x compatibility** and *
 - ✅ Module 8: 50% passing (3/6 examples), 1 working but slow
 - All critical functionality verified and working
 
-**Recent Compatibility Fixes (Dec 2024):**
+**Recent Compatibility Fixes (November 2025):**
 - Updated all `bind_parameters` → `assign_parameters` (Qiskit 2.x API)
 - Fixed noise model configurations for 1-qubit vs 2-qubit gates
 - Added measurement circuits where required
@@ -401,7 +401,7 @@ python verify_examples.py --module module1_fundamentals
 
 ## 🔧 Troubleshooting & Common Issues
 
-### Qiskit API Changes (Dec 2024 Update)
+### Qiskit API Changes (November 2025 Update)
 If you encounter errors with older code or examples from other sources:
 
 **❌ Common Errors:**
@@ -468,7 +468,7 @@ pip install scikit-learn
 ### **When You Need Help:**
 - 🐛 **Technical Issues**: Run `python verify_examples.py` to diagnose problems
 - 📚 **Learning Questions**: Check the [Complete Beginner's Guide](BEGINNERS_GUIDE.md)
-- 📖 **Qiskit 2.x Compatibility**: All examples updated for Qiskit 2.x (tested Dec 2024)
+- 📖 **Qiskit 2.x Compatibility**: All examples updated for Qiskit 2.x (tested November 2025)
 - 🐳 **Docker/Headless Problems**: Examples use matplotlib 'Agg' backend for headless compatibility
 - 💬 **Community Support**: Join quantum computing forums and communities
 - 🔧 **Installation Problems**: Follow the setup instructions above

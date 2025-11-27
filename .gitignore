@@ -173,3 +173,4 @@ datasets/
 *.hdf5
 *.csv
 *.json
+tmp/

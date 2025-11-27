@@ -1,6 +1,6 @@
 # Qiskit 2.x Compatibility Guide
 
-**Last Updated**: December 2024  
+**Last Updated**: November 2025  
 **Qiskit Version**: 2.x (>= 1.0.0)  
 **Testing Status**: 52/56 examples (93%) passing
 
@@ -375,6 +375,6 @@ For issues related to this codebase:
 ---
 
 **Maintained by**: Quantum Computing 101 Team  
-**Last Tested**: December 2024  
+**Last Tested**: November 2025  
 **Next Review**: When Qiskit 3.x releases
 
