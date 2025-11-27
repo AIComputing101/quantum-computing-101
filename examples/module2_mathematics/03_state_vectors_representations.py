@@ -140,8 +140,9 @@ class QuantumStateAnalyzer:
         bell_psi_minus = Statevector([0, 1 / np.sqrt(2), -1 / np.sqrt(2), 0])  # |Ψ-⟩
 
         # Partially entangled state
-        partial_entangled = Statevector([0.6, 0.8j, 0, 0])
-        partial_entangled = partial_entangled / partial_entangled.norm()
+        partial_data = np.array([0.6, 0.8j, 0, 0])
+        partial_data = partial_data / np.linalg.norm(partial_data)
+        partial_entangled = Statevector(partial_data)
 
         states_2q = {
             "|00⟩": state_00,

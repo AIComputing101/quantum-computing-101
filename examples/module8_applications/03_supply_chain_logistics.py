@@ -266,9 +266,9 @@ class VehicleRoutingOptimizer:
         simulator = AerSimulator()
 
         def cost_function(params):
-            bound_ansatz = qaoa_ansatz.bind_parameters(params)
+            bound_ansatz = qaoa_ansatz.assign_parameters(params)
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz, inplace=True)
+            qc.compose(bound_ansatz.decompose(), inplace=True)
             qc.measure_all()
 
             job = simulator.run(qc, shots=1000)
@@ -305,10 +305,10 @@ class VehicleRoutingOptimizer:
 
         # Get final solution
         final_params = result.x
-        bound_ansatz = qaoa_ansatz.bind_parameters(final_params)
+        bound_ansatz = qaoa_ansatz.assign_parameters(final_params)
 
         qc = QuantumCircuit(n_qubits)
-        qc.compose(bound_ansatz, inplace=True)
+        qc.compose(bound_ansatz.decompose(), inplace=True)
         qc.measure_all()
 
         job = simulator.run(qc, shots=5000)
@@ -429,9 +429,9 @@ class InventoryOptimizer:
         simulator = AerSimulator()
 
         def cost_function(params):
-            bound_ansatz = qaoa_ansatz.bind_parameters(params)
+            bound_ansatz = qaoa_ansatz.assign_parameters(params)
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz, inplace=True)
+            qc.compose(bound_ansatz.decompose(), inplace=True)
             qc.measure_all()
 
             job = simulator.run(qc, shots=1000)
@@ -466,10 +466,10 @@ class InventoryOptimizer:
 
         # Get final solution
         final_params = result.x
-        bound_ansatz = qaoa_ansatz.bind_parameters(final_params)
+        bound_ansatz = qaoa_ansatz.assign_parameters(final_params)
 
         qc = QuantumCircuit(n_qubits)
-        qc.compose(bound_ansatz, inplace=True)
+        qc.compose(bound_ansatz.decompose(), inplace=True)
         qc.measure_all()
 
         job = simulator.run(qc, shots=5000)

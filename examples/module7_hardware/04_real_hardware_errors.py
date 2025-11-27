@@ -213,8 +213,12 @@ class HardwareNoiseCharacterizer:
                 # Get ideal and noisy states
                 ideal_state = Statevector.from_instruction(qc)
 
+                # Add measurement before running
+                qc_measured = qc.copy()
+                qc_measured.measure_all()
+                
                 # Run with noise
-                job = simulator.run(qc, shots=1000)
+                job = simulator.run(qc_measured, shots=1000)
                 result = job.result()
 
                 # Estimate state from measurements

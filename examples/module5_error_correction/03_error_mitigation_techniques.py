@@ -83,8 +83,11 @@ class ErrorMitigation:
         if factor == 1:
             return circuit.copy()
 
-        # Create new circuit with repeated operations
-        scaled_circuit = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
+        # Create new circuit by copying the original (preserves registers)
+        scaled_circuit = circuit.copy()
+        
+        # Clear the circuit data but keep the registers
+        scaled_circuit.data.clear()
 
         for instruction in circuit.data:
             # Add original instruction
@@ -101,20 +104,21 @@ class ErrorMitigation:
 
     def readout_error_mitigation(self, circuit, shots=1024):
         """Readout error mitigation using calibration."""
-        # Calibration: measure |0⟩ and |1⟩ states
+        # Calibration: prepare all basis states for proper calibration
         cal_circuits = []
+        n_qubits = circuit.num_qubits
+        n_states = 2**n_qubits
 
-        # Calibration circuit for |0⟩
-        cal_0 = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
-        cal_0.measure_all()
-        cal_circuits.append(cal_0)
-
-        # Calibration circuit for |1⟩
-        cal_1 = QuantumCircuit(circuit.num_qubits, circuit.num_clbits)
-        for i in range(circuit.num_qubits):
-            cal_1.x(i)
-        cal_1.measure_all()
-        cal_circuits.append(cal_1)
+        # Create calibration circuit for each basis state
+        for state_idx in range(n_states):
+            cal_circuit = QuantumCircuit(n_qubits)
+            # Prepare the basis state by applying X gates
+            for qubit_idx in range(n_qubits):
+                # Check if bit is set in state_idx (read from right to left)
+                if (state_idx >> qubit_idx) & 1:
+                    cal_circuit.x(qubit_idx)
+            cal_circuit.measure_all()
+            cal_circuits.append(cal_circuit)
 
         # Run calibration
         noise_model = self.create_noise_model()
@@ -151,7 +155,9 @@ class ErrorMitigation:
         for i, counts in enumerate(cal_results):
             total_shots = sum(counts.values())
             for state, count in counts.items():
-                state_int = int(state, 2)
+                # Remove spaces from state string
+                state_clean = state.replace(" ", "")
+                state_int = int(state_clean, 2)
                 cal_matrix[state_int, i] = count / total_shots
 
         return cal_matrix
@@ -164,7 +170,9 @@ class ErrorMitigation:
         # Convert counts to probability vector
         prob_vector = np.zeros(n_states)
         for state, count in counts.items():
-            state_int = int(state, 2)
+            # Remove spaces from state string
+            state_clean = state.replace(" ", "")
+            state_int = int(state_clean, 2)
             prob_vector[state_int] = count / total_shots
 
         # Invert calibration matrix and apply
@@ -227,8 +235,10 @@ class ErrorMitigation:
         expectation = 0
 
         for state, count in counts.items():
+            # Remove spaces and get first bit
+            state_clean = state.replace(" ", "")
             # Z eigenvalue is +1 for |0⟩, -1 for |1⟩ on first qubit
-            if state[0] == "0":
+            if state_clean[0] == "0":
                 expectation += count / total_shots
             else:
                 expectation -= count / total_shots
@@ -384,8 +394,8 @@ def main():
     mitigator = ErrorMitigation(verbose=args.verbose)
 
     try:
-        # Create test circuit
-        test_circuit = QuantumCircuit(2, 2)
+        # Create test circuit (don't pre-create classical bits, measure_all will add them)
+        test_circuit = QuantumCircuit(2)
         test_circuit.h(0)
         test_circuit.cx(0, 1)
         test_circuit.measure_all()
@@ -454,7 +464,9 @@ def main():
         print(f"\n✅ Error mitigation analysis completed!")
 
     except Exception as e:
+        import traceback
         print(f"\n❌ Error: {e}")
+        traceback.print_exc()
         return 1
 
     return 0

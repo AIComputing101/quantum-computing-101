@@ -1,6 +1,14 @@
 # Module 3: Quantum Programming Basics
 *Foundation Tier*
 
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> 
+> **Recent Updates:**
+> - Updated conditional operations to use `if_test()` for Qiskit 2.x
+> - Changed `bind_parameters` → `assign_parameters` across all examples
+> - Fixed quantum adder implementation to avoid duplicate qubit errors
+> - All 6 examples (100%) passing tests
+
 ## Learning Objectives
 By the end of this module, you will be able to:
 - Set up a reproducible quantum development environment

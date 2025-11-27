@@ -230,11 +230,11 @@ class QuantumPortfolioOptimizer:
 
         def cost_function(params):
             # Bind parameters to ansatz
-            bound_ansatz = qaoa_ansatz.bind_parameters(params)
+            bound_ansatz = qaoa_ansatz.assign_parameters(params)
 
             # Create circuit
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz, inplace=True)
+            qc.compose(bound_ansatz.decompose(), inplace=True)
             qc.measure_all()
 
             # Run circuit
@@ -279,10 +279,10 @@ class QuantumPortfolioOptimizer:
 
         # Get final portfolio distribution
         final_params = result.x
-        bound_ansatz = qaoa_ansatz.bind_parameters(final_params)
+        bound_ansatz = qaoa_ansatz.assign_parameters(final_params)
 
         qc = QuantumCircuit(n_qubits)
-        qc.compose(bound_ansatz, inplace=True)
+        qc.compose(bound_ansatz.decompose(), inplace=True)
         qc.measure_all()
 
         job = simulator.run(qc, shots=10000)

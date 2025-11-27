@@ -71,7 +71,7 @@ class DeutschJozsaOracle:
                 f"   Truth table too large to display ({len(self.truth_table)} entries)"
             )
         print(
-            f"   Expected result: {'CONSTANT' if self._is_constant() else 'BALANCED'}"
+            f"   Expected result: {'CONSTANT' if self.is_constant() else 'BALANCED'}"
         )
 
     def _generate_function(self):

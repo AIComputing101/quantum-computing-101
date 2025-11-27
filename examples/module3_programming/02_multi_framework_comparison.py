@@ -290,7 +290,7 @@ class MultiFrameworkComparator:
             qc_var.cx(0, 1)
 
             # Bind parameters
-            qc_bound = qc_var.bind_parameters(
+            qc_bound = qc_var.assign_parameters(
                 {theta: params[0], phi: params[1], lambda_param: params[2]}
             )
 
@@ -399,7 +399,7 @@ class MultiFrameworkComparator:
                     list(qc.parameters)[i]: params_vals[i]
                     for i in range(len(params_vals))
                 }
-                bound_circuit = qc.bind_parameters(param_dict)
+                bound_circuit = qc.assign_parameters(param_dict)
 
                 # Add measurement of ZZ expectation
                 from qiskit.quantum_info import SparsePauliOp

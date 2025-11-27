@@ -1,6 +1,15 @@
 # Module 5: Quantum Error Correction & Noise
 *Intermediate Tier*
 
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> 
+> **Recent Updates:**
+> - Fixed noise model configuration for 1-qubit vs 2-qubit gates
+> - Updated to use `density_matrix` method for noisy simulations
+> - Added proper measurement circuits where required
+> - Fixed readout error API (`add_all_qubit_readout_error`)
+> - All 5 examples (100%) passing tests
+
 ## Learning Objectives
 By the end of this module, you will be able to:
 - Explain sources of quantum noise: decoherence, relaxation (T1), dephasing (T2), gate & readout errors

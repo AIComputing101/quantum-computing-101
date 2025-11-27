@@ -148,7 +148,7 @@ class CloudResourceManager:
             return float("inf")
 
         provider = self.providers[provider_name]
-        base_time = provider["typical_queue_time"]
+        base_time = provider.get("typical_queue_time", provider.get("capabilities", {}).get("typical_queue_time", 0))
         load_multiplier = 1 + provider["current_load"] / provider["max_concurrent_jobs"]
 
         return base_time * load_multiplier
@@ -623,7 +623,7 @@ class WorkflowOptimizer:
                 estimated_cost = (
                     n_tasks * 1000 * provider_info["cost_per_shot"]
                 )  # Rough estimate
-                estimated_time = provider_info["typical_queue_time"]
+                estimated_time = provider_info.get("typical_queue_time", provider_info.get("capabilities", {}).get("typical_queue_time", 0))
                 fidelity = provider_info["capabilities"]["gate_fidelity"]
 
                 total_cost += estimated_cost
@@ -1003,7 +1003,9 @@ def main():
         print(f"\n✅ Hybrid cloud workflow demonstration completed!")
 
     except Exception as e:
+        import traceback
         print(f"\n❌ Error: {e}")
+        traceback.print_exc()
         return 1
 
     return 0

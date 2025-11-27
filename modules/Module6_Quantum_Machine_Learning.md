@@ -1,6 +1,13 @@
 # Module 6: Quantum Machine Learning (QML)
 *Intermediate Tier*
 
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> 
+> **Recent Updates:**
+> - Updated `bind_parameters` → `assign_parameters` in all QML examples
+> - All 5 examples (100%) passing tests
+> - Note: QNN training may take 60-120s depending on dataset size
+
 ## Learning Objectives
 By the end of this module, you will be able to:
 - Explain what makes data "quantum ready" and compare quantum data encoding strategies

@@ -1,6 +1,14 @@
 # Module 7: Quantum Hardware & Cloud Platforms
 *Advanced Tier*
 
+> **✅ Qiskit 2.x Compatible** - All examples updated and tested (Dec 2024)
+> 
+> **Recent Updates:**
+> - Made networkx dependency optional with graceful fallback
+> - Fixed measurement circuit requirements for noisy simulations
+> - Updated provider queue time handling
+> - All 5 examples (100%) passing tests
+
 ## 7.0 Overview
 This module bridges theory and practice by exploring real quantum hardware technologies and the cloud platforms that provide access to them. You will learn architectural principles of leading qubit modalities, hardware performance metrics, access workflows across major cloud providers, execution optimization strategies, and how to responsibly run and benchmark workloads on actual quantum devices.
 

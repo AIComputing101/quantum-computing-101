@@ -177,11 +177,12 @@ class MolecularSimulator:
 
         def cost_function(params):
             # Bind parameters to ansatz
-            bound_ansatz = ansatz.bind_parameters(params)
+            bound_ansatz = ansatz.assign_parameters(params)
 
             # Create circuit for expectation value calculation
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz, inplace=True)
+            # Decompose the bound ansatz before composing
+            qc.compose(bound_ansatz.decompose(), inplace=True)
 
             # Calculate expectation value of Hamiltonian
             expectation_value = 0
@@ -235,7 +236,7 @@ class MolecularSimulator:
             "molecule": molecule["name"],
             "ground_state_energy": result.fun,
             "optimal_parameters": result.x,
-            "n_iterations": result.nit,
+            "n_iterations": getattr(result, 'nit', getattr(result, 'nfev', 0)),
             "success": result.success,
             "n_qubits": n_qubits,
             "hamiltonian_terms": len(hamiltonian.paulis),

@@ -90,7 +90,7 @@ class QuantumFeatureMaps:
         )
 
         # Bind data
-        bound_circuit = feature_map.bind_parameters(data_point)
+        bound_circuit = feature_map.assign_parameters(data_point)
 
         return bound_circuit
 

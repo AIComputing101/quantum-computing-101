@@ -379,8 +379,14 @@ def demonstrate_advanced_measurements():
     # Measure first qubit
     qc_conditional.measure(0, 0)
 
-    # Conditional operation based on measurement
-    qc_conditional.x(2).c_if(qc_conditional.cregs[0], 1)
+    # Conditional operation based on measurement (using if_test for newer Qiskit)
+    try:
+        # Try newer Qiskit API with dynamic circuits
+        with qc_conditional.if_test((qc_conditional.cregs[0], 1)):
+            qc_conditional.x(2)
+    except AttributeError:
+        # Fallback for older Qiskit versions
+        qc_conditional.x(2).c_if(qc_conditional.cregs[0], 1)
 
     # Measure remaining qubits
     qc_conditional.measure(1, 1)

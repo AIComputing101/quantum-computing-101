@@ -96,7 +96,13 @@ except ImportError:
         return None
 
 
-import networkx as nx
+try:
+    import networkx as nx
+    HAS_NETWORKX = True
+except ImportError:
+    HAS_NETWORKX = False
+    print("ℹ️  networkx not available, some topology analysis features will be limited")
+
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -710,36 +716,42 @@ def visualize_optimization_results(optimizer, benchmark_results, analysis):
     ax1 = plt.subplot(2, 3, 1)
 
     # Plot coupling maps
-    for i, (backend_name, backend_info) in enumerate(optimizer.backends.items()):
-        if i < 2:  # Show first two backends
-            coupling_map = backend_info["coupling_map"]
+    if HAS_NETWORKX:
+        for i, (backend_name, backend_info) in enumerate(optimizer.backends.items()):
+            if i < 2:  # Show first two backends
+                coupling_map = backend_info["coupling_map"]
 
-            # Create graph
-            G = nx.Graph()
-            G.add_edges_from(coupling_map)
+                # Create graph
+                G = nx.Graph()
+                G.add_edges_from(coupling_map)
 
-            # Position nodes
-            if "linear" in backend_name.lower():
-                pos = {i: (i, 0) for i in range(backend_info["n_qubits"])}
-            elif "grid" in backend_name.lower():
-                pos = {i: (i % 5, i // 5) for i in range(backend_info["n_qubits"])}
-            else:
-                pos = nx.spring_layout(G)
+                # Position nodes
+                if "linear" in backend_name.lower():
+                    pos = {i: (i, 0) for i in range(backend_info["n_qubits"])}
+                elif "grid" in backend_name.lower():
+                    pos = {i: (i % 5, i // 5) for i in range(backend_info["n_qubits"])}
+                else:
+                    pos = nx.spring_layout(G)
 
-            # Plot
-            nx.draw(
-                G,
-                pos,
-                ax=ax1,
-                node_color=f"C{i}",
-                node_size=200,
-                alpha=0.7,
-                label=backend_name,
-            )
+                # Plot
+                nx.draw(
+                    G,
+                    pos,
+                    ax=ax1,
+                    node_color=f"C{i}",
+                    node_size=200,
+                    alpha=0.7,
+                    label=backend_name,
+                )
 
-    ax1.set_title("Backend Architectures")
-    ax1.legend()
-    ax1.axis("equal")
+        ax1.set_title("Backend Architectures")
+        ax1.legend()
+        ax1.axis("equal")
+    else:
+        ax1.text(0.5, 0.5, "Network visualization\nrequires networkx", 
+                ha='center', va='center', transform=ax1.transAxes)
+        ax1.set_title("Backend Architectures (networkx required)")
+        ax1.axis('off')
 
     # Optimization effectiveness
     ax2 = plt.subplot(2, 3, 2)

@@ -140,7 +140,7 @@ def analyze_error_rates():
 
     fidelities = {"Depolarizing": [], "Amplitude Damping": [], "Phase Damping": []}
 
-    simulator = AerSimulator(method="statevector")
+    simulator = AerSimulator(method="density_matrix")
 
     for error_rate in error_rates:
         print(f"Testing error rate: {error_rate:.4f}")
@@ -148,19 +148,28 @@ def analyze_error_rates():
         for noise_type in fidelities.keys():
             # Create noise model
             if noise_type == "Depolarizing":
-                error = depolarizing_error(error_rate, 1)
+                error_1q = depolarizing_error(error_rate, 1)
+                error_2q = depolarizing_error(error_rate, 2)
             elif noise_type == "Amplitude Damping":
-                error = amplitude_damping_error(error_rate)
+                error_1q = amplitude_damping_error(error_rate)
+                # For 2-qubit gates, use depolarizing as amplitude damping is 1-qubit only
+                error_2q = depolarizing_error(error_rate, 2)
             else:  # Phase Damping
-                error = phase_damping_error(error_rate)
+                error_1q = phase_damping_error(error_rate)
+                # For 2-qubit gates, use depolarizing as phase damping is 1-qubit only
+                error_2q = depolarizing_error(error_rate, 2)
 
             noise_model = NoiseModel()
-            noise_model.add_all_qubit_quantum_error(error, ["h", "cx"])
+            noise_model.add_all_qubit_quantum_error(error_1q, ["h"])
+            noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
 
-            # Run simulation
-            job = simulator.run(transpile(qc, simulator), noise_model=noise_model)
+            # Run simulation with noise - need to save and retrieve density matrix
+            qc_copy = qc.copy()
+            qc_copy.save_density_matrix()
+            
+            job = simulator.run(transpile(qc_copy, simulator), noise_model=noise_model)
             result = job.result()
-            noisy_state = result.get_statevector()
+            noisy_state = result.data()['density_matrix']
 
             # Calculate fidelity
             fidelity = state_fidelity(ideal_state, noisy_state)
@@ -226,7 +235,7 @@ def demonstrate_algorithm_degradation():
     n_qubits = 2
     error_rates = [0.0, 0.001, 0.005, 0.01, 0.02, 0.05]
 
-    results = {"Constant": {}, "Balanced": {}}
+    results = {"constant": {}, "balanced": {}}
 
     simulator = AerSimulator()
 
@@ -239,9 +248,11 @@ def demonstrate_algorithm_degradation():
 
             if error_rate > 0:
                 # Add noise
-                error = depolarizing_error(error_rate, 1)
+                error_1q = depolarizing_error(error_rate, 1)
+                error_2q = depolarizing_error(error_rate, 2)
                 noise_model = NoiseModel()
-                noise_model.add_all_qubit_quantum_error(error, ["h", "cx"])
+                noise_model.add_all_qubit_quantum_error(error_1q, ["h"])
+                noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
             else:
                 noise_model = None
 
@@ -277,7 +288,7 @@ def demonstrate_algorithm_degradation():
             error_rates_list,
             success_rates,
             "o-",
-            label=f"{function_type} Function",
+            label=f"{function_type.capitalize()} Function",
             linewidth=2,
             markersize=8,
         )
@@ -321,7 +332,7 @@ def characterize_realistic_noise():
 
         # Measurement errors
         readout_error = [[0.99, 0.01], [0.02, 0.98]]  # Readout error matrix
-        noise_model.add_readout_error(readout_error)
+        noise_model.add_all_qubit_readout_error(readout_error)
 
         return noise_model
 

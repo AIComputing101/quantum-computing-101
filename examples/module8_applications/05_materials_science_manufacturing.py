@@ -178,9 +178,9 @@ class MaterialSimulator:
         simulator = AerSimulator()
 
         def cost_function(params):
-            bound_ansatz = ansatz.bind_parameters(params)
+            bound_ansatz = ansatz.assign_parameters(params)
             qc = QuantumCircuit(n_orbitals)
-            qc.compose(bound_ansatz, inplace=True)
+            qc.compose(bound_ansatz.decompose(), inplace=True)
 
             # Calculate expectation value
             expectation_value = 0
@@ -570,9 +570,9 @@ class ManufacturingOptimizer:
         simulator = AerSimulator()
 
         def cost_function(params):
-            bound_ansatz = qaoa_ansatz.bind_parameters(params)
+            bound_ansatz = qaoa_ansatz.assign_parameters(params)
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz, inplace=True)
+            qc.compose(bound_ansatz.decompose(), inplace=True)
             qc.measure_all()
 
             job = simulator.run(qc, shots=1000)
@@ -607,7 +607,7 @@ class ManufacturingOptimizer:
 
         # Get final solution
         final_params = result.x
-        bound_ansatz = qaoa_ansatz.bind_parameters(final_params)
+        bound_ansatz = qaoa_ansatz.assign_parameters(final_params)
 
         qc = QuantumCircuit(n_qubits)
         qc.compose(bound_ansatz, inplace=True)

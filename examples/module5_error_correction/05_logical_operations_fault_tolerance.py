@@ -63,7 +63,7 @@ class FaultTolerantOperations:
     def non_transversal_t_gate(self):
         """Non-transversal T gate implementation (magic state injection)."""
         # Simplified magic state T gate - in practice requires distillation
-        t_gate = QuantumCircuit(8, name="T_Gate_Magic_State")  # 7 + 1 ancilla
+        t_gate = QuantumCircuit(8, 1, name="T_Gate_Magic_State")  # 7 + 1 ancilla, 1 classical bit
 
         # Prepare magic state |T⟩ = (|0⟩ + e^(iπ/4)|1⟩)/√2
         t_gate.ry(np.pi / 4, 7)  # Approximate magic state preparation
@@ -466,7 +466,7 @@ def main():
         print(f"\n🎓 Fault Tolerance Principles:")
         print(f"   • Errors must not propagate uncontrollably")
         print(f"   • At most one error per code block from single fault")
-        print(f"   • Universal set: {Clifford + T} gates sufficient")
+        print(f"   • Universal set: {{Clifford + T}} gates sufficient")
         print(f"   • Threshold theorem enables arbitrarily reliable computation")
 
         print(f"\n✅ Fault-tolerant operation analysis completed!")

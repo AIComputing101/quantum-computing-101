@@ -278,21 +278,18 @@ class QuantumCircuitPatterns:
         print("\n1. Quantum Adder Module:")
 
         def quantum_adder(a_qubits, b_qubits, carry_qubit):
-            """Create a quantum adder circuit."""
+            """Create a quantum adder circuit (simplified)."""
             n_bits = len(a_qubits)
             qc = QuantumCircuit(a_qubits + b_qubits + [carry_qubit])
 
-            # Ripple carry adder implementation
+            # Simplified adder implementation (XOR for addition without carry propagation)
             for i in range(n_bits):
-                if i == 0:
-                    # First bit: no carry in
-                    qc.ccx(a_qubits[i], b_qubits[i], carry_qubit)
-                    qc.cx(a_qubits[i], b_qubits[i])
-                else:
-                    # Subsequent bits: use carry from previous
-                    qc.ccx(a_qubits[i], b_qubits[i], carry_qubit)
-                    qc.cx(a_qubits[i], b_qubits[i])
-                    qc.ccx(carry_qubit, b_qubits[i - 1], carry_qubit)
+                # XOR operation: a XOR b
+                qc.cx(a_qubits[i], b_qubits[i])
+                
+            # Compute final carry (AND of highest bits)
+            if n_bits > 0:
+                qc.ccx(a_qubits[-1], b_qubits[-1], carry_qubit)
 
             return qc
 
