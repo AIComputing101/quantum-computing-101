@@ -32,24 +32,29 @@ jobs:
     - name: Install core dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r examples/requirements.txt
+        pip install -r examples/requirements-core.txt
     
-    - name: Test example imports and basic functionality
+    - name: Verify examples syntax
+      run: |
+        echo "🔍 Running syntax verification..."
+        python verify_examples.py --quick
+    
+    - name: Test essential imports
       env:
         MPLBACKEND: Agg  # Use non-interactive matplotlib backend
       run: |
-        # Test essential imports work
-        python -c "import sys; sys.path.append('examples'); import utils.visualization; print('✅ Utils import successful')"
-        
-        # Test key examples can run with minimal parameters
-        echo "🧪 Testing Module 1 (Fundamentals)..."
-        timeout 30s python examples/module1_fundamentals/01_classical_vs_quantum_bits.py --shots 5 || echo "⚠️ Module 1 timeout (expected for educational content)"
-        
-        echo "🧪 Testing CLI interfaces..."
+        echo "📦 Testing essential imports..."
+        python -c "import sys; sys.path.append('examples'); import utils.visualization; print('✅ Visualization utils OK')"
+        python -c "import sys; sys.path.append('examples'); import utils.quantum_helpers; print('✅ Quantum helpers OK')"
+        python -c "import sys; sys.path.append('examples'); import utils.cli; print('✅ CLI utils OK')"
+        echo "✅ All imports successful"
+    
+    - name: Test CLI help interfaces
+      run: |
+        echo "🧪 Testing CLI help interfaces..."
         python examples/module1_fundamentals/01_classical_vs_quantum_bits.py --help > /dev/null
         python examples/module4_algorithms/01_deutsch_jozsa_algorithm.py --help > /dev/null
-        
-        echo "✅ Core functionality verified"
+        echo "✅ CLI interfaces working"
 
   documentation:
     runs-on: ubuntu-latest
@@ -62,17 +67,45 @@ jobs:
         
         # Check essential documentation exists
         test -f README.md && echo "✅ Main README found"
+        test -f BEGINNERS_GUIDE.md && echo "✅ Beginner's Guide found"
         test -f examples/README.md && echo "✅ Examples README found"
+        test -f verify_examples.py && echo "✅ Verification script found"
+        test -f CHANGELOG.md && echo "✅ Changelog found"
         
-        # Count examples across modules
-        total_examples=$(find examples/module*/ -maxdepth 1 -name "*.py" | wc -l)
+        # Count examples across modules (excluding __init__.py and other non-example files)
+        total_examples=$(find examples/module*/ -maxdepth 1 -name "*.py" -not -name "__*" | wc -l)
         echo "📊 Found $total_examples example files"
         
-        # Basic structure validation (flexible for educational content)
+        # Validate example count (expecting 45 examples)
         if [ "$total_examples" -lt 40 ]; then
-          echo "⚠️ Warning: Expected ~45 examples, found $total_examples"
+          echo "❌ Error: Expected 45 examples, found only $total_examples"
+          exit 1
+        elif [ "$total_examples" -ge 45 ]; then
+          echo "✅ Example count correct: $total_examples examples"
         else
-          echo "✅ Example count looks good: $total_examples examples"
+          echo "⚠️ Warning: Expected 45 examples, found $total_examples"
         fi
         
         echo "✅ Documentation structure validated"
+  
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Test Docker CPU build
+      run: |
+        echo "🐳 Testing Docker CPU build..."
+        cd docker
+        docker build --build-arg VARIANT=cpu -t qc101-test:cpu -f Dockerfile ..
+        echo "✅ Docker CPU build successful"
+    
+    - name: Run quick example in container
+      run: |
+        echo "🧪 Running example in Docker container..."
+        docker run --rm qc101-test:cpu \
+          python examples/module1_fundamentals/01_classical_vs_quantum_bits.py --shots 10
+        echo "✅ Docker container execution successful"
