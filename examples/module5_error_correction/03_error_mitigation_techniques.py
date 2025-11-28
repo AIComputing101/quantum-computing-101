@@ -142,24 +142,106 @@ class ErrorMitigation:
         return scaled_circuit
 
     def readout_error_mitigation(self, circuit, shots=1024):
-        """Readout error mitigation using calibration."""
-        # Calibration: prepare all basis states for proper calibration
+        """
+        Readout error mitigation using calibration - Fix measurement mistakes!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE PROBLEM: Measurement errors corrupt results
+        When we measure |0⟩, might get |1⟩ (and vice versa)
+        
+        THE SOLUTION: Calibration + Matrix Inversion
+        
+        STEP-BY-STEP PROCESS:
+        =====================
+        
+        STEP 1: CALIBRATION
+        Prepare EVERY possible basis state, measure it
+        Build "confusion matrix" M that describes measurement errors
+        
+        STEP 2: INVERSION
+        Compute M^(-1) (inverse of confusion matrix)
+        
+        STEP 3: CORRECTION
+        For noisy measurement results p_noisy:
+        Corrected results: p_ideal = M^(-1) · p_noisy
+        
+        MATHEMATICAL FORMULA:
+        =====================
+        Measurement process: p_measured = M · p_true
+        
+        where:
+        M[i,j] = P(measure i | prepared j)
+        p_true = true probability distribution
+        p_measured = what we actually observe
+        
+        INVERSION:
+        p_true = M^(-1) · p_measured
+        
+        EXAMPLE (2 qubits):
+        Prepare |00⟩, |01⟩, |10⟩, |11⟩
+        Measure each 1000 times → Build 4×4 matrix M
+        
+        M = [[P(00|00), P(00|01), P(00|10), P(00|11)],
+             [P(01|00), P(01|01), P(01|10), P(01|11)],
+             [P(10|00), P(10|01), P(10|10), P(10|11)],
+             [P(11|00), P(11|01), P(11|10), P(11|11)]]
+        
+        IDEAL (No errors): M = I (identity matrix)
+        REALISTIC: M has off-diagonal elements (errors!)
+        
+        WHY THIS WORKS:
+        Measurement errors are CLASSICAL (not quantum)
+        Can be described by stochastic matrix
+        Linear algebra: Invertible if errors not too large
+        
+        LIMITATION:
+        Works only if M is invertible (determinant ≠ 0)
+        Requires: errors < 50% (otherwise information lost)
+        
+        OVERHEAD:
+        Need 2^n calibration circuits for n qubits
+        2 qubits → 4 circuits
+        3 qubits → 8 circuits
+        4 qubits → 16 circuits (feasible for small n)
+        """
+        # ==============================================================
+        # STEP 1: CALIBRATION - Prepare all basis states
+        # ==============================================================
+        # GOAL: Learn what the measurement errors are
+        # METHOD: Prepare known states, measure them, build confusion matrix
+        
         cal_circuits = []
         n_qubits = circuit.num_qubits
-        n_states = 2**n_qubits
+        n_states = 2**n_qubits  # Total number of basis states
+        # EXAMPLE: 2 qubits → 4 states |00⟩, |01⟩, |10⟩, |11⟩
 
-        # Create calibration circuit for each basis state
+        # Build calibration circuit for each basis state
+        # LOOP: state_idx from 0 to 2^n - 1
         for state_idx in range(n_states):
             cal_circuit = QuantumCircuit(n_qubits)
-            # Prepare the basis state by applying X gates
+            
+            # Prepare basis state by applying X gates
+            # BIT MANIPULATION TRICK:
+            # state_idx = 0 (binary: 00) → No X gates → |00⟩
+            # state_idx = 1 (binary: 01) → X on qubit 0 → |01⟩  
+            # state_idx = 2 (binary: 10) → X on qubit 1 → |10⟩
+            # state_idx = 3 (binary: 11) → X on both → |11⟩
             for qubit_idx in range(n_qubits):
-                # Check if bit is set in state_idx (read from right to left)
+                # Check if bit qubit_idx is set in state_idx
+                # (state_idx >> qubit_idx) shifts bits right
+                # & 1 checks if least significant bit is 1
                 if (state_idx >> qubit_idx) & 1:
-                    cal_circuit.x(qubit_idx)
+                    cal_circuit.x(qubit_idx)  # Flip this qubit to |1⟩
+                    
             cal_circuit.measure_all()
             cal_circuits.append(cal_circuit)
 
-        # Run calibration
+        # ==============================================================
+        # STEP 2: Run calibration circuits with noise
+        # ==============================================================
+        # MEASURE: What do we actually observe when we prepare each state?
+        # This tells us the confusion matrix M
         noise_model = self.create_noise_model()
         simulator = AerSimulator(noise_model=noise_model)
 
@@ -168,16 +250,29 @@ class ErrorMitigation:
             job = simulator.run(cal_circuit, shots=shots)
             result = job.result()
             cal_results.append(result.get_counts())
+            # Each result contains measurement distribution for one basis state
 
-        # Build calibration matrix
+        # ==============================================================
+        # STEP 3: Build calibration (confusion) matrix M
+        # ==============================================================
+        # MATHEMATICAL CONSTRUCTION: M[i,j] from calibration data
+        # Column j: Results when we prepared state j
+        # Row i: Probability of measuring state i
         cal_matrix = self.build_calibration_matrix(cal_results, circuit.num_qubits)
 
-        # Run main circuit with noise
+        # ==============================================================
+        # STEP 4: Run actual circuit with noise
+        # ==============================================================
+        # This is the circuit whose results we want to correct
         job = simulator.run(circuit, shots=shots)
         result = job.result()
         noisy_counts = result.get_counts()
 
-        # Apply readout error mitigation
+        # ==============================================================
+        # STEP 5: Apply mitigation (matrix inversion)
+        # ==============================================================
+        # MATHEMATICAL OPERATION: p_ideal = M^(-1) · p_noisy
+        # This "undoes" the measurement errors!
         mitigated_counts = self.apply_readout_mitigation(noisy_counts, cal_matrix)
 
         return {
@@ -187,49 +282,221 @@ class ErrorMitigation:
         }
 
     def build_calibration_matrix(self, cal_results, n_qubits):
-        """Build calibration matrix from calibration results."""
+        """
+        Build calibration matrix from calibration results.
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        CONFUSION MATRIX (Calibration Matrix) M:
+        Describes how measurement errors transform probabilities
+        
+        MATRIX STRUCTURE (n qubits → 2^n × 2^n matrix):
+        M[i,j] = P(measure state i | prepared state j)
+        
+        EXAMPLE (2 qubits, 4×4 matrix):
+                Prepared: |00⟩  |01⟩  |10⟩  |11⟩
+        Measured |00⟩: [ M₀₀   M₀₁   M₀₂   M₀₃ ]
+                |01⟩: [ M₁₀   M₁₁   M₁₂   M₁₃ ]
+                |10⟩: [ M₂₀   M₂₁   M₂₂   M₂₃ ]
+                |11⟩: [ M₃₀   M₃₁   M₃₂   M₃₃ ]
+        
+        READING THE MATRIX:
+        Column j: Distribution we measure when preparing state j
+        Row i: Probability of observing outcome i
+        
+        IDEAL (No errors): M = I (identity)
+        REALISTIC: M has off-diagonal elements
+        
+        CONSTRUCTION ALGORITHM:
+        =======================
+        FOR each prepared state j = 0 to 2^n-1:
+            1. Prepared state j
+            2. Measure 1000 times
+            3. Count how often we get each outcome i
+            4. M[i,j] = count(i) / 1000
+        
+        MATHEMATICAL PROPERTY:
+        Each column sums to 1 (it's a probability distribution)
+        Σᵢ M[i,j] = 1 for all j
+        
+        Matrix is STOCHASTIC (non-negative, columns sum to 1)
+        
+        WHY WE NEED THIS:
+        Once we know M, we can invert it to correct future measurements!
+        """
+        # ==============================================================
+        # Initialize calibration matrix
+        # ==============================================================
+        # SIZE: 2^n × 2^n for n qubits
+        # EXAMPLE: 2 qubits → 4×4 matrix, 3 qubits → 8×8 matrix
         n_states = 2**n_qubits
         cal_matrix = np.zeros((n_states, n_states))
 
+        # ==============================================================
+        # Fill matrix from calibration data
+        # ==============================================================
+        # i = prepared state index (which calibration circuit)
+        # counts = measurement results for that prepared state
         for i, counts in enumerate(cal_results):
             total_shots = sum(counts.values())
+            
+            # Loop through all measured outcomes
             for state, count in counts.items():
-                # Remove spaces from state string
+                # CLEAN STATE STRING: Remove spaces (Qiskit formatting)
+                # EXAMPLE: "0 1" → "01"
                 state_clean = state.replace(" ", "")
+                
+                # CONVERT BINARY STRING TO INTEGER
+                # EXAMPLE: "01" → 1, "10" → 2, "11" → 3
+                # MATH: Binary to decimal conversion
                 state_int = int(state_clean, 2)
+                
+                # FILL MATRIX ENTRY M[measured_state, prepared_state]
+                # PROBABILITY: count / total_shots
+                # EXAMPLE: Prepared |00⟩ (i=0), measured |01⟩ 50 times out of 1000
+                #          → M[1, 0] = 50/1000 = 0.05 (5% error)
                 cal_matrix[state_int, i] = count / total_shots
 
+        # ==============================================================
+        # RESULT: Calibration matrix M fully populated
+        # ==============================================================
+        # Each column j: Probability distribution when preparing state j
+        # Diagonal elements: Probability of correct measurement (should be high!)
+        # Off-diagonal: Probability of incorrect measurement (errors)
+        
         return cal_matrix
 
     def apply_readout_mitigation(self, counts, cal_matrix):
-        """Apply readout error mitigation."""
+        """
+        Apply readout error mitigation - The correction step!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE CORRECTION FORMULA:
+        p_ideal = M^(-1) · p_noisy
+        
+        WHERE:
+        - M = calibration (confusion) matrix
+        - M^(-1) = inverse matrix (undoes the errors!)
+        - p_noisy = what we measured (with errors)
+        - p_ideal = what we SHOULD have measured (without errors)
+        
+        STEP-BY-STEP PROCESS:
+        =====================
+        
+        STEP 1: Convert measurement counts to probability vector
+        Counts: {'00': 450, '01': 300, '10': 200, '11': 50}
+        Total: 1000 shots
+        Probabilities: [0.45, 0.30, 0.20, 0.05]
+        
+        STEP 2: Compute inverse calibration matrix
+        M^(-1) = inv(M)
+        
+        WHY IT WORKS: If measurement transforms as p_noisy = M·p_ideal,
+        then p_ideal = M^(-1)·p_noisy (multiply both sides by M^(-1))
+        
+        MATHEMATICAL VERIFICATION:
+        M^(-1) · M = I (identity)
+        M^(-1) · (M · p_ideal) = M^(-1) · p_noisy
+        (M^(-1) · M) · p_ideal = M^(-1) · p_noisy
+        I · p_ideal = M^(-1) · p_noisy
+        p_ideal = M^(-1) · p_noisy ✓
+        
+        STEP 3: Matrix multiplication
+        p_ideal = M^(-1) @ p_noisy
+        
+        EXAMPLE (2 qubits):
+        p_noisy = [0.45, 0.30, 0.20, 0.05]  (what we measured)
+        M^(-1) ≈ [[1.02, -0.01, -0.01, 0],
+                  [-0.01, 1.03, 0, -0.02],
+                  [-0.01, 0, 1.03, -0.02],
+                  [0, -0.02, -0.02, 1.05]]
+        p_ideal ≈ M^(-1) @ p_noisy (corrected probabilities!)
+        
+        STEP 4: Convert back to counts
+        mitigated_counts = p_ideal × total_shots
+        
+        IMPORTANT NOTES:
+        ================
+        1. Mitigated probabilities can be NEGATIVE (quasi-probabilities)
+           This is OK! It's a mathematical artifact of error correction
+           Negative values typically small (< 5%)
+           
+        2. Matrix must be INVERTIBLE
+           If errors too large (> 50%), M becomes singular (can't invert)
+           
+        3. Statistical noise amplification
+           Inversion amplifies statistical fluctuations
+           Need more shots for mitigated results to converge
+        
+        PRACTICAL BENEFIT:
+        Typical improvement: 2-5× reduction in measurement errors
+        Cost: Just classical post-processing (essentially free!)
+        """
+        # ==============================================================
+        # STEP 1: Convert counts dictionary to probability vector
+        # ==============================================================
+        # VECTOR FORMAT: [P(|00⟩), P(|01⟩), P(|10⟩), P(|11⟩), ...]
+        # SIZE: 2^n elements for n qubits
         n_states = cal_matrix.shape[0]
         total_shots = sum(counts.values())
 
-        # Convert counts to probability vector
         prob_vector = np.zeros(n_states)
         for state, count in counts.items():
-            # Remove spaces from state string
+            # Clean state string (remove Qiskit formatting spaces)
             state_clean = state.replace(" ", "")
+            # Convert binary string to integer index
+            # EXAMPLE: "10" → int("10", 2) = 2
             state_int = int(state_clean, 2)
+            # Calculate probability for this state
             prob_vector[state_int] = count / total_shots
 
-        # Invert calibration matrix and apply
+        # ==============================================================
+        # STEP 2: Invert calibration matrix and apply correction
+        # ==============================================================
         try:
+            # COMPUTE INVERSE: M^(-1)
+            # LINEAR ALGEBRA: Uses LU decomposition or similar
+            # COMPLEXITY: O(n³) for n×n matrix
+            # EXAMPLE: 4×4 matrix → ~64 operations
             inv_cal_matrix = np.linalg.inv(cal_matrix)
+            
+            # APPLY CORRECTION: Matrix-vector multiplication
+            # MATHEMATICAL OPERATION: p_ideal = M^(-1) @ p_noisy
+            # @ = matrix multiplication operator in Python/NumPy
+            # RESULT: Corrected probability distribution
             mitigated_probs = inv_cal_matrix @ prob_vector
 
-            # Convert back to counts
+            # ==============================================================
+            # STEP 3: Convert corrected probabilities back to counts
+            # ==============================================================
             mitigated_counts = {}
             for i, prob in enumerate(mitigated_probs):
-                if prob > 0:  # Only include positive probabilities
+                # QUASI-PROBABILITIES: Can be negative due to inversion
+                # Filter: Only include non-negative (prob > 0)
+                # MATHEMATICAL NOTE: Small negative values are OK and expected
+                # They arise from statistical fluctuations + inversion
+                if prob > 0:
+                    # Convert state index to binary string
+                    # EXAMPLE: i=2, n=2 qubits → "10"
                     state_str = format(i, f"0{int(np.log2(n_states))}b")
+                    # Scale back to counts (multiply by total shots)
                     mitigated_counts[state_str] = int(prob * total_shots)
 
             return mitigated_counts
 
         except np.linalg.LinAlgError:
-            # Fallback if matrix is singular
+            # ==============================================================
+            # ERROR HANDLING: Matrix inversion failed
+            # ==============================================================
+            # REASONS:
+            # 1. Matrix is singular (determinant = 0)
+            # 2. Errors too large (> 50%) → Matrix not invertible
+            # 3. Numerical instability
+            #
+            # FALLBACK: Return original noisy counts (no mitigation)
+            print("⚠️  Warning: Calibration matrix not invertible!")
+            print("    Errors may be too large for mitigation")
             return counts
 
     def symmetry_verification(self, circuit, symmetry_circuits, shots=1024):

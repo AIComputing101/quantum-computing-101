@@ -206,26 +206,102 @@ class QuantumErrorCorrectionProtocols:
         }
 
     def three_qubit_phase_flip_code(self):
-        """Implementation of 3-qubit phase flip code."""
-        # Encoding circuit (in X basis)
+        """
+        Implementation of 3-qubit phase-flip code - Protects against Z errors!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE PROBLEM: Phase-flip errors (Z gates)
+        |+⟩ --Z--> |-⟩  (superposition signs flip)
+        α|0⟩ + β|1⟩ --Z--> α|0⟩ - β|1⟩ (phase changed!)
+        
+        CHALLENGE: Can't just copy qubits (no-cloning theorem)
+        
+        THE CLEVER SOLUTION: Work in X-BASIS instead of Z-basis!
+        
+        BASIS TRANSFORMATION:
+        =====================
+        Z-basis: |0⟩, |1⟩ (computational basis)
+        X-basis: |+⟩ = (|0⟩+|1⟩)/√2, |-⟩ = (|0⟩-|1⟩)/√2
+        
+        KEY INSIGHT: Hadamard gate swaps the bases
+        H: |0⟩ ↔ |+⟩, |1⟩ ↔ |-⟩
+        
+        TRANSFORMATION OF ERRORS:
+        Z error in Z-basis = X error in X-basis!
+        
+        MATHEMATICAL PROOF:
+        In Z-basis: Z|ψ⟩ causes phase flip
+        Transform: H·Z·H = X (Hadamard conjugates Z to X)
+        In X-basis: Same error acts like bit-flip!
+        
+        ENCODING STRATEGY:
+        ==================
+        |0⟩ → H → |+⟩ → bit-flip encode → |+++⟩ → H → |0̄⟩
+        |1⟩ → H → |-⟩ → bit-flip encode → |---⟩ → H → |1̄⟩
+        
+        WHERE:
+        |+++⟩ = |+⟩⊗|+⟩⊗|+⟩ (all three qubits in |+⟩)
+        |---⟩ = |-⟩⊗|-⟩⊗|-⟩ (all three qubits in |-⟩)
+        
+        EXPLICIT ENCODING:
+        |0̄⟩ = (1/2√2)[|000⟩+|011⟩+|101⟩+|110⟩+|001⟩+|010⟩+|100⟩+|111⟩]
+        (Superposition with EVEN number of |1⟩'s have + sign)
+        
+        |1̄⟩ = (1/2√2)[|000⟩-|011⟩-|101⟩-|110⟩+|001⟩+|010⟩+|100⟩-|111⟩]
+        (Different phase pattern)
+        
+        ERROR CORRECTION:
+        If one Z error occurs:
+        |+++⟩ → |++-⟩, |+-+⟩, or |-++⟩ (detectable!)
+        Use X-basis parity checks to identify which qubit
+        Apply Z correction to fix it
+        
+        SYNDROME MEASUREMENT (X-basis):
+        X₀X₁ = +1 or -1 (parity of qubits 0,1 in X-basis)
+        X₁X₂ = +1 or -1 (parity of qubits 1,2 in X-basis)
+        
+        ANALOGY:
+        Bit-flip code protects against X by checking Z parities
+        Phase-flip code protects against Z by checking X parities
+        They're DUAL to each other!
+        """
+        # ==============================================================
+        # ENCODING CIRCUIT: Transform to X-basis, encode, transform back
+        # ==============================================================
         encoding = QuantumCircuit(3, name="phase_flip_encode")
-        encoding.h([0, 1, 2])  # Change to X basis
-        encoding.cx(0, 1)
-        encoding.cx(0, 2)
-        encoding.h([0, 1, 2])  # Back to Z basis
+        
+        # STEP 1: Transform to X-basis (where Z errors become X errors)
+        # MATH: H|0⟩ = |+⟩, H|1⟩ = |-⟩
+        encoding.h([0, 1, 2])
+        
+        # STEP 2: Apply bit-flip encoding in X-basis
+        # EFFECT: |+⟩|0⟩|0⟩ → |+++⟩ (or |-⟩|0⟩|0⟩ → |---⟩)
+        encoding.cx(0, 1)  # Copy qubit 0 to qubit 1
+        encoding.cx(0, 2)  # Copy qubit 0 to qubit 2
+        
+        # STEP 3: Transform back to Z-basis
+        # MATH: H|+⟩ = |0⟩, H|-⟩ = |1⟩
+        encoding.h([0, 1, 2])
+        
+        # RESULT: Encoded state in Z-basis, protected against Z errors!
 
-        # Decoding circuit
+        # ==============================================================
+        # DECODING CIRCUIT: Reverse of encoding
+        # ==============================================================
+        # MATHEMATICAL PROPERTY: Encoding is self-inverse (unitary)
+        # Applying same gates in reverse order decodes
         decoding = QuantumCircuit(3, name="phase_flip_decode")
-        decoding.h([0, 1, 2])
-        decoding.cx(0, 1)
+        decoding.h([0, 1, 2])       # To X-basis
+        decoding.cx(0, 1)            # Undo entanglement
         decoding.cx(0, 2)
-        decoding.h([0, 1, 2])
+        decoding.h([0, 1, 2])       # Back to Z-basis
 
         return {
             "encoding": encoding,
             "decoding": decoding,
-            "code_distance": 3,
-            "correctable_errors": 1,
+            "code_distance": 3,           # Can detect 2 errors, correct 1
+            "correctable_errors": 1,      # ⌊(3-1)/2⌋ = 1 error
         }
 
     def shor_nine_qubit_code(self):
