@@ -22,10 +22,32 @@ warnings.filterwarnings("ignore")
 
 class TREXMitigation:
     """
-    TREX (Twirled Readout Error eXtinction) Implementation
+    TREX (Twirled Readout Error eXtinction) Implementation - IBM 2024
     
-    IBM's 2024 technique that reduces measurement errors by 2-5×
-    by randomly applying X gates before measurement to symmetrize noise.
+    MATHEMATICAL CONCEPT (For Beginners):
+    ======================================
+    THE PROBLEM: Measurement errors are ASYMMETRIC in real hardware
+    - When qubit is |0⟩, might measure |1⟩ with probability p₀ (typically 2-5%)
+    - When qubit is |1⟩, might measure |0⟩ with probability p₁ (typically 10-15%)
+    - Notice: p₀ ≠ p₁ → Asymmetric! This makes correction harder.
+    
+    THE TREX SOLUTION: "Twirl" (randomize) the measurement to make it symmetric!
+    
+    HOW TREX WORKS:
+    1. Before measuring, randomly apply X gate with 50% probability
+    2. If we applied X, flip the measurement result back
+    3. This averages out the asymmetry!
+    
+    MATHEMATICAL FORMULA:
+    Original noise matrix:
+        M = [[P(0|0), P(0|1)],     [[0.95, 0.15],
+             [P(1|0), P(1|1)]]  =   [0.05, 0.85]]  ← Asymmetric!
+    
+    After TREX twirling:
+        M_twirled = (M + X·M·X) / 2  ← More symmetric, easier to invert!
+    
+    WHY IT'S BETTER: Symmetric matrices are more stable to invert
+    RESULT: 2-5× better error reduction compared to classical methods
     """
     
     def __init__(self, verbose=False):
@@ -35,18 +57,44 @@ class TREXMitigation:
         """
         Create realistic asymmetric readout noise model
         
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        READOUT ERROR = When we measure a qubit wrong!
+        
+        Two types of mistakes:
+        1. State is |0⟩ but we measure |1⟩ → Probability = error_prob_0
+        2. State is |1⟩ but we measure |0⟩ → Probability = error_prob_1
+        
+        Confusion Matrix M:
+            M = [[P(measure 0 | prepared 0), P(measure 0 | prepared 1)],
+                 [P(measure 1 | prepared 0), P(measure 1 | prepared 1)]]
+        
+        For our example:
+            M = [[0.95, 0.15],  ← Column 1: If we prepare |0⟩
+                 [0.05, 0.85]]  ← Column 2: If we prepare |1⟩
+        
+        Reading the matrix:
+        - Top-left (0.95): 95% chance to correctly measure |0⟩ when state is |0⟩
+        - Top-right (0.15): 15% chance to incorrectly measure |0⟩ when state is |1⟩
+        - Bottom-left (0.05): 5% chance to incorrectly measure |1⟩ when state is |0⟩
+        - Bottom-right (0.85): 85% chance to correctly measure |1⟩ when state is |1⟩
+        
+        NOTICE: The errors are DIFFERENT (5% vs 15%) → Asymmetric!
+        This is realistic - real hardware has asymmetric errors.
+        
         Args:
-            error_prob_0: Probability of measuring 1 when state is |0⟩
-            error_prob_1: Probability of measuring 0 when state is |1⟩
+            error_prob_0: Probability of measuring 1 when state is |0⟩ (typ. 2-5%)
+            error_prob_1: Probability of measuring 0 when state is |1⟩ (typ. 10-15%)
         """
         noise_model = NoiseModel()
         
-        # Asymmetric readout errors (realistic)
+        # Build the confusion matrix (readout error matrix)
         readout_error = ReadoutError([
-            [1 - error_prob_0, error_prob_0],     # P(measure 0|0), P(measure 1|0)
-            [error_prob_1, 1 - error_prob_1]      # P(measure 0|1), P(measure 1|1)
+            [1 - error_prob_0, error_prob_0],     # Row 1: Prepared |0⟩
+            [error_prob_1, 1 - error_prob_1]      # Row 2: Prepared |1⟩
         ])
         
+        # Add to noise model (affects qubit 0)
         noise_model.add_readout_error(readout_error, [0])
         
         return noise_model
@@ -55,33 +103,87 @@ class TREXMitigation:
         """
         Build calibration circuits with measurement twirling
         
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        CALIBRATION = Learning what the measurement errors are
+        
+        THE TREX TRICK - "Measurement Twirling":
+        =========================================
+        STEP 1: Prepare a known state (e.g., |0⟩ or |1⟩)
+        STEP 2: Randomly flip it (50% chance apply X gate)
+        STEP 3: Measure it
+        STEP 4: Flip the result back if we flipped in step 2
+        STEP 5: Average over many random flips
+        
+        WHY THIS WORKS:
+        Mathematical Formula:
+            M_twirled = (1/2)[M + X·M·X]
+        
+        Where:
+        - M = original (asymmetric) confusion matrix
+        - X = bit-flip operation
+        - M_twirled = averaged (more symmetric) confusion matrix
+        
+        INTUITION: Imagine you have a biased coin (unfair measurement).
+        By randomly flipping inputs, you average out the bias!
+        
+        BENEFIT: Symmetric matrices are numerically more stable to invert
+        → Better calibration → 2-5× improved error reduction
+        
         Returns:
             List of circuits with different twirling configurations
         """
         calibration_circuits = []
         
-        # For each computational basis state
+        # =============================================================
+        # OUTER LOOP: For each computational basis state |00⟩, |01⟩, |10⟩, |11⟩
+        # =============================================================
+        # WHY? We need to measure errors for EVERY possible input state
+        # MATH: For n qubits, there are 2ⁿ basis states to test
         for basis_state in range(2**num_qubits):
-            # Prepare basis state
+            # Prepare the basis state
+            # EXAMPLE for 2 qubits:
+            #   basis_state=0 → |00⟩ (no X gates)
+            #   basis_state=1 → |01⟩ (X on qubit 0)
+            #   basis_state=2 → |10⟩ (X on qubit 1)
+            #   basis_state=3 → |11⟩ (X on both)
             base_circuit = QuantumCircuit(num_qubits, num_qubits)
             for qubit in range(num_qubits):
+                # Bit manipulation: Check if bit 'qubit' is set in basis_state
                 if (basis_state >> qubit) & 1:
-                    base_circuit.x(qubit)
+                    base_circuit.x(qubit)  # Apply X to prepare |1⟩
             
-            # Create multiple circuits with different twirling patterns
+            # ==========================================================
+            # INNER LOOP: Apply different twirling patterns
+            # ==========================================================
+            # THE TREX MAGIC: For each basis state, we apply all possible
+            # combinations of X gates (twirling patterns)
+            # MATH: For n qubits, 2ⁿ twirling patterns
+            # EXAMPLE for 2 qubits:
+            #   twirl_config=0 → No X gates
+            #   twirl_config=1 → X on qubit 0
+            #   twirl_config=2 → X on qubit 1  
+            #   twirl_config=3 → X on both
             for twirl_config in range(2**num_qubits):
                 twirled_circuit = base_circuit.copy()
                 
                 # Apply X gates according to twirl configuration
+                # THIS IS THE "TWIRLING" - randomly flipping qubits before measurement
                 for qubit in range(num_qubits):
                     if (twirl_config >> qubit) & 1:
                         twirled_circuit.x(qubit)
                 
                 # Explicit measurement to existing classical registers
+                # IMPORTANT: We use explicit measure() not measure_all()
+                # (Qiskit 2.x compatibility - see bug fix notes)
                 for qubit in range(num_qubits):
                     twirled_circuit.measure(qubit, qubit)
                 
                 calibration_circuits.append((basis_state, twirl_config, twirled_circuit))
+        
+        # TOTAL CIRCUITS GENERATED: 2ⁿ (basis states) × 2ⁿ (twirl configs) = 4ⁿ
+        # For 2 qubits: 4 × 4 = 16 calibration circuits
+        # WHY SO MANY? To average over all twirling patterns for best calibration!
         
         return calibration_circuits
     

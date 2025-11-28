@@ -21,36 +21,188 @@ warnings.filterwarnings("ignore")
 
 
 class QuantumErrorCorrectionProtocols:
+    """
+    Quantum Error Correction Protocols - Building Blocks for Fault Tolerance
+    
+    MATHEMATICAL CONCEPT (For Beginners):
+    ======================================
+    WHAT IS QUANTUM ERROR CORRECTION (QEC)?
+    Protecting quantum information by encoding it across multiple qubits
+    so that errors can be detected and corrected WITHOUT measuring the data!
+    
+    THREE FUNDAMENTAL CODES (From Simple to Complex):
+    ==================================================
+    
+    1. BIT-FLIP CODE (3 qubits) - Protects against X errors
+       Encoding: |0⟩ → |000⟩, |1⟩ → |111⟩
+       Distance: 3 (can correct 1 X error)
+       
+    2. PHASE-FLIP CODE (3 qubits) - Protects against Z errors
+       Encoding: |0⟩ → |+++⟩, |1⟩ → |---⟩ (in X-basis)
+       Distance: 3 (can correct 1 Z error)
+       
+    3. SHOR CODE (9 qubits) - Protects against ANY single-qubit error!
+       Combines bit-flip + phase-flip codes
+       Distance: 3 (can correct 1 arbitrary error: X, Y, or Z)
+    
+    KEY PRINCIPLE: REDUNDANCY
+    ==========================
+    Classical: Copy bits |0⟩ → |000⟩
+    Problem: No-cloning theorem forbids quantum copying!
+    
+    Quantum Solution: Use ENTANGLEMENT instead of copying
+    |ψ⟩ = α|0⟩ + β|1⟩ → α|000⟩ + β|111⟩
+    
+    WHY IT WORKS:
+    - Errors affect individual qubits
+    - Redundancy allows majority vote (for bit flips)
+    - Or parity checks (for phase flips)
+    - Detect error WITHOUT measuring the encoded state!
+    
+    SYNDROME MEASUREMENT:
+    ====================
+    KEY IDEA: Extract error information without destroying data
+    
+    Method: Use ancilla (helper) qubits
+    1. Entangle ancilla with code qubits
+    2. Measure ancilla → Get "syndrome" (error signature)
+    3. Syndrome tells us which qubit has error
+    4. Apply correction based on syndrome
+    5. Data qubits remain unmeasured!
+    
+    MATHEMATICAL FORMULA:
+    Syndrome s = H·e (mod 2)
+    where H = parity check matrix, e = error vector
+    
+    CODE DISTANCE:
+    =============
+    Definition: Minimum weight of non-trivial logical operator
+    
+    INTERPRETATION:
+    Distance d means:
+    - Can DETECT up to d-1 errors
+    - Can CORRECT up to ⌊(d-1)/2⌋ errors
+    
+    Examples:
+    - Distance 3: Correct 1 error
+    - Distance 5: Correct 2 errors
+    - Distance 7: Correct 3 errors
+    """
     def __init__(self, verbose=False):
         self.verbose = verbose
 
     def three_qubit_bit_flip_code(self):
-        """Implementation of 3-qubit bit flip code."""
-        # Encoding circuit
+        """
+        Implementation of 3-qubit bit-flip code - The Simplest QEC Code!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE PROBLEM: Bit-flip errors (X gates)
+        |0⟩ --X--> |1⟩ (unwanted!)
+        |1⟩ --X--> |0⟩ (unwanted!)
+        
+        THE SOLUTION: Encode 1 qubit into 3 qubits
+        
+        ENCODING:
+        |0⟩_L = |000⟩  (logical zero = all qubits in |0⟩)
+        |1⟩_L = |111⟩  (logical one = all qubits in |1⟩)
+        
+        General state: α|0⟩ + β|1⟩ → α|000⟩ + β|111⟩
+        
+        WHY IT WORKS:
+        If ONE qubit flips due to error:
+        - |000⟩ → |100⟩, |010⟩, or |001⟩ (detectable!)
+        - |111⟩ → |011⟩, |101⟩, or |110⟩ (detectable!)
+        
+        CORRECTION: Majority vote
+        - 2 or more |0⟩'s → Correct to |0⟩
+        - 2 or more |1⟩'s → Correct to |1⟩
+        
+        ENCODING CIRCUIT:
+        =================
+        Input: |ψ⟩|0⟩|0⟩ where |ψ⟩ = α|0⟩ + β|1⟩
+        
+        Step 1: CNOT(0→1): Copy qubit 0 to qubit 1
+                Result: α|000⟩ + β|110⟩
+        
+        Step 2: CNOT(0→2): Copy qubit 0 to qubit 2
+                Result: α|000⟩ + β|111⟩ ✓
+        
+        MATHEMATICAL PROPERTY:
+        The encoded state is:
+        |ψ⟩_L = α|0⟩_L + β|1⟩_L = α|000⟩ + β|111⟩
+        
+        This is an ENTANGLED state! The qubits are correlated.
+        
+        SYNDROME MEASUREMENT:
+        =====================
+        Use 2 ancilla qubits to check parity:
+        
+        Ancilla 1: Checks if qubits 0 and 1 match
+                   Result: 0 (match) or 1 (mismatch)
+        
+        Ancilla 2: Checks if qubits 1 and 2 match
+                   Result: 0 (match) or 1 (mismatch)
+        
+        SYNDROME TABLE:
+        (Ancilla1, Ancilla2) → Error Location
+        (0, 0) → No error
+        (1, 0) → Error on qubit 0
+        (1, 1) → Error on qubit 1
+        (0, 1) → Error on qubit 2
+        
+        LIMITATION: Only corrects X (bit-flip) errors, not Z (phase-flip)!
+        """
+        # ==============================================================
+        # ENCODING CIRCUIT: |ψ⟩|0⟩|0⟩ → α|000⟩ + β|111⟩
+        # ==============================================================
+        # MATHEMATICAL OPERATION: Copy qubit 0 to qubits 1 and 2
+        # RESULT: Creates entanglement (cannot be factored)
         encoding = QuantumCircuit(3, name="3-qubit_encode")
-        encoding.cx(0, 1)
-        encoding.cx(0, 2)
+        encoding.cx(0, 1)  # If qubit 0 is |1⟩, flip qubit 1
+        encoding.cx(0, 2)  # If qubit 0 is |1⟩, flip qubit 2
+        # EFFECT: |0⟩|0⟩|0⟩ stays |000⟩, |1⟩|0⟩|0⟩ becomes |111⟩
 
-        # Decoding circuit
+        # ==============================================================
+        # DECODING CIRCUIT: Inverse of encoding (same gates!)
+        # ==============================================================
+        # MATHEMATICAL PROPERTY: CNOT gates are self-inverse
+        # CNOT·CNOT = Identity
+        # Applying encoding twice gives back the original state
         decoding = QuantumCircuit(3, name="3-qubit_decode")
-        decoding.cx(0, 1)
-        decoding.cx(0, 2)
+        decoding.cx(0, 1)  # Undo the first CNOT
+        decoding.cx(0, 2)  # Undo the second CNOT
 
-        # Syndrome measurement circuit
+        # ==============================================================
+        # SYNDROME MEASUREMENT: Detect errors without destroying data
+        # ==============================================================
+        # CIRCUIT STRUCTURE:
+        # Qubits 0,1,2: Data qubits (encoded state)
+        # Qubits 3,4: Ancilla qubits (for parity checks)
+        # Classical bits 0,1: Store syndrome measurement results
         syndrome = QuantumCircuit(5, 2, name="syndrome_measure")
-        # Ancilla qubits for syndrome measurement
-        syndrome.cx(0, 3)  # Check qubit 0 vs 1
-        syndrome.cx(1, 3)
-        syndrome.cx(1, 4)  # Check qubit 1 vs 2
-        syndrome.cx(2, 4)
+        
+        # --- Parity Check 1: Do qubits 0 and 1 have same value? ---
+        # MATHEMATICAL OPERATION: XOR of qubits 0 and 1 into ancilla 3
+        # If qubit 0 = qubit 1 → ancilla 3 stays |0⟩ (parity even)
+        # If qubit 0 ≠ qubit 1 → ancilla 3 becomes |1⟩ (parity odd)
+        syndrome.cx(0, 3)  # Copy qubit 0 parity to ancilla 3
+        syndrome.cx(1, 3)  # XOR with qubit 1 parity
+        
+        # --- Parity Check 2: Do qubits 1 and 2 have same value? ---
+        syndrome.cx(1, 4)  # Copy qubit 1 parity to ancilla 4
+        syndrome.cx(2, 4)  # XOR with qubit 2 parity
+        
+        # --- Measure ancillas (NOT the data qubits!) ---
+        # CRITICAL: This preserves the quantum superposition in qubits 0,1,2
         syndrome.measure([3, 4], [0, 1])
 
         return {
             "encoding": encoding,
             "decoding": decoding,
             "syndrome": syndrome,
-            "code_distance": 3,
-            "correctable_errors": 1,
+            "code_distance": 3,           # Minimum weight of error detectable
+            "correctable_errors": 1,      # Can correct ⌊(3-1)/2⌋ = 1 error
         }
 
     def three_qubit_phase_flip_code(self):
@@ -77,28 +229,147 @@ class QuantumErrorCorrectionProtocols:
         }
 
     def shor_nine_qubit_code(self):
-        """Implementation of Shor's 9-qubit code."""
-        # Encoding: combines bit flip and phase flip codes
+        """
+        Implementation of Shor's 9-qubit code - First Universal QEC Code!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE ACHIEVEMENT: First code to protect against ANY single-qubit error!
+        - X errors (bit flips): ✓ Corrected
+        - Z errors (phase flips): ✓ Corrected
+        - Y errors (both): ✓ Corrected (since Y = iXZ)
+        
+        THE BRILLIANT IDEA: Concatenation
+        ==================================
+        STEP 1: Protect against phase flips (Z errors)
+               |0⟩ → |+++⟩ (3 qubits in superposition)
+               |1⟩ → |---⟩ (3 qubits in superposition)
+        
+        STEP 2: Protect each of those 3 qubits against bit flips (X errors)
+               Each |+⟩ → |000⟩+|111⟩ (3 more qubits)
+               Total: 3 × 3 = 9 qubits!
+        
+        MATHEMATICAL STRUCTURE:
+        =======================
+        Logical |0⟩ encoding:
+        |0̄⟩ = (1/2√2)[|000⟩+|111⟩] ⊗ [|000⟩+|111⟩] ⊗ [|000⟩+|111⟩]
+        
+        Breaking this down:
+        - 3 blocks of 3 qubits each
+        - Each block: Bit-flip protected |+⟩ state
+        - Blocks together: Phase-flip protected
+        
+        Logical |1⟩ encoding:
+        |1̄⟩ = (1/2√2)[|000⟩-|111⟩] ⊗ [|000⟩-|111⟩] ⊗ [|000⟩-|111⟩]
+        (Note the minus signs!)
+        
+        QUBIT ORGANIZATION:
+        ===================
+        Block 1: Qubits 0,1,2  } 
+        Block 2: Qubits 3,4,5  } Phase-flip protected
+        Block 3: Qubits 6,7,8  }
+        
+        Within each block: Bit-flip protected
+        
+        ERROR CORRECTION CAPABILITY:
+        ============================
+        Can correct ANY single error on ANY single qubit:
+        - X on any qubit: Detected by bit-flip syndrome
+        - Z on any qubit: Detected by phase-flip syndrome
+        - Y on any qubit: Detected by both syndromes (Y = iXZ)
+        
+        ENCODING PROCESS:
+        =================
+        LAYER 1 (Bit-flip protection):
+        For each of 3 blocks, encode |ψ⟩ → |ψψψ⟩
+        Input: |ψ⟩|0⟩⁸
+        After Layer 1: Each block has 3 identical qubits
+        
+        LAYER 2 (Phase-flip protection):
+        Create superposition across the 3 blocks
+        Apply in Hadamard (X) basis
+        
+        ANALOGY: 
+        Layer 1 = Protecting each word by writing it 3 times
+        Layer 2 = Protecting the sentence structure
+        Together = Full protection!
+        
+        CODE PARAMETERS:
+        ================
+        [[9,1,3]] code:
+        - 9 physical qubits
+        - 1 logical qubit
+        - Distance 3 (corrects 1 arbitrary error)
+        
+        HISTORICAL SIGNIFICANCE:
+        Peter Shor, 1995 - Proved quantum error correction is possible!
+        Before this: Many thought quantum computing was impossible due to errors
+        """
+        # ==============================================================
+        # ENCODING: Two-layer concatenated code
+        # ==============================================================
         encoding = QuantumCircuit(9, name="shor_9_encode")
 
-        # First layer: bit flip encoding for each logical qubit
-        for i in range(3):
-            base = i * 3
-            encoding.cx(base, base + 1)
-            encoding.cx(base, base + 2)
+        # ==============================================================
+        # LAYER 1: Bit-flip protection (within each block)
+        # ==============================================================
+        # GOAL: Encode each qubit using 3-qubit bit-flip code
+        # MATHEMATICAL OPERATION: |ψ⟩ → |ψψψ⟩ for each block
+        #
+        # We have 3 blocks:
+        # Block 1: Qubits {0,1,2}
+        # Block 2: Qubits {3,4,5}
+        # Block 3: Qubits {6,7,8}
+        #
+        # For each block, apply: CNOT(base → base+1), CNOT(base → base+2)
+        # This creates: |0⟩ → |000⟩, |1⟩ → |111⟩ (bit-flip protected)
+        
+        for i in range(3):  # Loop over 3 blocks
+            base = i * 3    # Starting qubit of this block
+            encoding.cx(base, base + 1)  # Copy to second qubit in block
+            encoding.cx(base, base + 2)  # Copy to third qubit in block
+        # RESULT: Each block now has redundancy against bit flips
 
-        # Second layer: phase flip encoding
-        encoding.h([0, 3, 6])
-        encoding.cx(0, 3)
-        encoding.cx(0, 6)
-        encoding.h([0, 3, 6])
+        # ==============================================================
+        # LAYER 2: Phase-flip protection (across blocks)
+        # ==============================================================
+        # GOAL: Protect against phase (Z) errors by working in X-basis
+        # MATHEMATICAL OPERATION: Create superposition across 3 blocks
+        #
+        # STRATEGY:
+        # 1. Transform to X-basis using Hadamard gates
+        # 2. Apply bit-flip code logic (which protects against X errors in Z-basis
+        #    = Z errors in X-basis!)
+        # 3. Transform back to Z-basis
+        #
+        # For each qubit position within blocks (0, 1, 2):
+        #   - Apply Hadamard to qubits at that position in all 3 blocks
+        #   - Create entanglement across blocks
+        #   - Apply Hadamard back
+        
+        # --- Process qubit position 0 in each block ---
+        # QUBITS: 0 (block 1), 3 (block 2), 6 (block 3)
+        encoding.h([0, 3, 6])         # Transform to X-basis
+        encoding.cx(0, 3)              # Entangle block 1 with block 2
+        encoding.cx(0, 6)              # Entangle block 1 with block 3
+        encoding.h([0, 3, 6])         # Back to Z-basis
+        # RESULT: Qubits 0,3,6 now in phase-flip protected state
 
-        # Repeat for other qubits in each block
+        # --- Repeat for qubit positions 1 and 2 ---
+        # This ensures ALL qubits in each block are phase-protected
         for offset in [1, 2]:
-            encoding.h([offset, offset + 3, offset + 6])
-            encoding.cx(offset, offset + 3)
+            qubits = [offset, offset + 3, offset + 6]
+            encoding.h(qubits)        # To X-basis
+            encoding.cx(offset, offset + 3)  # Entangle
             encoding.cx(offset, offset + 6)
-            encoding.h([offset, offset + 3, offset + 6])
+            encoding.h(qubits)        # Back to Z-basis
+        
+        # ==============================================================
+        # FINAL STATE: Doubly-protected quantum state
+        # ==============================================================
+        # The 9 qubits now encode: α|0̄⟩ + β|1̄⟩
+        # where |0̄⟩ and |1̄⟩ are the logical codewords
+        # Protected against ANY single X, Y, or Z error!
 
         return {
             "encoding": encoding,

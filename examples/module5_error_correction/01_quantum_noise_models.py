@@ -35,13 +35,43 @@ import seaborn as sns
 
 
 def demonstrate_basic_noise_types():
-    """Demonstrate basic types of quantum noise."""
+    """
+    Demonstrate basic types of quantum noise.
+    
+    MATHEMATICAL BACKGROUND (For Beginners):
+    ==========================================
+    Quantum noise happens because quantum states are fragile. When a qubit
+    interacts with its environment, it loses information. There are three main types:
+    
+    1. DEPOLARIZING NOISE - "Random Direction Errors"
+       Mathematical Formula: ρ_noisy = (1-p)ρ + p·(I/2)
+       Physical Meaning: With probability p, the qubit state gets replaced by
+                        completely random noise (total chaos!)
+       Example: Like randomly flipping a coin - you lose all information
+    
+    2. AMPLITUDE DAMPING - "Energy Loss" (T1 decay)
+       Mathematical Formula: ρ_noisy = E₀·ρ·E₀† + E₁·ρ·E₁†
+       where E₀ = [[1, 0], [0, √(1-γ)]], E₁ = [[0, √γ], [0, 0]]
+       Physical Meaning: The excited state |1⟩ decays to ground state |0⟩
+       Example: Like a battery slowly losing charge
+    
+    3. PHASE DAMPING - "Phase Information Loss" (T2 dephasing)  
+       Mathematical Formula: ρ_noisy = (1-γ/2)ρ + (γ/2)Z·ρ·Z
+       Physical Meaning: The relative phase between |0⟩ and |1⟩ gets randomized
+       Example: Like two synchronized clocks slowly going out of sync
+    
+    KEY INSIGHT: All three noise types affect superposition states differently!
+    """
     print("=== BASIC QUANTUM NOISE TYPES ===")
     print()
 
-    # Create a simple test circuit
+    # ==================================================================
+    # STEP 1: Create a simple test circuit
+    # ==================================================================
+    # We'll create a superposition state |+⟩ = (|0⟩ + |1⟩)/√2
+    # This is the MOST SENSITIVE state to noise (it has both amplitudes and phase)
     qc = QuantumCircuit(1)
-    qc.h(0)  # Create superposition state
+    qc.h(0)  # Hadamard gate creates superposition: |0⟩ → (|0⟩ + |1⟩)/√2
 
     initial_state = Statevector.from_instruction(qc)
     print(f"Initial state: {initial_state}")
@@ -50,29 +80,56 @@ def demonstrate_basic_noise_types():
     )
     print()
 
-    # Define different noise models
+    # ==================================================================
+    # STEP 2: Define different noise models
+    # ==================================================================
     noise_models = {}
 
-    # 1. Depolarizing noise
-    error_rate = 0.1
-    depol_error = depolarizing_error(error_rate, 1)
+    # -------------------------------------------------------------------
+    # 1. DEPOLARIZING NOISE - "Complete Randomization"
+    # -------------------------------------------------------------------
+    # MATH: With probability p, replace state with I/2 (maximally mixed state)
+    #       ρ_out = (1-p)ρ + p·(I/2)
+    # INTUITION: Imagine shaking a box with a coin - it becomes random!
+    error_rate = 0.1  # 10% chance of noise per gate
+    depol_error = depolarizing_error(error_rate, 1)  # 1 = single-qubit error
     noise_model_depol = NoiseModel()
     noise_model_depol.add_all_qubit_quantum_error(depol_error, ["h"])
     noise_models["Depolarizing"] = noise_model_depol
 
-    # 2. Amplitude damping (T1 decay)
+    # -------------------------------------------------------------------
+    # 2. AMPLITUDE DAMPING - "Energy Decay" (Like a battery draining)
+    # -------------------------------------------------------------------
+    # MATH: Kraus operators E₀, E₁ describe energy loss
+    #       E₀ preserves |0⟩, partially preserves |1⟩
+    #       E₁ takes |1⟩ → |0⟩ (the decay process)
+    # PHYSICAL MEANING: T1 = relaxation time (how long |1⟩ stays excited)
+    # INTUITION: An atom in excited state falls back to ground state
     amp_damp_error = amplitude_damping_error(error_rate)
     noise_model_amp = NoiseModel()
     noise_model_amp.add_all_qubit_quantum_error(amp_damp_error, ["h"])
     noise_models["Amplitude Damping"] = noise_model_amp
 
-    # 3. Phase damping (T2 dephasing)
+    # -------------------------------------------------------------------
+    # 3. PHASE DAMPING - "Clock Desynchronization"
+    # -------------------------------------------------------------------
+    # MATH: Randomly applies Z gate (phase flip): |0⟩ stays, |1⟩ → -|1⟩
+    #       Superposition (|0⟩ + |1⟩) gradually loses phase coherence
+    # PHYSICAL MEANING: T2 = dephasing time (how long phase info survives)
+    # INTUITION: Two clocks ticking at slightly different rates
+    # KEY: T2 ≤ 2T1 always (phase info more fragile than population)
     phase_damp_error = phase_damping_error(error_rate)
     noise_model_phase = NoiseModel()
     noise_model_phase.add_all_qubit_quantum_error(phase_damp_error, ["h"])
     noise_models["Phase Damping"] = noise_model_phase
 
-    # Test each noise model
+    # ==================================================================
+    # STEP 3: Test each noise model and measure the effects
+    # ==================================================================
+    # WHY MEASURE? To see how each noise type changes our superposition state
+    # IDEAL RESULT: |+⟩ should give 50% |0⟩ and 50% |1⟩ when measured
+    # NOISY RESULT: Different noise types will deviate differently!
+    
     simulator = AerSimulator()
     results = {}
 
@@ -81,7 +138,9 @@ def demonstrate_basic_noise_types():
         test_circuit = qc.copy()
         test_circuit.measure_all()
 
-        # Run with noise
+        # Run with noise (1000 shots = 1000 repetitions)
+        # STATISTICS: More shots = more accurate probability estimates
+        # Formula: Standard error ∝ 1/√(shots)
         job = simulator.run(
             transpile(test_circuit, simulator), shots=1000, noise_model=noise_model
         )
@@ -89,13 +148,16 @@ def demonstrate_basic_noise_types():
         counts = result.get_counts()
         results[noise_name] = counts
 
-        # Calculate probabilities
+        # Calculate probabilities from measurement counts
+        # MATH: Probability = (# of outcomes) / (total shots)
+        # This is Born's rule: P(i) = |⟨i|ψ⟩|²
         prob_0 = counts.get("0", 0) / 1000
         prob_1 = counts.get("1", 0) / 1000
 
         print(f"{noise_name} noise (error rate: {error_rate}):")
         print(f"  Measured probabilities: |0⟩: {prob_0:.3f}, |1⟩: {prob_1:.3f}")
         print(f"  Deviation from ideal: {abs(prob_0 - 0.5):.3f}")
+        print(f"  INTERPRETATION: Larger deviation = more noise damage!")
         print()
 
     # Visualize results
@@ -124,54 +186,118 @@ def demonstrate_basic_noise_types():
 
 
 def analyze_error_rates():
-    """Analyze how different error rates affect quantum states."""
+    """
+    Analyze how different error rates affect quantum states.
+    
+    MATHEMATICAL CONCEPT (For Beginners):
+    ======================================
+    FIDELITY = How similar two quantum states are
+    
+    Mathematical Formula: F(ρ, σ) = Tr(√(√ρ σ √ρ))²
+    For pure states: F = |⟨ψ|φ⟩|²
+    
+    Range: 0 ≤ F ≤ 1
+    - F = 1.0 means states are identical (perfect!)
+    - F = 0.5 means states are somewhat similar
+    - F = 0.0 means states are completely different
+    
+    WHY IT MATTERS: Fidelity tells us how much damage noise has done.
+    In quantum computing, we want F > 0.99 for useful computations!
+    
+    EXPERIMENT GOAL: See how fidelity degrades as error rate increases
+    """
     print("=== ERROR RATE ANALYSIS ===")
     print()
 
-    # Create test circuit
+    # ==================================================================
+    # STEP 1: Create a test circuit - Bell state
+    # ==================================================================
+    # Bell state: |Φ+⟩ = (|00⟩ + |11⟩)/√2
+    # This is a MAXIMALLY ENTANGLED state - very sensitive to noise!
+    # MATH: Starting from |00⟩, apply H to first qubit, then CNOT
+    #       H|0⟩|0⟩ = (|0⟩+|1⟩)|0⟩/√2
+    #       CNOT gives (|00⟩+|11⟩)/√2 ← Bell state!
     qc = QuantumCircuit(2)
-    qc.h(0)
-    qc.cx(0, 1)  # Create Bell state
+    qc.h(0)      # Create superposition on first qubit
+    qc.cx(0, 1)  # Entangle: if qubit 0 is |1⟩, flip qubit 1
 
     ideal_state = Statevector.from_instruction(qc)
 
-    # Test different error rates
-    error_rates = np.logspace(-3, -1, 10)  # 0.001 to 0.1
+    # ==================================================================
+    # STEP 2: Test a range of error rates (from very small to large)
+    # ==================================================================
+    # We use logarithmic spacing: 0.1%, 0.2%, 0.5%, 1%, 2%, 5%, 10%
+    # WHY LOGARITHMIC? Error rates span multiple orders of magnitude!
+    error_rates = np.logspace(-3, -1, 10)  # 10 points from 0.001 to 0.1
 
+    # Store fidelity results for each noise type
     fidelities = {"Depolarizing": [], "Amplitude Damping": [], "Phase Damping": []}
 
+    # Use density matrix method (needed for mixed states from noise)
+    # MATH: Pure states → vectors |ψ⟩
+    #       Mixed states → density matrices ρ = Σᵢ pᵢ|ψᵢ⟩⟨ψᵢ|
     simulator = AerSimulator(method="density_matrix")
 
+    # ==================================================================
+    # STEP 3: Loop through error rates and measure fidelity
+    # ==================================================================
     for error_rate in error_rates:
         print(f"Testing error rate: {error_rate:.4f}")
 
         for noise_type in fidelities.keys():
-            # Create noise model
+            # =============================================================
+            # Create noise model for this error rate
+            # =============================================================
+            # IMPORTANT: We need separate noise models for 1-qubit and 2-qubit gates
+            # WHY? Gates have different durations and complexities
+            # TYPICAL: 2-qubit gates have ~10× higher error rates than 1-qubit gates
+            
             if noise_type == "Depolarizing":
-                error_1q = depolarizing_error(error_rate, 1)
-                error_2q = depolarizing_error(error_rate, 2)
+                # DEPOLARIZING: Affects both single and two-qubit gates
+                # MATH: ρ → (1-p)ρ + p·(I/d) where d = dimension (2 for qubits)
+                error_1q = depolarizing_error(error_rate, 1)      # Single-qubit H gate
+                error_2q = depolarizing_error(error_rate, 2)      # Two-qubit CNOT gate
             elif noise_type == "Amplitude Damping":
+                # AMPLITUDE DAMPING: |1⟩ → |0⟩ energy decay
+                # NOTE: Only defined for single qubits (it's a physical process)
                 error_1q = amplitude_damping_error(error_rate)
-                # For 2-qubit gates, use depolarizing as amplitude damping is 1-qubit only
+                # For 2-qubit gates, approximate with depolarizing
                 error_2q = depolarizing_error(error_rate, 2)
             else:  # Phase Damping
+                # PHASE DAMPING: Phase coherence loss
+                # MATH: Random Z rotations destroy phase relationships
+                # NOTE: Also only for single qubits
                 error_1q = phase_damping_error(error_rate)
-                # For 2-qubit gates, use depolarizing as phase damping is 1-qubit only
+                # For 2-qubit gates, approximate with depolarizing
                 error_2q = depolarizing_error(error_rate, 2)
 
+            # Build the complete noise model
             noise_model = NoiseModel()
-            noise_model.add_all_qubit_quantum_error(error_1q, ["h"])
-            noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
+            noise_model.add_all_qubit_quantum_error(error_1q, ["h"])    # H gate gets error_1q
+            noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])   # CNOT gets error_2q
 
-            # Run simulation with noise - need to save and retrieve density matrix
+            # =============================================================
+            # Run noisy simulation
+            # =============================================================
+            # TECHNICAL: We save the density matrix (not just measurements)
+            # WHY? Density matrix ρ contains full info about mixed states
+            # PURE STATE: ρ = |ψ⟩⟨ψ| (rank-1 matrix)
+            # NOISY STATE: ρ = Σᵢ pᵢ|ψᵢ⟩⟨ψᵢ| (rank > 1, mixed state)
             qc_copy = qc.copy()
-            qc_copy.save_density_matrix()
+            qc_copy.save_density_matrix()  # Tell simulator to save ρ
             
             job = simulator.run(transpile(qc_copy, simulator), noise_model=noise_model)
             result = job.result()
             noisy_state = result.data()['density_matrix']
 
-            # Calculate fidelity
+            # =============================================================
+            # Calculate fidelity (how similar ideal vs noisy states are)
+            # =============================================================
+            # FORMULA: F = Tr(√(√ρ₁ ρ₂ √ρ₁))²
+            # INTERPRETATION:
+            # - F ≈ 1.0: Very little noise damage (excellent!)
+            # - F ≈ 0.8-0.9: Moderate noise (usable)
+            # - F < 0.7: High noise (problematic)
             fidelity = state_fidelity(ideal_state, noisy_state)
             fidelities[noise_type].append(fidelity)
 

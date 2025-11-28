@@ -45,11 +45,41 @@ class ErrorMitigation:
         return noise_model
 
     def zero_noise_extrapolation(self, circuit, noise_factors=[1, 2, 3], shots=1024):
-        """Zero noise extrapolation technique."""
+        """
+        Zero-Noise Extrapolation (ZNE) - A Clever Error Mitigation Trick!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE BIG IDEA: If we can't eliminate noise, let's add MORE noise
+        intentionally, then mathematically extrapolate back to zero noise!
+        
+        HOW IT WORKS:
+        1. Run circuit with normal noise → Get result at noise level λ₁
+        2. Run circuit with 2× noise → Get result at noise level λ₂  
+        3. Run circuit with 3× noise → Get result at noise level λ₃
+        4. Fit a curve through these points
+        5. Extrapolate the curve back to λ=0 (zero noise!)
+        
+        MATHEMATICAL FORMULA:
+        Assume: E(λ) = a + b·λ + c·λ² (expectation value vs noise)
+        Measure: E(λ₁), E(λ₂), E(λ₃)
+        Extrapolate: E(0) = a ← This is our estimate of the ideal result!
+        
+        ANALOGY: Like drawing a line through noisy data points and reading
+                 where it crosses the y-axis (zero noise)
+        
+        LIMITATION: Works best when noise scales smoothly (linear or polynomial)
+        OVERHEAD: Need to run circuit multiple times (2-5× more shots)
+        """
         results = []
 
+        # =============================================================
+        # Loop through different noise scaling factors
+        # =============================================================
         for factor in noise_factors:
-            # Scale noise by repeating circuit elements
+            # NOISE SCALING: We artificially increase noise by factor
+            # HOW? Add extra gates that cancel out (U·U†) but add noise
+            # MATH: If original noise = λ, scaled noise ≈ factor × λ
             scaled_circuit = self.scale_circuit_noise(circuit, factor)
 
             # Simulate with noise
@@ -61,16 +91,25 @@ class ErrorMitigation:
             counts = result.get_counts()
 
             # Calculate expectation value (assuming measurement of Z on first qubit)
+            # MATH: ⟨Z⟩ = P(0) - P(1) = probability of |0⟩ minus probability of |1⟩
+            # Range: -1 (all |1⟩) to +1 (all |0⟩)
             expectation = self.calculate_expectation_z(counts)
             results.append((factor, expectation))
 
-        # Extrapolate to zero noise
-        factors = [r[0] for r in results]
-        expectations = [r[1] for r in results]
+        # =============================================================
+        # Extrapolate to zero noise (the magic step!)
+        # =============================================================
+        factors = [r[0] for r in results]        # Noise scaling factors [1, 2, 3]
+        expectations = [r[1] for r in results]   # Measured ⟨Z⟩ values
 
-        # Linear extrapolation
+        # Linear extrapolation: E(λ) = a + b·λ
+        # MATH: Fit line through points, then evaluate at λ=0
+        # np.polyfit returns [slope, intercept] for degree 1 polynomial
         coeffs = np.polyfit(factors, expectations, 1)
-        zero_noise_estimate = coeffs[1]  # y-intercept
+        zero_noise_estimate = coeffs[1]  # y-intercept = E(0) ← Zero noise estimate!
+        
+        # INTERPRETATION: zero_noise_estimate is our best guess at the ideal result
+        # without noise, computed by extrapolating from noisy measurements!
 
         return {
             "measurements": results,

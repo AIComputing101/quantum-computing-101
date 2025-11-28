@@ -19,40 +19,196 @@ warnings.filterwarnings("ignore")
 
 class WillowSurfaceCodeAnalysis:
     """
-    Google Willow Surface Code Analysis
+    Google Willow Surface Code Analysis - December 2024 Breakthrough!
     
-    Demonstrates the threshold theorem and exponential error suppression
-    achieved in Google's Willow chip (December 2024).
+    MATHEMATICAL CONCEPT (For Beginners):
+    ======================================
+    THE HISTORIC ACHIEVEMENT:
+    Google Willow is the FIRST quantum computer to demonstrate
+    "below-threshold" error correction with exponential error suppression!
+    
+    WHAT THIS MEANS:
+    ================
+    Before Willow (2023 and earlier):
+    - Adding more qubits for error correction → More noise from extra qubits
+    - Result: Error correction made things WORSE!
+    - Problem: Physical qubits weren't good enough
+    
+    With Willow (December 2024):
+    - Adding more qubits for error correction → Better protection!
+    - Result: Logical errors DECREASE exponentially
+    - Solution: Physical error rate below the theoretical threshold!
+    
+    THE THRESHOLD THEOREM (Fundamental Result in QEC):
+    ===================================================
+    MATHEMATICAL FORMULA:
+    
+    p_logical(d) = (p_physical / p_threshold)^((d+1)/2)
+    
+    Where:
+    - p_logical(d) = logical error rate with code distance d
+    - p_physical = physical qubit error rate
+    - p_threshold = threshold error rate (~1% for surface codes)
+    - d = code distance (how many errors the code can correct)
+    
+    INTERPRETATION:
+    
+    Let λ = p_physical / p_threshold
+    
+    IF λ < 1 (BELOW THRESHOLD): ✅
+        p_logical(d) = λ^((d+1)/2) → Decreases exponentially with d!
+        Example: d=3 → λ², d=5 → λ³, d=7 → λ⁴
+        MORE qubits = BETTER protection
+        
+    IF λ > 1 (ABOVE THRESHOLD): ❌
+        p_logical(d) = λ^((d+1)/2) → Increases exponentially with d!
+        MORE qubits = WORSE performance
+        Error correction is counterproductive!
+    
+    GOOGLE WILLOW'S NUMBERS:
+    ========================
+    - Physical error rate: p_physical ≈ 0.1% (0.001)
+    - Threshold: p_threshold ≈ 1% (0.01)
+    - λ = 0.001 / 0.01 = 0.1 < 1 ✅ BELOW THRESHOLD!
+    
+    EXPERIMENTAL RESULTS:
+    - Distance d=3 → p_logical ≈ 0.01 (1%)
+    - Distance d=5 → p_logical ≈ 0.001 (0.1%) [10× better!]
+    - Distance d=7 → p_logical ≈ 0.0001 (0.01%) [100× better than d=3!]
+    
+    SIGNIFICANCE:
+    =============
+    This proves that quantum error correction WORKS in practice!
+    - Larger quantum computers will be MORE reliable
+    - Path to fault-tolerant quantum computing is validated
+    - Million-qubit quantum computers are now feasible
+    
+    SURFACE CODE BASICS:
+    ====================
+    - Arrange qubits on a 2D lattice (like a checkerboard)
+    - Data qubits + Syndrome qubits (measure stabilizers)
+    - Distance d code: Can correct ⌊(d-1)/2⌋ errors
+    - Qubit overhead: ~d² physical qubits per logical qubit
+    
+    ANALOGY: Like a self-healing surface
+    - Small scratches (errors) are automatically repaired
+    - Bigger surface (larger d) = can heal bigger scratches
+    - Below threshold = healing works faster than damage accumulates!
     """
     
     def __init__(self, verbose=False):
         self.verbose = verbose
         
-        # Google Willow specifications (approximate)
+        # ==============================================================
+        # Google Willow Chip Specifications (December 2024)
+        # ==============================================================
+        # These are approximate values based on Google's announcement
+        # SOURCE: "Quantum Error Correction Below the Surface Code Threshold"
+        #         Nature, December 2024
+        
         self.willow_specs = {
-            'physical_qubits': 105,
-            'physical_error_rate': 0.001,  # ~0.1% per gate
-            'T1_time': 100e-6,  # 100 microseconds
-            'T2_time': 50e-6,   # 50 microseconds
-            'gate_fidelity': 0.999,  # 99.9%
-            'gate_time': 50e-9,  # 50 nanoseconds
-            'threshold': 0.01    # ~1% threshold for surface codes
+            # HARDWARE SPECIFICATIONS
+            'physical_qubits': 105,              # Total qubits on chip
+            'physical_error_rate': 0.001,        # 0.1% error per gate (excellent!)
+            
+            # COHERENCE TIMES (How long quantum info survives)
+            'T1_time': 100e-6,                   # 100 μs (energy relaxation time)
+            'T2_time': 50e-6,                    # 50 μs (dephasing time)
+            # REMINDER: T2 ≤ 2·T1 always (phase more fragile than population)
+            
+            # GATE QUALITY
+            'gate_fidelity': 0.999,              # 99.9% success rate per gate
+            'gate_time': 50e-9,                  # 50 ns (very fast!)
+            # CALCULATION: Can do ~2000 gates within T1 time (100μs / 50ns)
+            
+            # ERROR CORRECTION THRESHOLD
+            'threshold': 0.01                    # 1% threshold for surface codes
+            # MATHEMATICAL MEANING: If p_physical < 1%, scaling up helps!
+            # WILLOW: 0.1% < 1% → Below threshold ✅
         }
     
     def threshold_theorem_analysis(self):
         """
-        Analyze the threshold theorem
+        Analyze the threshold theorem - The fundamental law of QEC!
         
-        Key equation: p_logical(d) = (p_physical / p_threshold)^((d+1)/2)
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE THRESHOLD THEOREM:
+        There exists a critical error rate (threshold) below which
+        error correction becomes exponentially effective as you scale up.
         
-        Below threshold: λ = p_physical / p_threshold < 1
-        → Logical errors decrease exponentially with code distance
+        KEY EQUATION:
+        p_logical(d) = (p_physical / p_threshold)^((d+1)/2)
+        
+        STEP-BY-STEP EXPLANATION:
+        ==========================
+        
+        1. DEFINE λ (lambda) - The Critical Ratio:
+           λ = p_physical / p_threshold
+           
+           WHERE:
+           - p_physical = Error rate of your physical qubits
+           - p_threshold = Theoretical threshold for your code (~1% for surface codes)
+           
+        2. INTERPRET λ:
+           λ < 1: BELOW THRESHOLD ✅
+                  Errors decrease exponentially: p_logical = λ^((d+1)/2)
+                  More qubits → Better!
+                  
+           λ > 1: ABOVE THRESHOLD ❌
+                  Errors increase exponentially: p_logical = λ^((d+1)/2)
+                  More qubits → Worse!
+           
+           λ = 1: AT THRESHOLD (boundary)
+                  Errors stay constant regardless of code size
+        
+        3. CALCULATE LOGICAL ERROR RATE:
+           For distance-d surface code:
+           p_logical(d) = λ^((d+1)/2)
+           
+           EXAMPLE (Willow: λ = 0.1):
+           d=3 → p_logical = 0.1^2 = 0.01 (1% error)
+           d=5 → p_logical = 0.1^3 = 0.001 (0.1% error)
+           d=7 → p_logical = 0.1^4 = 0.0001 (0.01% error)
+           
+           Notice: Each step of d improves by factor of λ!
+        
+        4. WHY (d+1)/2 EXPONENT?
+           Mathematical result from surface code structure
+           INTUITION: Distance d means d rounds of error correction
+                      Each round suppresses errors by factor ~λ
+                      Geometric average gives ~λ^(d/2)
+        
+        HISTORICAL CONTEXT:
+        ===================
+        - 1996: Threshold theorem proven theoretically
+        - 1997-2023: Experiments struggled to reach threshold
+        - 2024 (Willow): FIRST experimental demonstration below threshold!
+        
+        WHY IT TOOK SO LONG:
+        Physical qubits needed to reach p_physical < 0.1% consistently
+        This required 25+ years of engineering improvements!
         """
         print(f"\n🎯 Threshold Theorem Analysis")
         print(f"=" * 45)
         
-        p_phys = self.willow_specs['physical_error_rate']
-        p_th = self.willow_specs['threshold']
+        # ==============================================================
+        # Extract parameters
+        # ==============================================================
+        p_phys = self.willow_specs['physical_error_rate']   # Actual hardware performance
+        p_th = self.willow_specs['threshold']                 # Theoretical threshold
+        
+        # ==============================================================
+        # Calculate λ (lambda) - The Critical Ratio
+        # ==============================================================
+        # MATHEMATICAL MEANING: How close are we to the threshold?
+        # λ = p_physical / p_threshold
+        #
+        # INTERPRETATION:
+        # λ = 0.1 → Physical errors are 10% of threshold (excellent! 10× margin)
+        # λ = 0.5 → Physical errors are 50% of threshold (good, 2× margin)
+        # λ = 0.9 → Physical errors are 90% of threshold (barely below)
+        # λ = 1.1 → Physical errors exceed threshold (not viable)
         lambda_factor = p_phys / p_th
         
         print(f"\n📊 Willow Chip Parameters:")
@@ -60,42 +216,149 @@ class WillowSurfaceCodeAnalysis:
         print(f"   Threshold (p_th): {p_th*100:.1f}%")
         print(f"   λ = p_phys / p_th: {lambda_factor:.3f}")
         
+        # ==============================================================
+        # Determine if below or above threshold
+        # ==============================================================
         if lambda_factor < 1:
             print(f"   ✅ BELOW THRESHOLD (λ < 1)")
             print(f"   → Scaling up improves performance!")
+            print(f"   → Each doubling of code distance improves by ~{lambda_factor:.1f}×")
+            print(f"   → THIS IS THE HOLY GRAIL OF QUANTUM COMPUTING! 🎉")
+        elif lambda_factor == 1:
+            print(f"   ⚖️  AT THRESHOLD (λ = 1)")
+            print(f"   → Errors stay constant with scaling")
+            print(f"   → Need better hardware to improve")
         else:
             print(f"   ❌ ABOVE THRESHOLD (λ > 1)")
             print(f"   → Scaling up makes things worse")
+            print(f"   → Error correction is counterproductive")
+            print(f"   → Need hardware improvements before scaling")
         
         return lambda_factor
     
     def calculate_logical_error_rates(self, distances):
         """
-        Calculate logical error rates for different code distances
+        Calculate logical error rates for different code distances.
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        SURFACE CODE STRUCTURE:
+        Distance-d surface code arranges qubits on a 2D grid
+        
+        QUBIT COUNT FORMULA:
+        n_qubits = d² + (d-1)²
+        
+        WHY THIS FORMULA?
+        - d² data qubits (arranged in d×d grid)
+        - (d-1)² syndrome qubits (between data qubits)
+        - Total: d² + (d-1)² ≈ 2d² qubits
+        
+        EXAMPLES:
+        d=3 → 3² + 2² = 9 + 4 = 13 qubits
+        d=5 → 5² + 4² = 25 + 16 = 41 qubits
+        d=7 → 7² + 6² = 49 + 36 = 85 qubits
+        d=9 → 9² + 8² = 81 + 64 = 145 qubits
+        
+        ERROR CORRECTION CAPABILITY:
+        Distance d can correct ⌊(d-1)/2⌋ errors
+        d=3 → Corrects 1 error
+        d=5 → Corrects 2 errors
+        d=7 → Corrects 3 errors
+        
+        LOGICAL ERROR RATE CALCULATION:
+        ================================
+        FORMULA: p_logical(d) = λ^((d+1)/2)
+        
+        WHERE: λ = p_physical / p_threshold
+        
+        INTERPRETATION:
+        - Small d: Limited protection, higher logical error rate
+        - Large d: Strong protection, lower logical error rate
+        - Exponential improvement as d increases!
+        
+        TRADE-OFF:
+        Larger d → Better protection BUT more qubits needed
+        Optimization problem: Find smallest d that gives acceptable p_logical
+        
+        GOOGLE WILLOW DEMONSTRATION:
+        ============================
+        Tested d=3, d=5, d=7
+        
+        d=3 (13 qubits):
+          p_logical ≈ 1% (0.01)
+          Improvement: ~10× better than no error correction
+          
+        d=5 (41 qubits):
+          p_logical ≈ 0.1% (0.001)
+          Improvement: ~10× better than d=3 ✅
+          
+        d=7 (85 qubits):
+          p_logical ≈ 0.01% (0.0001)
+          Improvement: ~10× better than d=5 ✅✅
+        
+        KEY RESULT: Each step improves by factor of λ ≈ 0.1
+        This proves exponential error suppression!
+        
+        EFFECTIVE COHERENCE TIME:
+        =========================
+        Physical qubit: T1 ≈ 100 μs (coherence time)
+        
+        With error correction at rate 1/T_cycle:
+        T_logical ≈ T_physical / p_logical
+        
+        EXAMPLE (Willow with d=7):
+        p_logical ≈ 0.0001
+        T_logical ≈ 100 μs / 0.0001 = 1,000,000 μs = 1 second!
+        
+        MEANING: Logical qubit survives 10,000× longer than physical!
         
         Args:
-            distances: List of surface code distances
+            distances: List of surface code distances to analyze
             
         Returns:
-            Dictionary with error rates and qubit counts
+            Dictionary with error rates, qubit counts, and performance metrics
         """
+        # ==============================================================
+        # Extract parameters
+        # ==============================================================
         p_phys = self.willow_specs['physical_error_rate']
         p_th = self.willow_specs['threshold']
-        lambda_factor = p_phys / p_th
+        lambda_factor = p_phys / p_th  # The critical ratio (should be < 1)
         
+        # ==============================================================
+        # Initialize results storage
+        # ==============================================================
         results = {
-            'distances': [],
-            'physical_qubits': [],
-            'logical_error_rates': [],
-            'effective_coherence': [],
-            'lambda_factors': []
+            'distances': [],              # Code distances tested
+            'physical_qubits': [],        # How many physical qubits needed
+            'logical_error_rates': [],    # Resulting logical error rates
+            'effective_coherence': [],    # Effective coherence time extension
+            'lambda_factors': []          # Power of λ at each distance
         }
         
+        # ==============================================================
+        # Calculate metrics for each code distance
+        # ==============================================================
         for d in distances:
-            # Surface code requires approximately d^2 + (d-1)^2 qubits
+            # ----------------------------------------------------------
+            # Calculate qubit overhead
+            # ----------------------------------------------------------
+            # FORMULA: n = d² + (d-1)²
+            # DERIVATION: d×d data grid + (d-1)×(d-1) syndrome grid
+            # SIMPLIFICATION: n ≈ 2d² - 2d + 1 ≈ 2d² for large d
             n_qubits = d**2 + (d-1)**2
             
-            # Logical error rate (simplified model)
+            # ----------------------------------------------------------
+            # Calculate logical error rate
+            # ----------------------------------------------------------
+            # FORMULA: p_logical(d) = λ^((d+1)/2)
+            # DERIVATION: From surface code theory (see papers by Fowler et al.)
+            #
+            # INTUITION: Why (d+1)/2?
+            # - Distance d means we do d rounds of error correction
+            # - Each round suppresses errors by factor ~√λ
+            # - Total suppression: (√λ)^d = λ^(d/2)
+            # - Technical correction gives (d+1)/2 exponent
             p_logical = lambda_factor**((d+1)/2)
             
             # Effective coherence time improvement

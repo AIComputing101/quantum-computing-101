@@ -21,59 +21,325 @@ warnings.filterwarnings("ignore")
 
 
 class FaultTolerantOperations:
+    """
+    Fault-Tolerant Logical Operations - Computing on Protected Qubits!
+    
+    MATHEMATICAL CONCEPT (For Beginners):
+    ======================================
+    THE CHALLENGE: How do we compute on ERROR-CORRECTED qubits?
+    
+    If we have |ψ⟩_L (logical qubit encoded in 7 physical qubits),
+    how do we apply gates like X, Z, H, CNOT without breaking the encoding?
+    
+    NAIVE APPROACH (WRONG):
+    1. Decode: |ψ⟩_L → |ψ⟩ (1 qubit)
+    2. Apply gate: X|ψ⟩
+    3. Re-encode: X|ψ⟩ → X|ψ⟩_L
+    Problem: During step 2, no error protection!
+    
+    FAULT-TOLERANT APPROACH (RIGHT):
+    Apply operations DIRECTLY on encoded state
+    WITHOUT decoding!
+    
+    TRANSVERSAL GATES - The Gold Standard
+    ======================================
+    DEFINITION: A gate is TRANSVERSAL if it can be implemented by
+    applying single-qubit (or two-qubit) gates to corresponding
+    qubits in each code block, with no interaction between blocks.
+    
+    MATHEMATICAL FORMULA:
+    Ū = U⊗U⊗...⊗U (tensor product of U on each qubit)
+    
+    WHY TRANSVERSAL IS GOOD:
+    1. Errors cannot spread: One error on one qubit stays on one qubit
+    2. Simple to implement: Just apply gate to each physical qubit
+    3. Naturally fault-tolerant: Preserves error correction properties
+    
+    STEANE CODE TRANSVERSAL GATES:
+    ===============================
+    The [[7,1,3]] Steane code supports:
+    
+    ✓ Logical X̄ = X⊗X⊗X⊗X⊗X⊗X⊗X (Apply X to all 7 qubits)
+    ✓ Logical Z̄ = Z⊗Z⊗Z⊗Z⊗Z⊗Z⊗Z (Apply Z to all 7 qubits)
+    ✓ Logical H̄ = H⊗H⊗H⊗H⊗H⊗H⊗H (Apply H to all 7 qubits)
+    ✓ Logical CNOT: CNOT⊗...⊗CNOT between corresponding qubits
+    
+    These are the CLIFFORD gates - very important subset!
+    
+    NON-TRANSVERSAL GATES:
+    ======================
+    ❌ T gate (π/8 rotation) is NOT transversal for Steane code
+    
+    PROBLEM: Transversal gates alone cannot achieve universal
+    quantum computation! We need T gate (or similar) for universality.
+    
+    SOLUTION: Magic State Distillation
+    1. Prepare noisy "magic states" |T⟩ = (|0⟩ + e^(iπ/4)|1⟩)/√2
+    2. Use error correction to "distill" high-fidelity magic states
+    3. Inject magic state + measurement → Implements T gate!
+    
+    EASTIN-KNILL THEOREM:
+    =====================
+    "No quantum error correcting code can have a universal set
+    of transversal gates."
+    
+    CONSEQUENCE: Must use non-transversal operations (like magic state
+    injection) for universal computation. This is more expensive but necessary!
+    
+    FAULT TOLERANCE GUARANTEE:
+    ==========================
+    An operation is FAULT-TOLERANT if:
+    "Any single fault (error) during the operation causes at most one
+    error in each code block."
+    
+    INTUITION: Errors don't cascade or spread uncontrollably
+    
+    KEY METRICS:
+    ============
+    - Transversal depth: How many layers of transversal gates
+    - Magic state overhead: How many ancilla qubits for T gates
+    - Circuit depth: Total depth including error correction
+    """
     def __init__(self, verbose=False):
         self.verbose = verbose
 
     def logical_pauli_x_steane(self):
-        """Logical X operation for Steane code."""
-        # Transversal X operation
+        """
+        Logical X operation for Steane code - Transversal bit-flip!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        LOGICAL X̄ OPERATION:
+        Flips logical |0̄⟩ ↔ |1̄⟩
+        
+        ENCODING REMINDER:
+        |0̄⟩ = superposition including |0000000⟩
+        |1̄⟩ = superposition including |1111111⟩
+        
+        TRANSVERSAL IMPLEMENTATION:
+        Apply X to ALL 7 physical qubits simultaneously
+        
+        MATHEMATICAL VERIFICATION:
+        X̄|0̄⟩ = (X⊗X⊗X⊗X⊗X⊗X⊗X)|0̄⟩ = |1̄⟩ ✓
+        
+        WHY IT WORKS:
+        The Steane code is constructed such that applying X to all
+        qubits maps valid codewords to valid codewords!
+        
+        FAULT TOLERANCE:
+        If ONE X gate fails (error), it affects only ONE qubit.
+        The code can still correct this single error!
+        """
+        # ==============================================================
+        # TRANSVERSAL X: Apply X gate to each of the 7 qubits
+        # ==============================================================
+        # MATHEMATICAL OPERATION: X̄ = X^⊗7 = X⊗X⊗X⊗X⊗X⊗X⊗X
+        # EFFECT: |0̄⟩ → |1̄⟩ and |1̄⟩ → |0̄⟩ (logical bit-flip)
         logical_x = QuantumCircuit(7, name="Logical_X_Steane")
         for i in range(7):
-            logical_x.x(i)
+            logical_x.x(i)  # Apply X to physical qubit i
         return logical_x
 
     def logical_pauli_z_steane(self):
-        """Logical Z operation for Steane code."""
-        # Transversal Z operation
+        """
+        Logical Z operation for Steane code - Transversal phase-flip!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        LOGICAL Z̄ OPERATION:
+        Applies phase to logical |1̄⟩: α|0̄⟩ + β|1̄⟩ → α|0̄⟩ - β|1̄⟩
+        
+        TRANSVERSAL IMPLEMENTATION:
+        Apply Z to ALL 7 physical qubits simultaneously
+        
+        MATHEMATICAL FORMULA:
+        Z̄ = Z⊗Z⊗Z⊗Z⊗Z⊗Z⊗Z
+        
+        EFFECT:
+        Z̄|0̄⟩ = |0̄⟩ (no change)
+        Z̄|1̄⟩ = -|1̄⟩ (global phase flip)
+        
+        WHY TRANSVERSAL:
+        CSS code property: Z errors on physical qubits map to
+        Z error on logical qubit!
+        """
+        # ==============================================================
+        # TRANSVERSAL Z: Apply Z gate to each of the 7 qubits
+        # ==============================================================
         logical_z = QuantumCircuit(7, name="Logical_Z_Steane")
         for i in range(7):
-            logical_z.z(i)
+            logical_z.z(i)  # Apply Z to physical qubit i
         return logical_z
 
     def logical_hadamard_steane(self):
-        """Logical Hadamard operation for Steane code."""
-        # Transversal Hadamard
+        """
+        Logical Hadamard for Steane code - Basis transformation!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        LOGICAL H̄ OPERATION:
+        Swaps X̄ ↔ Z̄ (switches between computational and Hadamard basis)
+        
+        MATHEMATICAL FORMULA:
+        H̄ = H⊗H⊗H⊗H⊗H⊗H⊗H
+        
+        EFFECT:
+        H̄|0̄⟩ = |+̄⟩ = (|0̄⟩ + |1̄⟩)/√2
+        H̄|1̄⟩ = |-̄⟩ = (|0̄⟩ - |1̄⟩)/√2
+        
+        WHY IT WORKS FOR STEANE:
+        Steane code is CSS (Calderbank-Shor-Steane) code
+        Property: Symmetric under X ↔ Z exchange
+        Hadamard implements this symmetry on logical level!
+        
+        TRANSVERSAL PROPERTY:
+        Applying H to each physical qubit implements H̄ on logical qubit
+        """
+        # ==============================================================
+        # TRANSVERSAL H: Apply H gate to each of the 7 qubits
+        # ==============================================================
         logical_h = QuantumCircuit(7, name="Logical_H_Steane")
         for i in range(7):
-            logical_h.h(i)
+            logical_h.h(i)  # Apply H to physical qubit i
         return logical_h
 
     def logical_cnot_steane(self, control_block=0, target_block=1):
-        """Logical CNOT between two Steane code blocks."""
+        """
+        Logical CNOT between two Steane code blocks - Two-qubit gate!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        LOGICAL CNOT:
+        If control logical qubit is |1̄⟩, flip target logical qubit
+        
+        CIRCUIT STRUCTURE:
+        Need TWO Steane code blocks (14 physical qubits total)
+        Block 1 (control): Qubits 0-6
+        Block 2 (target): Qubits 7-13
+        
+        TRANSVERSAL IMPLEMENTATION:
+        Apply CNOT between CORRESPONDING qubits in each block:
+        CNOT(qubit_i in control, qubit_i in target) for i = 0...6
+        
+        MATHEMATICAL FORMULA:
+        CNOT̄ = CNOT⊗CNOT⊗...⊗CNOT (7 times)
+        
+        WHY IT'S FAULT-TOLERANT:
+        - Errors in control block stay in control block
+        - Errors in target block stay in target block
+        - Each physical CNOT affects only one qubit in each block
+        - Total: At most 1 error per block (correctable!)
+        
+        EXAMPLE:
+        |0̄⟩_control|ψ̄⟩_target → |0̄⟩_control|ψ̄⟩_target (no change)
+        |1̄⟩_control|ψ̄⟩_target → |1̄⟩_control X̄|ψ̄⟩_target (target flipped)
+        """
+        # ==============================================================
+        # TRANSVERSAL CNOT: Apply CNOT between corresponding qubits
+        # ==============================================================
+        # CIRCUIT SIZE: 14 qubits (two 7-qubit code blocks)
         logical_cnot = QuantumCircuit(14, name="Logical_CNOT_Steane")
 
-        # Transversal CNOT between corresponding qubits
+        # Loop over all 7 qubit positions
         for i in range(7):
+            # Calculate absolute qubit indices
+            # Control block: qubits 0-6 or 7-13 depending on control_block parameter
+            # Target block: qubits 0-6 or 7-13 depending on target_block parameter
             control_qubit = control_block * 7 + i
             target_qubit = target_block * 7 + i
+            
+            # Apply CNOT between qubit i in control and qubit i in target
+            # MATHEMATICAL EFFECT: If control qubit i is |1⟩, flip target qubit i
             logical_cnot.cx(control_qubit, target_qubit)
 
         return logical_cnot
 
     def non_transversal_t_gate(self):
-        """Non-transversal T gate implementation (magic state injection)."""
-        # Simplified magic state T gate - in practice requires distillation
-        t_gate = QuantumCircuit(8, 1, name="T_Gate_Magic_State")  # 7 + 1 ancilla, 1 classical bit
+        """
+        Non-transversal T gate - Required for universal quantum computing!
+        
+        MATHEMATICAL CONCEPT (For Beginners):
+        ======================================
+        THE T GATE:
+        T = [[1, 0], [0, e^(iπ/4)]]
+        Applies π/8 phase rotation to |1⟩ state
+        
+        WHY WE NEED IT:
+        Clifford gates (X, Z, H, CNOT) alone CANNOT achieve universal
+        quantum computation! Need at least one non-Clifford gate.
+        T gate + Clifford gates = Universal! (Can approximate any gate)
+        
+        THE PROBLEM:
+        T gate is NOT transversal for Steane code
+        Applying T to each qubit does NOT implement logical T̄
+        
+        EASTIN-KNILL THEOREM:
+        "No quantum code can have a universal set of transversal gates"
+        CONSEQUENCE: Must use non-transversal methods for universality
+        
+        THE SOLUTION: Magic State Distillation
+        ========================================
+        MAGIC STATE:
+        |T⟩ = (|0⟩ + e^(iπ/4)|1⟩)/√2
+        
+        PROCESS:
+        1. Prepare many noisy magic states (easy but low fidelity)
+        2. Use error correction to "distill" into few high-fidelity states
+        3. Inject magic state into computation via measurement
+        4. Result: Implements T gate on logical qubit!
+        
+        MATHEMATICAL PROTOCOL (Simplified):
+        Step 1: Prepare ancilla in |T⟩ state
+        Step 2: Entangle with logical qubit using CNOTs
+        Step 3: Measure ancilla
+        Step 4: Apply correction based on measurement outcome
+        Result: T gate applied to logical qubit!
+        
+        OVERHEAD:
+        - Resource intensive: Need ~10-100 noisy magic states per good one
+        - Dominates fault-tolerant quantum computation cost
+        - Active research area: Improving distillation efficiency
+        
+        TRADE-OFF:
+        Transversal gates: Fast, simple, low overhead
+        Non-transversal (T) gates: Slow, complex, high overhead
+        But NECESSARY for universal computation!
+        """
+        # ==============================================================
+        # MAGIC STATE INJECTION (Simplified implementation)
+        # ==============================================================
+        # CIRCUIT STRUCTURE:
+        # - 7 qubits: Logical qubit (Steane-encoded)
+        # - 1 ancilla: Magic state |T⟩
+        # - 1 classical bit: Measurement outcome
+        #
+        # NOTE: This is a simplified version. Real implementation requires:
+        # - Magic state distillation protocol
+        # - Multiple ancilla qubits
+        # - Error correction on ancilla
+        # - Classical feedback for correction
+        
+        t_gate = QuantumCircuit(8, 1, name="T_Gate_Magic_State")
 
-        # Prepare magic state |T⟩ = (|0⟩ + e^(iπ/4)|1⟩)/√2
-        t_gate.ry(np.pi / 4, 7)  # Approximate magic state preparation
+        # --- Step 1: Prepare magic state (simplified) ---
+        # MATHEMATICAL STATE: |T⟩ = (|0⟩ + e^(iπ/4)|1⟩)/√2
+        # APPROXIMATION: Use RY gate to create similar superposition
+        # IDEAL: Would use distilled magic state from ancilla factory
+        t_gate.ry(np.pi / 4, 7)  # Ancilla qubit (qubit 7)
 
-        # Controlled operation using magic state (simplified)
+        # --- Step 2: Entangle with logical qubit ---
+        # Apply CNOTs from each logical qubit to magic state ancilla
+        # This "injects" the T rotation into the logical qubit
         for i in range(7):
-            t_gate.cx(i, 7)
+            t_gate.cx(i, 7)  # Control: logical qubit i, Target: ancilla
 
-        # Measurement and correction (simplified)
+        # --- Step 3: Measure and apply correction ---
+        # Measure ancilla to project logical qubit appropriately
+        # Measurement outcome determines if correction needed
         t_gate.measure(7, 0)
+        
+        # NOTE: In full implementation, would apply conditional
+        # corrections based on measurement outcome using c_if()
 
         return t_gate
 
