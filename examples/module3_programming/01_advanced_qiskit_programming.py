@@ -69,7 +69,14 @@ def demonstrate_custom_gates():
 
     # Create a custom multi-qubit gate - Quantum Fourier Transform on 3 qubits
     def create_qft3_gate():
-        """Create a 3-qubit QFT gate."""
+        """
+        Create a 3-qubit QFT gate.
+        
+        Math: QFT transforms |x⟩ → (1/√8) Σ_k e^(2πixk/8) |k⟩
+        Used in Shor's algorithm, phase estimation, many quantum algorithms
+        
+        Gate sequence implements QFT through Hadamards + controlled phase rotations
+        """
         qc = QuantumCircuit(3, name="QFT3")
 
         # QFT implementation

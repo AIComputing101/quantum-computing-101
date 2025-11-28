@@ -42,14 +42,78 @@ class InnerProductAnalyzer:
             print(f"[InnerProduct] {message}")
 
     def basic_inner_products(self):
-        """Demonstrate basic inner product calculations."""
+        """
+        Demonstrate basic inner product calculations.
+        
+        Mathematical Foundation - Quantum Inner Product:
+        -----------------------------------------------
+        The inner product is fundamental to quantum mechanics,
+        measuring the "overlap" between two quantum states.
+        
+        Definition (Dirac Notation):
+        ⟨ψ|φ⟩ = Σᵢ ψᵢ* φᵢ
+        
+        where:
+        - ⟨ψ| is the "bra" (conjugate transpose of |ψ⟩)
+        - |φ⟩ is the "ket" (column vector)
+        - * denotes complex conjugate
+        - Σ is sum over all components
+        
+        For single qubit (2D vectors):
+        |ψ⟩ = [α_ψ, β_ψ]ᵀ
+        |φ⟩ = [α_φ, β_φ]ᵀ
+        
+        ⟨ψ|φ⟩ = α_ψ* α_φ + β_ψ* β_φ
+        
+        Key Properties:
+        --------------
+        1. Conjugate Symmetry: ⟨ψ|φ⟩ = ⟨φ|ψ⟩*
+        2. Linearity: ⟨ψ|(c|φ⟩) = c⟨ψ|φ⟩
+        3. Positive Definiteness: ⟨ψ|ψ⟩ = ||ψ||² ≥ 0
+        4. Norm: ||ψ|| = √⟨ψ|ψ⟩
+        
+        Physical Interpretation:
+        -----------------------
+        |⟨ψ|φ⟩|² = probability of finding system in state |φ⟩
+                  when it's prepared in state |ψ⟩
+        
+        Special Cases:
+        -------------
+        - ⟨ψ|ψ⟩ = 1 (normalized states)
+        - ⟨ψ|φ⟩ = 0 (orthogonal states)
+        - |⟨ψ|φ⟩| = 1 (identical or opposite states)
+        
+        Example Calculations:
+        --------------------
+        ⟨0|0⟩ = [1,0]·[1,0] = 1×1 + 0×0 = 1 ✓
+        ⟨0|1⟩ = [1,0]·[0,1] = 1×0 + 0×1 = 0 ✓ (orthogonal)
+        ⟨+|+⟩ = [1/√2,1/√2]·[1/√2,1/√2] = 1/2 + 1/2 = 1 ✓
+        ⟨+|-⟩ = [1/√2,1/√2]·[1/√2,-1/√2] = 1/2 - 1/2 = 0 ✓ (orthogonal)
+        
+        Measurement Connection:
+        ----------------------
+        When measuring observable O with eigenstates |φₙ⟩:
+        
+        P(measuring n) = |⟨φₙ|ψ⟩|²
+        
+        This is the Born rule - probability equals squared overlap!
+        
+        Computational Note:
+        ------------------
+        In Python/NumPy:
+        - np.vdot(a, b) computes a*.b (conjugates first argument)
+        - For real vectors, equivalent to np.dot
+        
+        Returns:
+            dict: Dictionary of quantum states for analysis
+        """
         print("\n=== Basic Inner Product Calculations ===")
 
-        # Define fundamental states
-        state_0 = np.array([1, 0], dtype=complex)
-        state_1 = np.array([0, 1], dtype=complex)
-        state_plus = np.array([1, 1], dtype=complex) / np.sqrt(2)
-        state_minus = np.array([1, -1], dtype=complex) / np.sqrt(2)
+        # Define fundamental states (orthonormal bases)
+        state_0 = np.array([1, 0], dtype=complex)  # |0⟩ computational basis
+        state_1 = np.array([0, 1], dtype=complex)  # |1⟩ computational basis
+        state_plus = np.array([1, 1], dtype=complex) / np.sqrt(2)  # |+⟩ Hadamard basis
+        state_minus = np.array([1, -1], dtype=complex) / np.sqrt(2)  # |-⟩ Hadamard basis
 
         states = {"|0⟩": state_0, "|1⟩": state_1, "|+⟩": state_plus, "|-⟩": state_minus}
 
@@ -57,21 +121,22 @@ class InnerProductAnalyzer:
         print("⟨ψ|φ⟩ = ψ*ᵀ · φ")
         print()
 
-        # Calculate all pairwise inner products
+        # Calculate all pairwise inner products to demonstrate orthogonality
         state_names = list(states.keys())
         for i, name1 in enumerate(state_names):
             for j, name2 in enumerate(state_names):
                 psi = states[name1]
                 phi = states[name2]
 
-                # Calculate inner product ⟨ψ|φ⟩
+                # Calculate inner product: ⟨ψ|φ⟩ = Σ ψᵢ* φᵢ
+                # np.vdot conjugates first argument automatically
                 inner_product = np.vdot(psi, phi)
                 self.computed_products.append((name1, name2, inner_product))
 
                 print(f"⟨{name1}|{name2}⟩ = {inner_product:.4f}")
 
                 if self.verbose:
-                    # Show detailed calculation
+                    # Show detailed calculation step-by-step
                     print(f"  Calculation: {np.conj(psi)} · {phi}")
                     print(
                         f"  = {np.conj(psi[0]):.4f} × {phi[0]:.4f} + {np.conj(psi[1]):.4f} × {phi[1]:.4f}"

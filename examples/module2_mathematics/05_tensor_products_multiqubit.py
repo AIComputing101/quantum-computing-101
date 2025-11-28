@@ -43,14 +43,78 @@ class TensorProductAnalyzer:
             print(f"[TensorProduct] {message}")
 
     def basic_tensor_products(self):
-        """Demonstrate basic tensor product operations."""
+        """
+        Demonstrate basic tensor product operations.
+        
+        Mathematical Foundation - Tensor Products:
+        -----------------------------------------
+        The tensor product (also called Kronecker product) combines quantum
+        states from separate systems into a composite system state.
+        
+        Notation: ⊗ (tensor product symbol)
+        Also written as: |ψ⟩|φ⟩ or |ψ⟩ ⊗ |φ⟩ or |ψφ⟩
+        
+        Definition for Vectors:
+        -----------------------
+        For vectors |ψ⟩ = [a, b]ᵀ and |φ⟩ = [c, d]ᵀ:
+        
+        |ψ⟩ ⊗ |φ⟩ = [a, b]ᵀ ⊗ [c, d]ᵀ = [a·[c,d]ᵀ, b·[c,d]ᵀ]
+                  = [ac, ad, bc, bd]ᵀ
+        
+        Detailed Example:
+        |0⟩ ⊗ |1⟩ = [1, 0]ᵀ ⊗ [0, 1]ᵀ
+                   = [1·[0,1]ᵀ, 0·[0,1]ᵀ]
+                   = [1×0, 1×1, 0×0, 0×1]ᵀ
+                   = [0, 1, 0, 0]ᵀ = |01⟩
+        
+        Dimensionality:
+        ---------------
+        If |ψ⟩ has dimension m and |φ⟩ has dimension n,
+        then |ψ⟩ ⊗ |φ⟩ has dimension m × n
+        
+        For qubits:
+        - 1 qubit: dimension 2¹ = 2
+        - 2 qubits: dimension 2² = 4
+        - 3 qubits: dimension 2³ = 8
+        - n qubits: dimension 2ⁿ (exponential growth!)
+        
+        Computational Basis for 2 Qubits:
+        ---------------------------------
+        The 4 basis states are:
+        |00⟩ = [1,0,0,0]ᵀ  (both qubits in |0⟩)
+        |01⟩ = [0,1,0,0]ᵀ  (first |0⟩, second |1⟩)
+        |10⟩ = [0,0,1,0]ᵀ  (first |1⟩, second |0⟩)
+        |11⟩ = [0,0,0,1]ᵀ  (both qubits in |1⟩)
+        
+        Any 2-qubit state can be written as:
+        |ψ⟩ = α|00⟩ + β|01⟩ + γ|10⟩ + δ|11⟩
+        where |α|² + |β|² + |γ|² + |δ|² = 1
+        
+        Properties of Tensor Products:
+        ------------------------------
+        1. NOT Commutative: |ψ⟩⊗|φ⟩ ≠ |φ⟩⊗|ψ⟩ (order matters!)
+        2. Associative: (|ψ⟩⊗|φ⟩)⊗|χ⟩ = |ψ⟩⊗(|φ⟩⊗|χ⟩)
+        3. Distributive: (|ψ⟩+|φ⟩)⊗|χ⟩ = |ψ⟩⊗|χ⟩ + |φ⟩⊗|χ⟩
+        4. Scalar mult: (c|ψ⟩)⊗|φ⟩ = c(|ψ⟩⊗|φ⟩)
+        
+        Why Tensor Products in Quantum Computing?
+        ------------------------------------------
+        - Combine individual qubit states into multi-qubit states
+        - State space grows exponentially (quantum advantage!)
+        - Enables entanglement when combined with gates
+        - Foundation for quantum algorithms
+        
+        Returns:
+            dict: Dictionary of constructed two-qubit states
+        """
         print("\n=== Basic Tensor Product Operations ===")
 
-        # Single-qubit states
-        state_0 = np.array([1, 0], dtype=complex)
-        state_1 = np.array([0, 1], dtype=complex)
-        state_plus = np.array([1, 1], dtype=complex) / np.sqrt(2)
-        state_minus = np.array([1, -1], dtype=complex) / np.sqrt(2)
+        # Single-qubit computational and superposition basis states
+        # These are the building blocks for multi-qubit systems
+        state_0 = np.array([1, 0], dtype=complex)  # |0⟩ = [1, 0]ᵀ
+        state_1 = np.array([0, 1], dtype=complex)  # |1⟩ = [0, 1]ᵀ
+        state_plus = np.array([1, 1], dtype=complex) / np.sqrt(2)  # |+⟩ = (|0⟩+|1⟩)/√2
+        state_minus = np.array([1, -1], dtype=complex) / np.sqrt(2)  # |-⟩ = (|0⟩-|1⟩)/√2
 
         print("Single-qubit states:")
         print(f"|0⟩ = {state_0}")
@@ -58,15 +122,17 @@ class TensorProductAnalyzer:
         print(f"|+⟩ = {state_plus}")
         print(f"|-⟩ = {state_minus}")
 
-        # Two-qubit tensor products
+        # Two-qubit tensor products using Kronecker product (np.kron)
         print("\nTwo-qubit tensor products:")
         print("General form: |ψ⟩ ⊗ |φ⟩")
+        print("np.kron(a, b) computes the Kronecker (tensor) product")
 
-        # Computational basis states
-        state_00 = np.kron(state_0, state_0)
-        state_01 = np.kron(state_0, state_1)
-        state_10 = np.kron(state_1, state_0)
-        state_11 = np.kron(state_1, state_1)
+        # Computational basis states for 2 qubits
+        # These form an orthonormal basis for the 4-dimensional Hilbert space
+        state_00 = np.kron(state_0, state_0)  # |0⟩ ⊗ |0⟩ = [1,0,0,0]ᵀ
+        state_01 = np.kron(state_0, state_1)  # |0⟩ ⊗ |1⟩ = [0,1,0,0]ᵀ
+        state_10 = np.kron(state_1, state_0)  # |1⟩ ⊗ |0⟩ = [0,0,1,0]ᵀ
+        state_11 = np.kron(state_1, state_1)  # |1⟩ ⊗ |1⟩ = [0,0,0,1]ᵀ
 
         print(f"\n|00⟩ = |0⟩ ⊗ |0⟩ = {state_00}")
         print(f"|01⟩ = |0⟩ ⊗ |1⟩ = {state_01}")
@@ -76,15 +142,20 @@ class TensorProductAnalyzer:
         if self.verbose:
             print("\nDetailed tensor product calculation for |01⟩:")
             print(f"|0⟩ ⊗ |1⟩ = {state_0} ⊗ {state_1}")
-            print(f"= [1×{state_1}, 0×{state_1}] = {state_01}")
+            print("Step-by-step: [1,0]ᵀ ⊗ [0,1]ᵀ")
+            print("= [1·[0,1]ᵀ, 0·[0,1]ᵀ]")
+            print(f"= [1×0, 1×1, 0×0, 0×1]ᵀ = {state_01}")
 
-        # Mixed basis states
+        # Mixed basis states - combining computational and superposition bases
+        # These demonstrate the flexibility of tensor products
         print(f"\nMixed basis products:")
-        state_0_plus = np.kron(state_0, state_plus)
-        state_plus_1 = np.kron(state_plus, state_1)
+        state_0_plus = np.kron(state_0, state_plus)  # |0⟩ ⊗ |+⟩ = |0⟩⊗((|0⟩+|1⟩)/√2) = (|00⟩+|01⟩)/√2
+        state_plus_1 = np.kron(state_plus, state_1)  # |+⟩ ⊗ |1⟩ = ((|0⟩+|1⟩)/√2)⊗|1⟩ = (|01⟩+|11⟩)/√2
 
         print(f"|0⟩ ⊗ |+⟩ = {state_0_plus}")
+        print(f"   Expanded: |0⟩ ⊗ (|0⟩+|1⟩)/√2 = (|00⟩+|01⟩)/√2")
         print(f"|+⟩ ⊗ |1⟩ = {state_plus_1}")
+        print(f"   Expanded: (|0⟩+|1⟩)/√2 ⊗ |1⟩ = (|01⟩+|11⟩)/√2")
 
         # Store for later analysis
         two_qubit_states = {

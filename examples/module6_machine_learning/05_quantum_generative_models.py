@@ -34,25 +34,150 @@ class QuantumBornMachine:
         self.training_history = []
 
     def create_born_circuit(self, parameters):
-        """Create Born machine circuit."""
+        """
+        Create Born machine circuit.
+        
+        Mathematical Foundation - Quantum Born Machine:
+        ----------------------------------------------
+        A Born machine is a quantum generative model that learns probability
+        distributions using quantum circuits and the Born rule.
+        
+        Born Rule (Fundamental):
+        -----------------------
+        For quantum state |ψ(θ)⟩ = Σᵢ αᵢ(θ)|i⟩:
+        
+        P(i|θ) = |αᵢ(θ)|² = |⟨i|ψ(θ)⟩|²
+        
+        This gives a probability distribution over basis states {|i⟩}.
+        
+        Goal:
+        -----
+        Learn parameters θ such that P(i|θ) ≈ P_data(i)
+        where P_data is the target distribution.
+        
+        Mathematical Framework:
+        ----------------------
+        
+        1. Quantum State:
+           |ψ(θ)⟩ = U(θ)|0⟩
+           where U(θ) is parameterized unitary circuit
+        
+        2. Probability Distribution:
+           For n qubits, we have 2^n basis states
+           P(i|θ) = |⟨i|ψ(θ)⟩|² for i = 0, ..., 2^n-1
+        
+        3. Training Objective:
+           Minimize distance D(P_data || P_θ)
+           Common choices:
+           - KL divergence: Σᵢ P_data(i) log[P_data(i)/P_θ(i)]
+           - MMD (Maximum Mean Discrepancy)
+           - Wasserstein distance
+        
+        Circuit Structure:
+        -----------------
+        Alternating layers of:
+        
+        Layer l:
+        1. Single-qubit rotations: R_y(θ_{l,i,1}), R_z(θ_{l,i,2})
+           Controls amplitude and phase of each qubit
+        
+        2. Entangling gates: CNOT chain + circular
+           Creates correlations in probability distribution
+        
+        Why This Works:
+        --------------
+        
+        Expressivity:
+        - n qubits can represent 2^n probabilities
+        - Entanglement allows complex correlations
+        - Different from classical restricted Boltzmann machines
+        
+        Mathematical Analysis:
+        ---------------------
+        
+        State Evolution:
+        Starting from |0⟩^⊗n, after k layers:
+        |ψ_k⟩ = U_k(θ_k) · ... · U_1(θ_1)|0⟩
+        
+        Probability Distribution:
+        P(x|θ) = |⟨x|ψ⟩|²
+        
+        For computational basis state |x⟩ = |x_{n-1}...x_1x_0⟩:
+        P(x|θ) = |amplitude of |x⟩ in final state|²
+        
+        Gradient Computation:
+        --------------------
+        Using parameter-shift rule:
+        ∂P(x|θᵢ)/∂θᵢ = [P(x|θᵢ + π/2) - P(x|θᵢ - π/2)] / 2
+        
+        Training Algorithm:
+        ------------------
+        1. Generate samples from P(x|θ) by measuring circuit
+        2. Compute loss L(θ) = D(P_data || P_θ)
+        3. Estimate gradients ∇L using parameter-shift
+        4. Update: θ ← θ - η ∇L
+        5. Repeat until convergence
+        
+        Sampling Process:
+        ----------------
+        1. Prepare |ψ(θ)⟩ using current parameters
+        2. Measure all qubits in computational basis
+        3. Outcome x occurs with probability P(x|θ) = |⟨x|ψ(θ)⟩|²
+        4. Repeat to get sample distribution
+        
+        Quantum vs Classical GANs:
+        -------------------------
+        Classical GAN: Generator G(z) maps noise z to samples
+        Quantum Born: Circuit U(θ) + measurement generates samples
+        
+        Advantages:
+        - Exponential state space (2^n dimensions)
+        - Quantum interference
+        - Exact probability calculations possible
+        - No mode collapse (common in GANs)
+        
+        Challenges:
+        - Limited qubit count (small 2^n)
+        - Measurement statistics (need many shots)
+        - Barren plateaus in training
+        - Loading classical data onto quantum states
+        
+        Applications:
+        ------------
+        - Learning unknown quantum states
+        - Generating synthetic data
+        - Anomaly detection
+        - Quantum chemistry (molecular distributions)
+        
+        Args:
+            parameters (array): Variational parameters θ
+            
+        Returns:
+            QuantumCircuit: Born machine circuit implementing P(x|θ)
+        """
         circuit = QuantumCircuit(self.n_qubits)
         param_idx = 0
 
+        # Build Born machine layer by layer
         for layer in range(self.n_layers):
-            # Single-qubit rotations
+            # Single-qubit rotations control individual qubit amplitudes
             for qubit in range(self.n_qubits):
                 if param_idx < len(parameters):
+                    # R_y: controls probability amplitude
                     circuit.ry(parameters[param_idx], qubit)
                     param_idx += 1
                 if param_idx < len(parameters):
+                    # R_z: controls relative phase
                     circuit.rz(parameters[param_idx], qubit)
                     param_idx += 1
 
-            # Entangling gates
+            # Entangling gates create correlations in distribution
+            # Linear chain
             for qubit in range(self.n_qubits - 1):
                 circuit.cx(qubit, qubit + 1)
 
-            # Circular entanglement
+            # Circular entanglement for richer correlations
+            # Creates ring topology
             if self.n_qubits > 2:
                 circuit.cx(self.n_qubits - 1, 0)
 

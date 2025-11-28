@@ -52,7 +52,50 @@ from quantum_helpers import create_bell_state, run_circuit_with_shots
 
 
 def demonstrate_classical_copying():
-    """Show how classical bits can be copied perfectly."""
+    """
+    Show how classical bits can be copied perfectly.
+    
+    Mathematical Foundation - Classical Copying:
+    -------------------------------------------
+    Classical information can be copied arbitrarily many times
+    without any loss or change to the original.
+    
+    Classical COPY Operation:
+    ------------------------
+    Input: |original⟩, |blank⟩
+    Output: |original⟩, |original⟩
+    
+    For classical bits (b ∈ {0,1}):
+    COPY(b, 0) = (b, b)
+    
+    Examples:
+    COPY(0, 0) = (0, 0) ✓
+    COPY(1, 0) = (1, 1) ✓
+    
+    Properties:
+    ----------
+    1. Perfect fidelity: Copy is identical to original
+    2. Non-destructive: Original unchanged
+    3. Unlimited copies: Can repeat infinitely
+    4. Independent: Reading doesn't affect the bit
+    
+    Why This Works Classically:
+    --------------------------
+    Classical bits have definite values (0 or 1).
+    Reading a bit tells us its value without changing it.
+    We can then set another bit to the same value.
+    
+    Mathematical representation:
+    If original = b, then after COPY:
+    - First bit = b (unchanged)
+    - Second bit = b (copied value)
+    - Correlation: 100% (perfect copy)
+    
+    This is IMPOSSIBLE for quantum states! (No-Cloning Theorem)
+    
+    Returns:
+        tuple: (original_bit, copied_bit)
+    """
     print("=== CLASSICAL BIT COPYING ===")
     print()
 
@@ -60,7 +103,8 @@ def demonstrate_classical_copying():
     original_bit = 1
     print(f"Original bit: {original_bit}")
 
-    # Classical copying is trivial
+    # Classical copying is trivial - just read and set
+    # Reading a classical bit doesn't change it (unlike quantum measurement!)
     copied_bit = original_bit
     print(f"Copied bit:   {copied_bit}")
     print(f"Are they identical? {original_bit == copied_bit}")
@@ -71,6 +115,12 @@ def demonstrate_classical_copying():
     print("2. Set the copy bit to the same value")
     print("3. Now you have two identical bits")
     print("4. This works for any classical information")
+    print()
+    
+    print("Mathematical view:")
+    print(f"  Before: bit₁ = {original_bit}, bit₂ = 0")
+    print(f"  After:  bit₁ = {original_bit}, bit₂ = {copied_bit}")
+    print("  Both bits are independent and identical!")
     print()
 
     return original_bit, copied_bit

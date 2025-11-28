@@ -28,39 +28,120 @@ import seaborn as sns
 
 
 def demonstrate_vector_operations():
-    """Demonstrate basic vector operations in quantum state space."""
+    """
+    Demonstrate basic vector operations in quantum state space.
+    
+    Mathematical Foundation - Quantum State Vectors:
+    -----------------------------------------------
+    Quantum states live in a Hilbert space (complex vector space with inner product).
+    For a single qubit, this is ℂ² (2-dimensional complex vector space).
+    
+    Vector Representation:
+    ----------------------
+    A quantum state |ψ⟩ is a column vector:
+    |ψ⟩ = α|0⟩ + β|1⟩ = α[1,0]ᵀ + β[0,1]ᵀ = [α, β]ᵀ
+    
+    Basis States (Computational Basis):
+    ----------------------------------
+    |0⟩ = [1, 0]ᵀ  (spin-up, ground state)
+    |1⟩ = [0, 1]ᵀ  (spin-down, excited state)
+    
+    These form an orthonormal basis:
+    - Orthogonal: ⟨0|1⟩ = 0
+    - Normalized: ⟨0|0⟩ = ⟨1|1⟩ = 1
+    
+    Vector Norm (Length):
+    --------------------
+    For vector v = [v₁, v₂, ..., vₙ]:
+    ||v|| = √(|v₁|² + |v₂|² + ... + |vₙ|²)
+    
+    Quantum states MUST be normalized: ||ψ|| = 1
+    This ensures Σ P(outcome) = 1 (probabilities sum to 1)
+    
+    Vector Addition:
+    ---------------
+    |ψ⟩ + |φ⟩ = [a₁ + b₁, a₂ + b₂]ᵀ
+    Component-wise addition (like adding 2D vectors)
+    
+    Example: |0⟩ + |1⟩ = [1,0]ᵀ + [0,1]ᵀ = [1,1]ᵀ
+    To normalize: divide by ||v|| = √2
+    → (|0⟩ + |1⟩)/√2 = [1/√2, 1/√2]ᵀ = |+⟩
+    
+    Inner Product (Dot Product):
+    ----------------------------
+    For quantum vectors, use Hermitian inner product:
+    ⟨ψ|φ⟩ = ψ₁*φ₁ + ψ₂*φ₂ + ... (where * = complex conjugate)
+    
+    In Python: np.vdot(v, w) computes v*.w (conjugates first argument)
+    
+    Properties:
+    - ⟨ψ|φ⟩* = ⟨φ|ψ⟩ (conjugate symmetry)
+    - ⟨ψ|ψ⟩ = ||ψ||² (real and positive)
+    - |⟨ψ|φ⟩| ≤ 1 for normalized states
+    
+    Orthogonality:
+    --------------
+    States |ψ⟩ and |φ⟩ are orthogonal if ⟨ψ|φ⟩ = 0
+    
+    Example: ⟨0|1⟩ = [1,0]·[0,1] = 1×0 + 0×1 = 0 ✓
+    
+    Physical Meaning:
+    ----------------
+    |⟨ψ|φ⟩|² = probability of measuring |φ⟩ when system is in state |ψ⟩
+    If ⟨ψ|φ⟩ = 0, states are distinguishable (orthogonal)
+    
+    Returns:
+        dict: Dictionary of quantum state vectors for further analysis
+    """
     print("=== VECTOR OPERATIONS IN QUANTUM SPACE ===")
     print()
 
-    # Define quantum state vectors
-    state_0 = np.array([1, 0])  # |0⟩
-    state_1 = np.array([0, 1])  # |1⟩
-    state_plus = np.array([1, 1]) / np.sqrt(2)  # |+⟩
-    state_minus = np.array([1, -1]) / np.sqrt(2)  # |-⟩
+    # Define quantum state vectors (column vectors represented as 1D arrays)
+    # These are the fundamental building blocks of quantum mechanics
+    state_0 = np.array([1, 0])  # |0⟩ = [1, 0]ᵀ (ground state)
+    state_1 = np.array([0, 1])  # |1⟩ = [0, 1]ᵀ (excited state)
+    state_plus = np.array([1, 1]) / np.sqrt(2)  # |+⟩ = (|0⟩+|1⟩)/√2 (superposition)
+    state_minus = np.array([1, -1]) / np.sqrt(2)  # |-⟩ = (|0⟩-|1⟩)/√2 (opposite phase)
 
     states = {"|0⟩": state_0, "|1⟩": state_1, "|+⟩": state_plus, "|-⟩": state_minus}
 
     print("Basic quantum state vectors:")
     for label, state in states.items():
+        # Calculate norm (length) of vector: ||v|| = √(Σ|vᵢ|²)
+        # For valid quantum states, norm should be 1 (normalized)
         norm = np.linalg.norm(state)
         print(f"{label}: {state} (norm: {norm:.3f})")
     print()
 
-    # Vector addition and subtraction
+    # Vector addition and subtraction - fundamental linear algebra operations
+    # These operations create new quantum states (superpositions)
     print("Vector operations:")
+    
+    # Addition: [1,0]ᵀ + [0,1]ᵀ = [1,1]ᵀ
+    # This is NOT normalized! Need to divide by √2
     sum_vector = state_0 + state_1
+    
+    # Subtraction: [1,0]ᵀ - [0,1]ᵀ = [1,-1]ᵀ
     diff_vector = state_0 - state_1
 
     print(f"|0⟩ + |1⟩ = {sum_vector}")
     print(f"|0⟩ - |1⟩ = {diff_vector}")
+    
+    # Normalization: divide by ||v|| to get unit vector
+    # This is REQUIRED for valid quantum states!
+    # Formula: |ψ_normalized⟩ = |ψ⟩ / ||ψ||
     print(f"Normalized (|0⟩ + |1⟩)/√2 = {sum_vector / np.linalg.norm(sum_vector)}")
     print(f"Normalized (|0⟩ - |1⟩)/√2 = {diff_vector / np.linalg.norm(diff_vector)}")
     print()
 
-    # Dot products (inner products)
+    # Inner products (dot products) measure "overlap" between quantum states
+    # ⟨ψ|φ⟩ = Σᵢ ψᵢ*φᵢ (sum of products, conjugating first vector)
+    # |⟨ψ|φ⟩|² gives probability of measuring |φ⟩ when in state |ψ⟩
     print("Inner products ⟨ψ|φ⟩:")
     for label1, state1 in states.items():
         for label2, state2 in states.items():
+            # np.vdot: conjugates first argument, then computes dot product
+            # This implements the quantum mechanical inner product
             inner_product = np.vdot(state1, state2)
             print(f"⟨{label1}|{label2}⟩ = {inner_product:.3f}")
         print()

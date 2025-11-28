@@ -150,7 +150,24 @@ class MaterialSimulator:
         return properties
 
     def vqe_electronic_structure(self, material_id, max_iter=100):
-        """Calculate electronic structure using VQE."""
+        """
+        Calculate electronic structure using VQE.
+        
+        Mathematical Foundation - Materials Science VQE:
+        -----------------------------------------------
+        
+        Electronic Structure Problem:
+        Solve: H|ψ⟩ = E|ψ⟩ for material's Hamiltonian
+        
+        VQE Approach:
+        1. Prepare trial state: |ψ(θ)⟩ = U(θ)|0⟩
+        2. Measure energy: E(θ) = ⟨ψ(θ)|H|ψ(θ)⟩
+        3. Optimize: min_θ E(θ) → Ground state energy
+        
+        For materials: H includes crystal structure, band gaps,
+        electron correlations. Applications: superconductors,
+        catalysts, batteries, semiconductors.
+        """
         if material_id not in self.materials:
             raise ValueError(f"Material {material_id} not found")
 

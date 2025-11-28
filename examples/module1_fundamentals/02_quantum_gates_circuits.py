@@ -28,19 +28,95 @@ from qiskit_aer import AerSimulator
 
 
 def demonstrate_single_qubit_gates():
-    """Demonstrate the effect of single-qubit gates."""
+    """
+    Demonstrate the effect of single-qubit gates.
+    
+    Mathematical Foundation - Quantum Gates:
+    ----------------------------------------
+    Quantum gates are unitary operators that transform qubit states.
+    For a gate represented by matrix U, acting on state |ψ⟩:
+    
+    |ψ'⟩ = U|ψ⟩
+    
+    Unitarity Condition:
+    -------------------
+    A matrix U is unitary if: U†U = I (where † means conjugate transpose)
+    This ensures:
+    1. Probability conservation: ⟨ψ'|ψ'⟩ = 1
+    2. Reversibility: U† reverses the operation (U†U = I)
+    3. Information preservation (no-information loss)
+    
+    Common Single-Qubit Gates:
+    ---------------------------
+    
+    1. IDENTITY (I):
+       Matrix: I = [[1, 0],
+                    [0, 1]]
+       Effect: I|ψ⟩ = |ψ⟩ (no change)
+    
+    2. PAULI-X (Quantum NOT):
+       Matrix: X = [[0, 1],
+                    [1, 0]]
+       Effect: X|0⟩ = |1⟩, X|1⟩ = |0⟩
+       Bloch sphere: 180° rotation around X-axis
+    
+    3. PAULI-Y:
+       Matrix: Y = [[0, -i],
+                    [i,  0]]
+       Effect: Y|0⟩ = i|1⟩, Y|1⟩ = -i|0⟩
+       Bloch sphere: 180° rotation around Y-axis
+    
+    4. PAULI-Z (Phase flip):
+       Matrix: Z = [[1,  0],
+                    [0, -1]]
+       Effect: Z|0⟩ = |0⟩, Z|1⟩ = -|1⟩
+       Bloch sphere: 180° rotation around Z-axis
+    
+    5. HADAMARD (H):
+       Matrix: H = (1/√2)[[1,  1],
+                          [1, -1]]
+       Effect: H|0⟩ = |+⟩ = (|0⟩+|1⟩)/√2
+               H|1⟩ = |-⟩ = (|0⟩-|1⟩)/√2
+       Creates equal superposition from basis states
+       Important: H² = I (self-inverse)
+    
+    6. PHASE (S) Gate:
+       Matrix: S = [[1, 0],
+                    [0, i]]
+       Effect: S|0⟩ = |0⟩, S|1⟩ = i|1⟩
+       Adds π/2 (90°) phase to |1⟩ component
+       Note: S² = Z
+    
+    7. T Gate (π/8 gate):
+       Matrix: T = [[1, 0],
+                    [0, e^(iπ/4)]]
+       Effect: T|0⟩ = |0⟩, T|1⟩ = e^(iπ/4)|1⟩
+       Adds π/4 (45°) phase to |1⟩ component
+       Note: T² = S, T⁴ = Z
+    
+    Why These Gates?
+    ----------------
+    - X, Y, Z are the Pauli matrices (fundamental in quantum mechanics)
+    - H creates superposition (essential for quantum algorithms)
+    - S, T are phase gates (important for quantum circuits)
+    - Together they form a universal gate set (can approximate any single-qubit gate)
+    
+    Returns:
+        dict: Dictionary of quantum circuits with different gates applied
+    """
     print("=== SINGLE QUBIT GATES ===")
     print()
 
     # Define the gates to demonstrate
+    # Each lambda function applies the corresponding gate to qubit 0
     gates = {
-        "Identity (I)": lambda qc: None,  # Do nothing
-        "Pauli-X (NOT)": lambda qc: qc.x(0),
-        "Pauli-Y": lambda qc: qc.y(0),
-        "Pauli-Z": lambda qc: qc.z(0),
-        "Hadamard (H)": lambda qc: qc.h(0),
-        "Phase (S)": lambda qc: qc.s(0),
-        "T Gate": lambda qc: qc.t(0),
+        "Identity (I)": lambda qc: None,  # Do nothing - identity operation
+        "Pauli-X (NOT)": lambda qc: qc.x(0),  # Bit flip
+        "Pauli-Y": lambda qc: qc.y(0),  # Bit + phase flip
+        "Pauli-Z": lambda qc: qc.z(0),  # Phase flip only
+        "Hadamard (H)": lambda qc: qc.h(0),  # Superposition creator
+        "Phase (S)": lambda qc: qc.s(0),  # π/2 phase gate
+        "T Gate": lambda qc: qc.t(0),  # π/4 phase gate
     }
 
     gate_descriptions = {
@@ -56,7 +132,8 @@ def demonstrate_single_qubit_gates():
     circuits = {}
 
     for gate_name, gate_function in gates.items():
-        # Start with |0⟩ state
+        # Start with |0⟩ state (default initial state)
+        # |0⟩ = [1, 0]ᵀ in vector form
         qc = QuantumCircuit(1)
         if gate_function:
             gate_function(qc)
@@ -71,58 +148,199 @@ def demonstrate_single_qubit_gates():
 
 
 def demonstrate_hadamard_sequence():
-    """Demonstrate a sequence of Hadamard gates."""
+    """
+    Demonstrate a sequence of Hadamard gates.
+    
+    Mathematical Foundation - Hadamard Gate Properties:
+    ---------------------------------------------------
+    The Hadamard gate has special mathematical properties:
+    
+    H = (1/√2)[[1,  1],
+               [1, -1]]
+    
+    Key Property - Self-Inverse:
+    ---------------------------
+    H² = H × H = I (Identity)
+    
+    Mathematical Proof:
+    H² = (1/√2)[[1,  1],    × (1/√2)[[1,  1],
+                [1, -1]]              [1, -1]]
+    
+       = (1/2)[[1+1,   1-1],
+               [1-1,   1+1]]
+    
+       = (1/2)[[2, 0],
+               [0, 2]]
+    
+       = [[1, 0],
+          [0, 1]] = I
+    
+    This means applying H twice returns to the original state!
+    
+    Sequence Effects:
+    ----------------
+    Starting from |0⟩:
+    - 0 H gates: |0⟩ = [1, 0]ᵀ
+    - 1 H gate:  |+⟩ = (|0⟩ + |1⟩)/√2 = [1/√2, 1/√2]ᵀ
+    - 2 H gates: |0⟩ = [1, 0]ᵀ (back to start!)
+    - 3 H gates: |+⟩ = [1/√2, 1/√2]ᵀ (same as 1 H gate)
+    - 4 H gates: |0⟩ = [1, 0]ᵀ (back to start!)
+    
+    Pattern: H^n alternates between |0⟩ (even n) and |+⟩ (odd n)
+    
+    Physical Interpretation:
+    ------------------------
+    On the Bloch sphere, each H gate is a 180° rotation around the
+    axis halfway between X and Z (the [1,0,1] direction).
+    Two such rotations complete a full 360° cycle, returning to start.
+    
+    Returns:
+        dict: Dictionary of circuits with different numbers of H gates
+    """
     print("=== HADAMARD GATE SEQUENCE ===")
     print()
 
     circuits = {}
 
-    # Apply multiple Hadamard gates
+    # Apply multiple Hadamard gates to demonstrate periodicity
+    # We'll see that H² = I (Hadamard is self-inverse)
     for i in range(4):
         qc = QuantumCircuit(1)
+        # Apply H gate i times
         for _ in range(i):
             qc.h(0)
         circuits[f"{i} H gates"] = qc
 
+        # Get the resulting quantum state
         state = Statevector.from_instruction(qc)
         print(f"After {i} Hadamard gate(s):")
         print(f"  State: {state}")
+        # Calculate measurement probabilities using Born rule: P = |amplitude|²
         print(
             f"  Probabilities: |0⟩: {abs(state[0])**2:.3f}, |1⟩: {abs(state[1])**2:.3f}"
         )
         print()
 
     print("Notice: Two H gates return to original state (H² = I)")
+    print("Pattern: Even number of H gates → |0⟩, Odd number → |+⟩")
     print()
 
     return circuits
 
 
 def demonstrate_multi_qubit_gates():
-    """Demonstrate multi-qubit gates."""
+    """
+    Demonstrate multi-qubit gates.
+    
+    Mathematical Foundation - Multi-Qubit Gates:
+    --------------------------------------------
+    Multi-qubit gates act on systems of 2 or more qubits.
+    For n qubits, the state space has dimension 2^n.
+    
+    State Vector for n qubits:
+    |ψ⟩ = Σ α_i |i⟩ where i ranges over all 2^n basis states
+    and Σ|α_i|² = 1 (normalization)
+    
+    1. CNOT (Controlled-X / CX) Gate:
+    ----------------------------------
+    2-qubit gate with one control and one target qubit.
+    
+    Operation:
+    - If control = |0⟩: target unchanged
+    - If control = |1⟩: target flipped (X gate applied)
+    
+    Matrix representation (4×4 for 2 qubits):
+    CNOT = [[1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 1, 0]]
+    
+    Basis state action:
+    |00⟩ → |00⟩  (control=0, target unchanged)
+    |01⟩ → |01⟩  (control=0, target unchanged)
+    |10⟩ → |11⟩  (control=1, target flipped)
+    |11⟩ → |10⟩  (control=1, target flipped)
+    
+    Creating Entanglement:
+    When control is in superposition, CNOT creates entanglement!
+    Example: CNOT(H|0⟩ ⊗ |0⟩) = CNOT((|0⟩+|1⟩)/√2 ⊗ |0⟩)
+                                = (|00⟩ + |11⟩)/√2  (Bell state!)
+    
+    2. Controlled-Z (CZ) Gate:
+    ---------------------------
+    Applies Z gate to target when control is |1⟩.
+    
+    Matrix representation:
+    CZ = [[1, 0, 0,  0],
+          [0, 1, 0,  0],
+          [0, 0, 1,  0],
+          [0, 0, 0, -1]]
+    
+    Basis state action:
+    |00⟩ → |00⟩
+    |01⟩ → |01⟩
+    |10⟩ → |10⟩
+    |11⟩ → -|11⟩  (only |11⟩ gets phase flip)
+    
+    Symmetry: CZ is symmetric - control and target are interchangeable!
+    CZ(i,j) = CZ(j,i)
+    
+    3. Toffoli (CCX/CCNOT) Gate:
+    -----------------------------
+    3-qubit gate: two controls, one target.
+    Applies X to target only when BOTH controls are |1⟩.
+    
+    Classical analog: AND gate followed by XOR
+    
+    Basis state action:
+    |110⟩ → |111⟩  (both controls=1, target flipped)
+    |111⟩ → |110⟩  (both controls=1, target flipped)
+    All other states unchanged
+    
+    Universal Classical Computation:
+    Toffoli + NOT gates are universal for classical computation!
+    Can build any classical circuit using just these gates.
+    
+    State Space Dimensions:
+    -----------------------
+    - 1 qubit: 2 dimensions (2¹ = 2)
+    - 2 qubits: 4 dimensions (2² = 4)
+    - 3 qubits: 8 dimensions (2³ = 8)
+    - n qubits: 2^n dimensions (exponential growth!)
+    
+    This exponential scaling is why quantum computers are powerful,
+    but also why they're hard to simulate on classical computers.
+    
+    Returns:
+        dict: Dictionary of circuits demonstrating multi-qubit gates
+    """
     print("=== MULTI-QUBIT GATES ===")
     print()
 
     circuits = {}
 
-    # CNOT gate (Controlled-X)
+    # CNOT gate (Controlled-X) - creates entanglement
+    # Starting from |00⟩, we apply H to control, then CNOT
+    # This creates a Bell state: (|00⟩ + |11⟩)/√2
     qc_cnot = QuantumCircuit(2)
-    qc_cnot.h(0)  # Put control qubit in superposition
-    qc_cnot.cx(0, 1)  # Apply CNOT
+    qc_cnot.h(0)  # Put control qubit in superposition: (|0⟩+|1⟩)/√2
+    qc_cnot.cx(0, 1)  # Apply CNOT: entangles control and target
     circuits["CNOT Gate"] = qc_cnot
 
-    # Controlled-Z gate
+    # Controlled-Z gate - symmetric phase gate
+    # Both qubits in superposition, then CZ adds phase to |11⟩ component
     qc_cz = QuantumCircuit(2)
     qc_cz.h(0)  # Put control qubit in superposition
     qc_cz.h(1)  # Put target qubit in superposition
-    qc_cz.cz(0, 1)  # Apply CZ
+    qc_cz.cz(0, 1)  # Apply CZ: adds -1 phase to |11⟩ component
     circuits["CZ Gate"] = qc_cz
 
-    # Toffoli gate (CCX - Controlled-Controlled-X)
+    # Toffoli gate (CCX - Controlled-Controlled-X) - 3-qubit gate
+    # Requires BOTH controls to be |1⟩ to flip target
     qc_ccx = QuantumCircuit(3)
     qc_ccx.h(0)  # Put first control in superposition
     qc_ccx.h(1)  # Put second control in superposition
-    qc_ccx.ccx(0, 1, 2)  # Apply Toffoli
+    qc_ccx.ccx(0, 1, 2)  # Apply Toffoli: flips target only when both controls are |1⟩
     circuits["Toffoli (CCX)"] = qc_ccx
 
     for name, circuit in circuits.items():
@@ -130,7 +348,8 @@ def demonstrate_multi_qubit_gates():
         print(f"  Qubits: {circuit.num_qubits}")
         print(f"  Gates: {len(circuit.data)}")
         state = Statevector.from_instruction(circuit)
-        print(f"  Final state dimension: {len(state)}")
+        # State vector dimension = 2^n where n is number of qubits
+        print(f"  Final state dimension: {len(state)} = 2^{circuit.num_qubits}")
         print()
 
     return circuits
@@ -302,17 +521,78 @@ def create_quantum_circuit_examples():
 
 
 def demonstrate_gate_matrices():
-    """Show the mathematical representation of quantum gates."""
+    """
+    Show the mathematical representation of quantum gates.
+    
+    Mathematical Foundation - Matrix Representation:
+    ------------------------------------------------
+    Quantum gates are represented as unitary matrices that transform
+    state vectors through matrix multiplication.
+    
+    State Transformation:
+    |ψ'⟩ = U|ψ⟩
+    
+    In matrix form, if |ψ⟩ = [α, β]ᵀ:
+    [α']   [u₀₀ u₀₁] [α]
+    [β'] = [u₁₀ u₁₁] [β]
+    
+    Unitarity Requirements:
+    -----------------------
+    A matrix U is unitary if U†U = I, where U† = (U*)ᵀ
+    (conjugate transpose)
+    
+    This ensures:
+    1. |det(U)| = 1 (determinant has unit magnitude)
+    2. U preserves inner products: ⟨ψ|ψ⟩ = ⟨ψ'|ψ'⟩
+    3. U is reversible: U† is also unitary and U†U = UU† = I
+    
+    Why Matrix Determinant Matters:
+    -------------------------------
+    For quantum gates, det(U) = e^(iφ) for some phase φ
+    Common cases:
+    - det(U) = 1: Special unitary (SU(2) group)
+    - det(U) = -1: Includes global phase
+    - |det(U)| = 1 always (unitarity requirement)
+    
+    Checking Unitarity:
+    -------------------
+    We verify U†U = I by computing:
+    U† @ U = (U.conj().T) @ U
+    
+    If result equals identity matrix [[1,0],[0,1]], gate is unitary.
+    
+    Note on Complex Numbers:
+    ------------------------
+    - i = √(-1) is the imaginary unit
+    - e^(iθ) = cos(θ) + i·sin(θ) (Euler's formula)
+    - |e^(iθ)| = 1 (unit magnitude)
+    - e^(iπ/4) = cos(π/4) + i·sin(π/4) = (1+i)/√2
+    """
     print("=== GATE MATRICES ===")
     print()
 
-    # Define gate matrices
+    # Define gate matrices as numpy arrays
+    # Each is a 2×2 complex matrix representing a unitary transformation
+    
+    # Identity - does nothing
     I = np.array([[1, 0], [0, 1]])
+    
+    # Pauli-X - bit flip (quantum NOT)
     X = np.array([[0, 1], [1, 0]])
+    
+    # Pauli-Y - bit flip with phase (combines X and Z)
     Y = np.array([[0, -1j], [1j, 0]])
+    
+    # Pauli-Z - phase flip
     Z = np.array([[1, 0], [0, -1]])
+    
+    # Hadamard - creates superposition (normalized rotation)
     H = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+    
+    # S gate - adds π/2 phase (√Z gate, since S² = Z)
     S = np.array([[1, 0], [0, 1j]])
+    
+    # T gate - adds π/4 phase (⁴√Z gate, since T⁴ = Z)
     T = np.array([[1, 0], [0, np.exp(1j * np.pi / 4)]])
 
     gates_matrices = {
@@ -328,11 +608,18 @@ def demonstrate_gate_matrices():
     for gate_name, matrix in gates_matrices.items():
         print(f"{gate_name}:")
         print(f"  Matrix:\n{matrix}")
+        # Determinant should have magnitude 1 for unitary matrices
         print(f"  Determinant: {np.linalg.det(matrix):.3f}")
+        # Check unitarity: U†U should equal identity matrix
+        # matrix.conj().T is the conjugate transpose (Hermitian adjoint)
         print(f"  Unitary: {np.allclose(matrix @ matrix.conj().T, np.eye(2))}")
         print()
 
     print("Note: All quantum gates are unitary (reversible)")
+    print("This means:")
+    print("  • Information is preserved (no information loss)")
+    print("  • Every gate has an inverse (U† = U⁻¹)")
+    print("  • Probabilities are conserved (|det(U)| = 1)")
     print()
 
 

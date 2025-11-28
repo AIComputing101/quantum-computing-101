@@ -32,7 +32,67 @@ from pathlib import Path
 
 
 def quantum_vs_classical_reality():
-    """Compare current quantum vs classical computing capabilities."""
+    """
+    Compare current quantum vs classical computing capabilities.
+    
+    Reality Check - Current State (2025):
+    ------------------------------------
+    This function provides a realistic assessment of where quantum
+    computing technology stands today, helping beginners understand:
+    
+    1. What quantum computers CAN do today
+    2. What they CANNOT do yet
+    3. Realistic timeline expectations
+    
+    Key Metrics Explained:
+    ---------------------
+    
+    ERROR RATES:
+    - Classical: ~10^-17 (1 error per 100 quadrillion operations!)
+    - Quantum: ~0.1-1% (1 error per 100-1000 operations)
+    - Why? Qubits are fragile, affected by noise, temperature, vibrations
+    - Threshold for fault tolerance: ~0.01% (99.99% fidelity)
+    
+    COHERENCE TIME:
+    - How long quantum information survives before decoherence
+    - Superconducting: ~100 microseconds (0.0001 seconds)
+    - Trapped ion: ~10 seconds
+    - Must complete computation before coherence time runs out!
+    
+    NUMBER OF QUBITS:
+    - Classical bit ≠ Qubit (not directly comparable)
+    - 50 qubits represent 2^50 ≈ 10^15 complex amplitudes
+    - But noise prevents using full power
+    - "Quantum supremacy": ~53-100 qubits for specific tasks
+    
+    QUANTUM ADVANTAGE TIMELINE:
+    ---------------------------
+    TODAY (2025):
+    - Quantum simulation (chemistry, materials)
+    - Research and algorithm development
+    - Proof-of-concept demonstrations
+    
+    NEAR TERM (2025-2030):
+    - Optimization problems (logistics, finance)
+    - Drug discovery simulations
+    - Improved quantum machine learning
+    
+    MEDIUM TERM (2030-2035):
+    - Practical quantum advantage for select industries
+    - Early fault-tolerant systems
+    - Quantum-classical hybrid algorithms
+    
+    LONG TERM (2035+):
+    - Breaking RSA encryption (if large-scale QC achieved)
+    - Universal quantum computation
+    - Quantum internet
+    
+    Important Reality:
+    -----------------
+    Quantum computers will NOT replace classical computers!
+    They are specialized co-processors for specific problems.
+    Most everyday computing will remain classical.
+    """
     print("=== QUANTUM vs CLASSICAL COMPUTING REALITY ===")
     print()
 

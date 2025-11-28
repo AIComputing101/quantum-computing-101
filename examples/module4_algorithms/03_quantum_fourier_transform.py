@@ -24,18 +24,119 @@ class QuantumFourierTransform:
         self.verbose = verbose
 
     def build_qft_circuit(self, n_qubits, inverse=False):
-        """Build QFT circuit."""
+        """
+        Build Quantum Fourier Transform circuit.
+        
+        Mathematical Foundation - Quantum Fourier Transform:
+        ----------------------------------------------------
+        The QFT is the quantum analog of the classical Discrete Fourier Transform (DFT).
+        
+        Classical DFT:
+        For input x₀, x₁, ..., x_{N-1}, the DFT produces:
+        y_k = (1/√N) Σⱼ xⱼ · e^(2πijk/N)
+        
+        Quantum Fourier Transform:
+        For n qubits (N = 2^n basis states), QFT transforms:
+        |j⟩ → (1/√N) Σₖ e^(2πijk/N) |k⟩
+        
+        QFT Matrix Representation:
+        --------------------------
+        QFT_N is an N×N unitary matrix where:
+        (QFT)_{jk} = (1/√N) · ω^(jk)
+        where ω = e^(2πi/N) is the N-th root of unity
+        
+        Product Representation (key insight):
+        -------------------------------------
+        The QFT can be written as a tensor product:
+        
+        QFT|j⟩ = (1/2^(n/2)) (|0⟩ + e^(2πi·0.j_n)|1⟩) ⊗
+                             (|0⟩ + e^(2πi·0.j_{n-1}j_n)|1⟩) ⊗ ... ⊗
+                             (|0⟩ + e^(2πi·0.j_1j_2...j_n)|1⟩)
+        
+        where 0.j_kj_{k+1}...j_n means the binary fraction:
+        j_k/2 + j_{k+1}/4 + ... + j_n/2^(n-k+1)
+        
+        Circuit Construction:
+        --------------------
+        For each qubit i (from 0 to n-1):
+        
+        1. Apply Hadamard gate H to qubit i
+           Creates superposition (|0⟩ + e^(iπ·j_i)|1⟩)/√2
+        
+        2. Apply controlled phase rotations
+           For each qubit j > i:
+           CP(θ) where θ = 2π/(2^(j-i+1))
+           
+           The controlled phase gate is:
+           CP(θ) = |0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ P(θ)
+           where P(θ) = [[1, 0], [0, e^(iθ)]]
+        
+        3. Final swap to reverse qubit order
+           (Due to little-endian vs big-endian convention)
+        
+        Specific Phase Angles:
+        ---------------------
+        For qubit i, we apply phases:
+        - CP(π/2) from qubit i+1    (90° phase)
+        - CP(π/4) from qubit i+2    (45° phase)  
+        - CP(π/8) from qubit i+3    (22.5° phase)
+        - ...
+        - CP(π/2^k) from qubit i+k  (decreasing phases)
+        
+        Why These Angles?
+        ----------------
+        Each phase gate adds a term e^(2πi·j_k/2^m) to the superposition,
+        building up the Fourier phase e^(2πijk/N) term by term.
+        
+        Inverse QFT:
+        -----------
+        To get inverse QFT, simply negate all phase angles:
+        QFT† = QFT with all angles → -angles
+        
+        Complexity:
+        ----------
+        - Classical FFT: O(N log N) gates for N points
+        - Quantum QFT: O(n²) gates for N = 2^n points
+        - Exponential speedup! (2^n points with only n² gates)
+        
+        Applications:
+        ------------
+        - Shor's factoring algorithm (period finding)
+        - Quantum phase estimation
+        - Quantum simulation
+        - Hidden subgroup problems
+        
+        Args:
+            n_qubits (int): Number of qubits
+            inverse (bool): If True, build inverse QFT (QFT†)
+            
+        Returns:
+            QuantumCircuit: QFT or inverse QFT circuit
+        """
         qft = QuantumCircuit(n_qubits, name=f'{"IQFT" if inverse else "QFT"}')
 
+        # Build QFT circuit using product representation
         for i in range(n_qubits):
+            # Apply Hadamard to create initial superposition
+            # H|j_i⟩ = (|0⟩ + (-1)^j_i|1⟩)/√2
             qft.h(i)
+            
+            # Apply controlled phase rotations from subsequent qubits
+            # Each adds a phase factor e^(2πi·j_k/2^m) to build Fourier phase
             for j in range(i + 1, n_qubits):
+                # Calculate phase angle: π/2^(j-i)
+                # This corresponds to 2π/2^(j-i+1) in the QFT formula
                 angle = np.pi / (2 ** (j - i))
                 if inverse:
+                    # For inverse QFT, negate all angles
                     angle *= -1
+                # CP gate: controlled phase rotation
+                # Adds phase e^(iθ) to |1⟩ component when control is |1⟩
                 qft.cp(angle, j, i)
 
         # Swap qubits for correct ordering
+        # QFT naturally outputs in reversed qubit order due to
+        # how we build it up. Swapping gives standard ordering.
         for i in range(n_qubits // 2):
             qft.swap(i, n_qubits - 1 - i)
 

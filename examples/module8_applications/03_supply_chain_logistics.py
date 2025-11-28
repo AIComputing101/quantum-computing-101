@@ -250,7 +250,28 @@ class VehicleRoutingOptimizer:
         return hamiltonian, distance_matrix, customers
 
     def run_qaoa_vrp(self, hamiltonian, n_layers=2, max_iter=50):
-        """Run QAOA for vehicle routing optimization."""
+        """
+        Run QAOA for vehicle routing optimization.
+        
+        Mathematical Foundation - QAOA for VRP:
+        --------------------------------------
+        
+        Vehicle Routing Problem (VRP):
+        - Given: N customers, distances d_ij, vehicle capacity
+        - Find: Optimal routes minimizing total distance
+        - Constraint: Each customer visited exactly once
+        
+        QAOA (Quantum Approximate Optimization Algorithm):
+        - Alternates between problem Hamiltonian and mixer
+        - Circuit: |ψ(β,γ)⟩ = U_M(β_p)U_P(γ_p)...U_M(β_1)U_P(γ_1)|+⟩^⊗n
+        - Variational: Optimize β,γ to minimize ⟨ψ|H_P|ψ⟩
+        
+        Problem Hamiltonian H_P:
+        Encodes VRP cost as sum of Pauli terms:
+        H_P = Σ_ij d_ij Z_i Z_j (route distances)
+        
+        Expected solution quality: ~0.7 × optimal (for p=1 layer)
+        """
         if self.verbose:
             print(f"   Running QAOA VRP with {n_layers} layers...")
 

@@ -29,11 +29,90 @@ class QuantumFeatureMaps:
         self.verbose = verbose
 
     def create_angle_encoding_map(self, n_features, data_point):
-        """Create angle encoding feature map."""
+        """
+        Create angle encoding feature map.
+        
+        Mathematical Foundation - Angle Encoding:
+        ----------------------------------------
+        Angle encoding (also called basis encoding) maps classical data
+        features to rotation angles of qubits.
+        
+        Mapping:
+        --------
+        For classical data x = [x₁, x₂, ..., x_n] where x_i ∈ ℝ:
+        
+        |ψ(x)⟩ = R_y(π·x₁) ⊗ R_y(π·x₂) ⊗ ... ⊗ R_y(π·x_n) |0...0⟩
+        
+        where R_y(θ) is the Y-rotation gate:
+        R_y(θ) = [[cos(θ/2), -sin(θ/2)],
+                  [sin(θ/2),  cos(θ/2)]]
+        
+        Effect on Single Qubit:
+        -----------------------
+        R_y(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
+        
+        For feature value x_i:
+        R_y(π·x_i)|0⟩ = cos(π·x_i/2)|0⟩ + sin(π·x_i/2)|1⟩
+        
+        Feature Range Considerations:
+        -----------------------------
+        - If x_i ∈ [0, 1]: θ = π·x_i ∈ [0, π]
+          → Rotates from |0⟩ to |1⟩
+        - If x_i ∈ [-1, 1]: θ = π·x_i ∈ [-π, π]
+          → Full rotation range
+        - Normalization recommended: scale features to [-1, 1] or [0, 1]
+        
+        Geometric Interpretation:
+        ------------------------
+        On the Bloch sphere, R_y(θ) rotates the qubit state around the Y-axis
+        by angle θ. Starting from |0⟩ (north pole):
+        - θ = 0:   stays at |0⟩
+        - θ = π/2: reaches equator |+⟩
+        - θ = π:   reaches |1⟩ (south pole)
+        - θ = 2π:  full rotation back to |0⟩
+        
+        Properties:
+        -----------
+        1. Linear: Uses 1 qubit per feature (1:1 mapping)
+        2. Resource efficient: n features → n qubits
+        3. No entanglement: qubits remain separable
+        4. Expressivity: Limited to product states only
+        
+        Advantages:
+        ----------
+        - Simple and efficient
+        - Easy to understand and implement
+        - Low gate count (1 gate per feature)
+        - Suitable for linear-separable problems
+        
+        Limitations:
+        -----------
+        - No entanglement between features
+        - Cannot capture feature interactions
+        - Limited expressivity (only product states)
+        - May not work well for non-linear problems
+        
+        When to Use:
+        -----------
+        - Features are independent
+        - Problem is linearly separable
+        - Need fast, simple encoding
+        - Have limited quantum resources
+        
+        Args:
+            n_features (int): Number of features to encode
+            data_point (array): Classical data point [x₁, x₂, ..., x_n]
+            
+        Returns:
+            QuantumCircuit: Circuit implementing angle encoding
+        """
         circuit = QuantumCircuit(n_features, name="Angle_Encoding")
 
         for i, feature in enumerate(data_point):
-            # Encode feature as rotation angle
+            # Encode feature as rotation angle: θ = π × x_i
+            # R_y(θ) rotates qubit around Y-axis by angle θ
+            # Starting from |0⟩: R_y(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
+            # This maps the feature value to a point on the Bloch sphere
             circuit.ry(feature * np.pi, i)
 
         return circuit
@@ -58,22 +137,155 @@ class QuantumFeatureMaps:
         return circuit
 
     def create_iqp_feature_map(self, n_features, data_point, depth=2):
-        """Create IQP (Instantaneous Quantum Polynomial) feature map."""
+        """
+        Create IQP (Instantaneous Quantum Polynomial) feature map.
+        
+        Mathematical Foundation - IQP Feature Map:
+        -----------------------------------------
+        IQP (Instantaneous Quantum Polynomial) is a powerful encoding
+        that creates entanglement between features, capturing feature interactions.
+        
+        Mathematical Form:
+        ------------------
+        The IQP feature map implements:
+        
+        U_Φ(x) = exp(i·Σ_{j,k} φ_{jk}(x)·Z_j⊗Z_k) · H^⊗n
+        
+        where:
+        - x = [x₁, ..., x_n] is the input data
+        - φ_{jk}(x) = x_j · x_k encodes feature interactions
+        - Z_j is the Pauli-Z operator on qubit j
+        - H is Hadamard gate
+        - ⊗ is tensor product
+        
+        Layer Structure (Repeated for 'depth' layers):
+        ------------------------------------------------
+        
+        1. HADAMARD LAYER: H^⊗n
+           Creates superposition on all qubits
+           |0...0⟩ → |+...+⟩ = (1/√2^n)·Σ|x⟩
+           Purpose: Prepare qubits to encode quantum features
+        
+        2. ENTANGLING LAYER: exp(i·φ_{jk}·Z_j⊗Z_k)
+           Applies controlled-phase gates between all qubit pairs:
+           CP(θ_{jk}) where θ_{jk} = π·x_j·x_k
+           
+           Two-qubit interaction term:
+           Z⊗Z creates correlation between qubits j and k
+           The angle θ = π·x_j·x_k encodes their product
+           
+           Mathematical action on basis states:
+           CP(θ)|00⟩ = |00⟩
+           CP(θ)|01⟩ = |01⟩
+           CP(θ)|10⟩ = |10⟩
+           CP(θ)|11⟩ = e^(iθ)|11⟩  (adds phase when both qubits are |1⟩)
+        
+        3. SINGLE-QUBIT LAYER: exp(i·x_j·Z_j)
+           Applies phase rotation to each qubit:
+           R_z(π·x_j) adds phase proportional to feature value
+           
+           R_z(θ)|0⟩ = |0⟩           (no phase on |0⟩)
+           R_z(θ)|1⟩ = e^(iθ)|1⟩    (adds phase to |1⟩)
+        
+        Why "Polynomial"?
+        -----------------
+        The encoding creates a quantum state whose amplitudes are related to
+        polynomial functions of the input features:
+        
+        ⟨z|U_Φ(x)|0⟩ ∝ exp(i·P(x))
+        
+        where P(x) is a polynomial in x₁, ..., x_n up to degree 2:
+        P(x) = Σ_j a_j·x_j + Σ_{j<k} b_{jk}·x_j·x_k
+        
+        This allows the quantum state to capture:
+        - Linear terms: x_i (from single-qubit rotations)
+        - Quadratic terms: x_i·x_j (from two-qubit interactions)
+        
+        Feature Interactions:
+        --------------------
+        The key advantage is encoding x_i·x_j products:
+        - Captures correlations between features
+        - Creates entanglement proportional to feature products
+        - Enables non-linear decision boundaries
+        
+        Depth Parameter:
+        ---------------
+        Higher depth = more layers = higher polynomial degree
+        - depth = 1: quadratic polynomials
+        - depth = 2: quartic polynomials
+        - depth = d: polynomial degree 2^d
+        
+        But more depth also means:
+        - More gates → more noise on real hardware
+        - Longer circuits → longer coherence time needed
+        - Trade-off between expressivity and practicality
+        
+        Quantum Advantage:
+        ------------------
+        Classical computation of kernel k(x,x') = |⟨Φ(x)|Φ(x')⟩|²
+        requires evaluating exponentially many terms!
+        Quantum computer does this naturally through interference.
+        
+        Advantages:
+        ----------
+        - High expressivity (captures feature interactions)
+        - Creates entanglement (uses quantum correlations)
+        - Suitable for non-linear problems
+        - Theoretically hard to simulate classically
+        
+        Limitations:
+        -----------
+        - More gates → more noise on real hardware
+        - Deeper circuits → longer execution time
+        - May overfit on small datasets
+        - Requires optimization of depth parameter
+        
+        Applications:
+        ------------
+        - Quantum kernel methods
+        - Quantum support vector machines
+        - Quantum neural networks
+        - Classification with non-linear boundaries
+        
+        Args:
+            n_features (int): Number of features (qubits)
+            data_point (array): Input data [x₁, x₂, ..., x_n]
+            depth (int): Number of encoding layers (default: 2)
+            
+        Returns:
+            QuantumCircuit: IQP feature map circuit
+        """
         circuit = QuantumCircuit(n_features, name="IQP_FeatureMap")
 
+        # Repeat encoding layers for specified depth
+        # Each layer increases polynomial degree of the encoding
         for layer in range(depth):
-            # Hadamard layer
+            # ------------------------------------------------------------------
+            # LAYER 1: Hadamard gates (create superposition)
+            # ------------------------------------------------------------------
+            # H^⊗n transforms |0...0⟩ to uniform superposition
+            # This is the foundation for quantum interference
             for i in range(n_features):
                 circuit.h(i)
 
-            # Entangling layer with data encoding
+            # ------------------------------------------------------------------
+            # LAYER 2: Entangling gates with data encoding
+            # ------------------------------------------------------------------
+            # Apply CP gates between all pairs of qubits
+            # This creates entanglement and encodes feature interactions x_i·x_j
             for i in range(n_features):
                 for j in range(i + 1, n_features):
-                    # Two-qubit interaction with data encoding
+                    # Two-qubit interaction: encodes product x_i · x_j
+                    # CP(θ) adds phase e^(iθ) to |11⟩ component
+                    # The angle θ = π·x_i·x_j encodes the feature interaction
                     angle = data_point[i] * data_point[j] * np.pi
                     circuit.cp(angle, i, j)
 
-            # Single-qubit rotations
+            # ------------------------------------------------------------------
+            # LAYER 3: Single-qubit rotations (encode linear terms)
+            # ------------------------------------------------------------------
+            # R_z gates encode individual feature values x_i
+            # Adds phase e^(iθ) where θ = π·x_i to |1⟩ component
             for i in range(n_features):
                 circuit.rz(data_point[i] * np.pi, i)
 

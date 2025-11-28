@@ -113,12 +113,72 @@ class QuantumStateAnalyzer:
                 )
 
     def _state_to_bloch(self, state_vector):
-        """Convert state vector to Bloch sphere coordinates."""
+        """
+        Convert state vector to Bloch sphere coordinates.
+        
+        Mathematical Foundation - Bloch Sphere Mapping:
+        ----------------------------------------------
+        Any single-qubit pure state can be mapped to a point on the
+        surface of a unit sphere (the Bloch sphere).
+        
+        State Representation:
+        |ψ⟩ = α|0⟩ + β|1⟩ where |α|² + |β|² = 1
+        
+        Bloch Vector Calculation:
+        -------------------------
+        The Bloch vector (x, y, z) represents expectation values
+        of Pauli operators:
+        
+        x = ⟨σ_x⟩ = ⟨ψ|X|ψ⟩ = 2Re(α*β)
+        y = ⟨σ_y⟩ = ⟨ψ|Y|ψ⟩ = 2Im(α*β)
+        z = ⟨σ_z⟩ = ⟨ψ|Z|ψ⟩ = |α|² - |β|²
+        
+        where:
+        - Re() = real part
+        - Im() = imaginary part
+        - * denotes complex conjugate
+        
+        Detailed Derivations:
+        --------------------
+        
+        X-coordinate:
+        ⟨ψ|X|ψ⟩ = [α*, β*] [[0,1],[1,0]] [α]
+                                          [β]
+                = α*β + β*α = 2Re(α*β)
+        
+        Y-coordinate:
+        ⟨ψ|Y|ψ⟩ = [α*, β*] [[0,-i],[i,0]] [α]
+                                            [β]
+                = i(β*α - α*β) = 2Im(α*β)
+        
+        Z-coordinate:
+        ⟨ψ|Z|ψ⟩ = [α*, β*] [[1,0],[0,-1]] [α]
+                                            [β]
+                = |α|² - |β|²
+        
+        Properties:
+        ----------
+        1. Unit sphere: x² + y² + z² = 1 (for pure states)
+        2. North pole (0,0,1) = |0⟩
+        3. South pole (0,0,-1) = |1⟩
+        4. Equator (z=0) = equal superpositions
+        
+        Args:
+            state_vector: Complex array [α, β]
+            
+        Returns:
+            np.array: Bloch coordinates [x, y, z]
+        """
         α, β = state_vector[0], state_vector[1]
 
-        # Calculate Bloch coordinates
+        # Calculate Bloch coordinates using expectation values
+        # x: ⟨X⟩ = 2Re(α*β) - measures superposition along X-axis
         x = 2 * np.real(α * np.conj(β))
+        
+        # y: ⟨Y⟩ = 2Im(α*β) - measures superposition along Y-axis  
         y = 2 * np.imag(α * np.conj(β))
+        
+        # z: ⟨Z⟩ = |α|² - |β|² - measures computational basis bias
         z = abs(α) ** 2 - abs(β) ** 2
 
         return np.array([x, y, z])

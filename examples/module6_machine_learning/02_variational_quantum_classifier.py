@@ -49,24 +49,140 @@ class VariationalQuantumClassifier:
         return circuit
 
     def create_ansatz(self, parameters):
-        """Create parameterized quantum circuit (ansatz)."""
+        """
+        Create parameterized quantum circuit (ansatz).
+        
+        Mathematical Foundation - Variational Quantum Classifier:
+        --------------------------------------------------------
+        A VQC uses a parameterized quantum circuit to learn a classification
+        function by optimizing parameters θ.
+        
+        Classification Function:
+        -----------------------
+        f(x; θ) = ⟨ψ(x,θ)|O|ψ(x,θ)⟩
+        
+        where:
+        - x: input feature vector
+        - θ: trainable parameters
+        - |ψ(x,θ)⟩ = U(θ) φ(x) |0⟩
+        - φ(x): feature map (encodes classical data)
+        - U(θ): parameterized ansatz (trainable circuit)
+        - O: observable (typically Z on first qubit)
+        
+        Training Objective:
+        ------------------
+        Minimize loss function:
+        L(θ) = Σᵢ loss(f(xᵢ; θ), yᵢ)
+        
+        where (xᵢ, yᵢ) are training samples and labels.
+        
+        Common loss functions:
+        - Binary cross-entropy: -[y log(p) + (1-y)log(1-p)]
+        - Hinge loss: max(0, 1 - y·f(x))
+        - MSE: (y - f(x))²
+        
+        Ansatz Structure (This Implementation):
+        --------------------------------------
+        Layer-by-layer construction:
+        
+        For each layer l = 1, ..., depth:
+        
+        1. Rotation Layer:
+           For each qubit i:
+           - R_y(θ_{l,i,1}): rotation around Y-axis
+           - R_z(θ_{l,i,2}): rotation around Z-axis
+           
+           Total: 2n parameters per layer
+           
+        2. Entangling Layer:
+           - CNOT between adjacent qubits (linear chain)
+           - Final layer: additional circular CNOT (ring topology)
+           
+        Mathematical Analysis:
+        ---------------------
+        
+        Total Parameters: 2 × n_qubits × depth
+        
+        Universal Approximation:
+        - R_y + R_z + CNOT form universal gate set
+        - With sufficient depth, can approximate any unitary
+        - But deeper → harder to train (barren plateaus)
+        
+        Rotation Gates:
+        R_y(θ) = [[cos(θ/2), -sin(θ/2)],
+                  [sin(θ/2),  cos(θ/2)]]
+        
+        R_z(θ) = [[e^(-iθ/2),     0     ],
+                  [   0,      e^(iθ/2)]]
+        
+        Why R_y and R_z?
+        ---------------
+        - R_y: controls amplitude (|0⟩ ↔ |1⟩ mixing)
+        - R_z: controls phase (relative phase between |0⟩ and |1⟩)
+        - Together: full control over qubit state on Bloch sphere
+        - Complementary: R_y affects measurement probabilities directly
+                        R_z affects interference (phase matters!)
+        
+        Entanglement Pattern:
+        --------------------
+        Linear chain: i=0→1, 1→2, ..., (n-2)→(n-1)
+        Final layer: also (n-1)→0 (circular connection)
+        
+        Creates correlations: allows learning of non-linear
+        decision boundaries that classical linear classifiers cannot!
+        
+        Training Process:
+        ----------------
+        1. Initialize parameters θ randomly
+        2. For each training sample (x, y):
+           a. Encode x via feature map
+           b. Apply ansatz U(θ)
+           c. Measure expectation ⟨O⟩
+           d. Compute loss L(θ)
+        3. Update θ using gradient descent:
+           θ ← θ - η ∇L(θ)
+        4. Repeat until convergence
+        
+        Gradient Computation:
+        --------------------
+        Use parameter-shift rule (unique to quantum):
+        ∂⟨O⟩/∂θᵢ = [⟨O⟩(θᵢ + π/2) - ⟨O⟩(θᵢ - π/2)] / 2
+        
+        Advantages over classical ML:
+        ----------------------------
+        - Exponential state space (2^n dimensions)
+        - Quantum interference
+        - Potential for quantum advantage on certain problems
+        
+        Args:
+            parameters (array): Variational parameters θ
+            
+        Returns:
+            QuantumCircuit: Parameterized ansatz circuit
+        """
         circuit = QuantumCircuit(self.n_qubits, name="Ansatz")
         param_idx = 0
 
+        # Build ansatz layer by layer
         for layer in range(self.depth):
-            # Rotation layer
+            # Rotation layer: apply R_y and R_z to each qubit
+            # These rotations give full single-qubit control
             for qubit in range(self.n_qubits):
                 if param_idx < len(parameters):
+                    # R_y: controls amplitude (probability) distribution
                     circuit.ry(parameters[param_idx], qubit)
                     param_idx += 1
                 if param_idx < len(parameters):
+                    # R_z: controls phase (important for interference)
                     circuit.rz(parameters[param_idx], qubit)
                     param_idx += 1
 
-            # Entangling layer
+            # Entangling layer: create quantum correlations
+            # Linear chain topology for hardware efficiency
             for qubit in range(self.n_qubits - 1):
                 circuit.cx(qubit, qubit + 1)
             # Add circular entanglement for last layer
+            # Creates ring topology for better expressivity
             if layer == self.depth - 1:
                 circuit.cx(self.n_qubits - 1, 0)
 

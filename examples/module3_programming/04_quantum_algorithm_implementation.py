@@ -98,20 +98,68 @@ class DeutschJozsaAlgorithm(QuantumAlgorithm):
         return self.circuit
 
     def _add_oracle(self, oracle_type):
-        """Add oracle based on type."""
+        """
+        Add Deutsch-Jozsa oracle based on function type.
+        
+        Mathematical Concept - Quantum Oracle:
+        -------------------------------------
+        An oracle is a "black box" that computes f(x) and encodes
+        the result into the phase of a quantum state.
+        
+        Oracle Operation:
+        ----------------
+        U_f: |x⟩|y⟩ → |x⟩|y ⊕ f(x)⟩
+        
+        where:
+        - |x⟩: n-qubit input register
+        - |y⟩: 1-qubit ancilla in state |−⟩ = (|0⟩−|1⟩)/√2
+        - f(x): Boolean function (0 or 1)
+        - ⊕: XOR operation
+        
+        Phase Kickback:
+        --------------
+        When y = |−⟩, the oracle induces a phase:
+        
+        U_f|x⟩|−⟩ = |x⟩(|0⊕f(x)⟩−|1⊕f(x)⟩)/√2
+                  = (−1)^f(x)|x⟩|−⟩
+        
+        Result: f(x) encoded in the PHASE (not the amplitude)!
+        
+        Oracle Types:
+        ------------
+        1. Constant: f(x) = 0 or f(x) = 1 for all x
+        2. Balanced: f(x) = 0 for half of inputs, 1 for the other half
+        
+        Deutsch-Jozsa Promise: f is guaranteed to be one of these two types
+        
+        Implementation Examples:
+        -----------------------
+        - Constant_0: f(x) = 0 → Do nothing (identity)
+        - Constant_1: f(x) = 1 → Apply X to ancilla
+        - Balanced: f(x) = x_0 → CNOT from qubit 0 to ancilla
+        - Balanced_parity: f(x) = x_0 ⊕ ... ⊕ x_{n-1} → CNOTs from all qubits
+        
+        Why This Works:
+        - Constant function → All phases same → Interference constructive at |0...0⟩
+        - Balanced function → Phases differ → Interference destructive at |0...0⟩
+        """
         n = self.n_qubits
 
         if oracle_type == "constant_0":
-            # f(x) = 0 for all x (do nothing)
+            # f(x) = 0 for all x (identity operation)
+            # Math: U_f|x⟩|y⟩ = |x⟩|y⟩ (no change)
             pass
         elif oracle_type == "constant_1":
             # f(x) = 1 for all x
+            # Math: U_f|x⟩|y⟩ = |x⟩|y⊕1⟩ → flip ancilla
             self.circuit.x(n)
         elif oracle_type == "balanced":
-            # f(x) = x_0 (first bit)
+            # f(x) = x_0 (output equals first input bit)
+            # Math: CNOT implements |x⟩|y⟩ → |x⟩|y⊕x_0⟩
             self.circuit.cx(0, n)
         elif oracle_type == "balanced_parity":
-            # f(x) = x_0 ⊕ x_1 ⊕ ... ⊕ x_{n-1}
+            # f(x) = x_0 ⊕ x_1 ⊕ ... ⊕ x_{n-1} (parity of all bits)
+            # Math: Each CNOT adds one bit to the parity
             for i in range(n):
                 self.circuit.cx(i, n)
 
@@ -178,45 +226,153 @@ class GroverAlgorithm(QuantumAlgorithm):
         return self.circuit
 
     def _add_oracle(self, marked_items):
-        """Add oracle that marks specified items."""
+        """
+        Add Grover oracle that marks specified items.
+        
+        Mathematical Concept - Grover Oracle:
+        ------------------------------------
+        The oracle flips the phase of the marked state(s).
+        
+        Oracle Operation:
+        ----------------
+        O|x⟩ = {  −|x⟩  if x is marked (target)
+              {   |x⟩  otherwise
+        
+        Mathematically:
+        O = I − 2|w⟩⟨w|
+        
+        where |w⟩ is the marked state.
+        
+        Phase Flip Implementation:
+        -------------------------
+        To flip phase of state |w⟩ = |w_n...w_1w_0⟩:
+        
+        1. Apply X gates to qubits where w_i = 0
+           (This makes target state |1...1⟩)
+        
+        2. Apply multi-controlled Z gate
+           (Flips phase of |1...1⟩ state)
+           Math: Z|1⟩ = −|1⟩
+        
+        3. Undo X gates (restore original basis)
+        
+        Example for |101⟩:
+        - Apply X to qubit 1: |101⟩ → |111⟩
+        - Apply CCZ: −|111⟩
+        - Undo X: −|101⟩ (phase flipped!)
+        
+        Multi-Controlled Z Gate:
+        -----------------------
+        For n qubits, need (n-1)-controlled Z:
+        - Decompose using H-CCX-H pattern
+        - CCX = Toffoli gate (2-controlled X)
+        
+        Why Phase Flip?
+        - Allows interference to amplify marked state
+        - Combined with diffusion → amplitude amplification
+        """
         for item in marked_items:
             # Convert item to binary and apply multi-controlled Z
             binary_item = format(item, f"0{self.n_qubits}b")
 
-            # Flip qubits that should be 0
+            # Step 1: Flip qubits where marked state has 0
+            # Transform |w⟩ to |1...1⟩
             for i, bit in enumerate(binary_item):
                 if bit == "0":
                     self.circuit.x(i)
 
-            # Multi-controlled Z gate
+            # Step 2: Multi-controlled Z gate
+            # Flips phase of |1...1⟩ state
             if self.n_qubits == 1:
                 self.circuit.z(0)
             elif self.n_qubits == 2:
                 self.circuit.cz(0, 1)
             else:
-                # Use auxiliary qubits for multi-controlled Z
+                # Use H-CCX-H for multi-controlled Z
+                # Math: HZH = X, so HXH = Z
                 self.circuit.h(self.n_qubits - 1)
                 self._multi_controlled_x(
                     list(range(self.n_qubits - 1)), self.n_qubits - 1
                 )
                 self.circuit.h(self.n_qubits - 1)
 
-            # Flip qubits back
+            # Step 3: Flip qubits back
+            # Restore original basis
             for i, bit in enumerate(binary_item):
                 if bit == "0":
                     self.circuit.x(i)
 
     def _add_diffuser(self):
-        """Add diffusion operator (inversion about average)."""
-        # H gates
+        """
+        Add diffusion operator (inversion about average).
+        
+        Mathematical Concept - Grover Diffusion Operator:
+        -------------------------------------------------
+        The diffusion operator inverts all amplitudes about their average.
+        This is the key to amplitude amplification!
+        
+        Diffusion Operator D:
+        --------------------
+        D = 2|s⟩⟨s| − I
+        
+        where |s⟩ = H^⊗n|0⟩ = (1/√N)Σ|x⟩ is the uniform superposition
+        
+        Effect on Amplitude:
+        -------------------
+        For state ψ = Σ α_x|x⟩:
+        
+        α_x → 2⟨α⟩ − α_x
+        
+        where ⟨α⟩ = (1/N)Σα_x is the average amplitude
+        
+        Geometric Interpretation:
+        ------------------------
+        - Reflects amplitudes about their mean
+        - States below average → become above average
+        - States above average → become below average
+        - After oracle marks target, diffusion amplifies it!
+        
+        Implementation: D = H^⊗n (2|0⟩⟨0| − I) H^⊗n
+        
+        Step-by-Step Construction:
+        -------------------------
+        1. H^⊗n: Transform to computational basis
+           |s⟩ → |0⟩
+        
+        2. Apply (2|0⟩⟨0| − I):
+           - Flip all qubits: |0⟩ → |1...1⟩
+           - Multi-controlled Z: Flip phase of |1...1⟩
+           - Flip qubits back
+           This implements: −(I − 2|0⟩⟨0|) = 2|0⟩⟨0| − I
+        
+        3. H^⊗n: Transform back to superposition
+           |0⟩ → |s⟩
+        
+        Combined with Oracle (Grover Operator):
+        ---------------------------------------
+        G = D·O (diffusion after oracle)
+        
+        Effect: Each iteration rotates state vector toward marked state
+        Amplitude of marked state increases by ~2/√N each iteration
+        
+        After k iterations:
+        α_marked ≈ sin((2k+1)θ) where θ = arcsin(1/√N)
+        
+        Optimal iterations: k ≈ (π/4)√N
+        """
+        # Step 1: Transform from superposition to computational basis
+        # H^⊗n: |s⟩ → |0⟩
         for i in range(self.n_qubits):
             self.circuit.h(i)
 
-        # X gates
+        # Step 2a: Flip all qubits
+        # Transform |0⟩ → |1...1⟩
         for i in range(self.n_qubits):
             self.circuit.x(i)
 
-        # Multi-controlled Z
+        # Step 2b: Multi-controlled Z
+        # Flips phase of |1...1⟩ state
+        # This implements conditional phase flip about |0⟩
         if self.n_qubits == 1:
             self.circuit.z(0)
         elif self.n_qubits == 2:
@@ -226,11 +382,14 @@ class GroverAlgorithm(QuantumAlgorithm):
             self._multi_controlled_x(list(range(self.n_qubits - 1)), self.n_qubits - 1)
             self.circuit.h(self.n_qubits - 1)
 
-        # X gates
+        # Step 2c: Flip qubits back
+        # Transform |1...1⟩ → |0⟩
         for i in range(self.n_qubits):
             self.circuit.x(i)
 
-        # H gates
+        # Step 3: Transform back to superposition
+        # H^⊗n: |0⟩ → |s⟩
+        # Now have implemented: 2|s⟩⟨s| − I
         for i in range(self.n_qubits):
             self.circuit.h(i)
 

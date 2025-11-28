@@ -42,13 +42,76 @@ class ShorsAlgorithmDemo:
         return result
 
     def find_period_classical(self, a, N):
-        """Classical period finding for verification."""
+        """
+        Classical period finding for verification.
+        
+        Mathematical Foundation - Period Finding:
+        ----------------------------------------
+        Period finding is the core of Shor's algorithm.
+        
+        Problem:
+        --------
+        Given integers a and N where gcd(a,N) = 1,
+        find the smallest positive integer r such that:
+        
+        a^r ≡ 1 (mod N)
+        
+        This r is called the "order" or "period" of a modulo N.
+        
+        Example:
+        -------
+        For a=2, N=15:
+        2^1 mod 15 = 2
+        2^2 mod 15 = 4
+        2^3 mod 15 = 8
+        2^4 mod 15 = 16 mod 15 = 1  ✓
+        
+        Period r = 4
+        
+        Classical Complexity:
+        --------------------
+        Classically, we must check each power sequentially:
+        - Best known: O(exp(√(log N))) - superpolynomial!
+        - For 300-digit N: ~10^15 years on classical computer
+        
+        Quantum Complexity:
+        ------------------
+        Quantum period finding (using QFT):
+        - Time: O((log N)²log log N) - polynomial!
+        - For 300-digit N: minutes on quantum computer
+        
+        This exponential speedup enables factoring!
+        
+        Why Period Helps Factor:
+        -----------------------
+        Once we have period r:
+        1. a^r ≡ 1 (mod N)
+        2. a^r - 1 ≡ 0 (mod N)
+        3. (a^(r/2) - 1)(a^(r/2) + 1) ≡ 0 (mod N)
+        4. N divides the product
+        5. gcd(a^(r/2) ± 1, N) likely gives factors!
+        
+        Example: N=15, a=2, r=4
+        - 2^4 - 1 = 15 = N
+        - 2^2 - 1 = 3  → gcd(3, 15) = 3 ✓
+        - 2^2 + 1 = 5  → gcd(5, 15) = 5 ✓
+        - Factors: 3 × 5 = 15 ✓
+        
+        Args:
+            a (int): Base (coprime to N)
+            N (int): Modulus
+            
+        Returns:
+            int: Period r, or None if not found
+        """
         period = 1
         current = a % N
+        # Keep multiplying by a until we return to 1 (mod N)
+        # This is the classical (slow) way to find period
         while current != 1:
             current = (current * a) % N
             period += 1
-            if period > N:  # Safety check
+            if period > N:  # Safety check for infinite loop
                 return None
         return period
 

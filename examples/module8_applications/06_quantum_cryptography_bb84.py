@@ -117,7 +117,169 @@ def demonstrate_one_time_pad():
 
 
 def create_bb84_protocol():
-    """Implement the complete BB84 quantum key distribution protocol."""
+    """
+    Implement the complete BB84 quantum key distribution protocol.
+    
+    Mathematical Foundation - BB84 Protocol:
+    ---------------------------------------
+    The BB84 protocol (Bennett & Brassard, 1984) is the first quantum
+    key distribution (QKD) scheme, using quantum mechanics to detect
+    eavesdropping and generate secure cryptographic keys.
+    
+    Protocol Overview:
+    -----------------
+    Goal: Alice and Bob want to generate a shared secret key over a
+          public (potentially eavesdropped) quantum channel.
+    
+    Key Principle: Any measurement by Eve will disturb the quantum states,
+                   revealing her presence!
+    
+    Mathematical Foundation:
+    -----------------------
+    
+    1. TWO COMPLEMENTARY BASES:
+       - Z basis (computational): {|0⟩, |1⟩}
+       - X basis (Hadamard): {|+⟩, |-⟩}
+       
+       where:
+       |+⟩ = (|0⟩ + |1⟩)/√2
+       |-⟩ = (|0⟩ - |1⟩)/√2
+    
+    2. BASIS INCOMPATIBILITY:
+       These bases are complementary (mutually unbiased):
+       
+       |⟨0|+⟩|² = |⟨0|-⟩|² = 1/2
+       |⟨1|+⟩|² = |⟨1|-⟩|² = 1/2
+       
+       MEANING: Measuring in the wrong basis gives random results!
+    
+    3. ENCODING MAP:
+       Alice's bit → Quantum state
+       
+       Z basis:
+       - bit 0 → |0⟩
+       - bit 1 → |1⟩
+       
+       X basis:
+       - bit 0 → |+⟩ = H|0⟩
+       - bit 1 → |-⟩ = H|1⟩
+    
+    BB84 Protocol Steps (Mathematical Detail):
+    ------------------------------------------
+    
+    STEP 1: Alice's Random Bit Generation
+    Alice generates random classical bits bₐ ∈ {0,1}
+    These will become the key if bases match
+    
+    STEP 2: Alice's Random Basis Choice
+    Alice randomly chooses basis θₐ ∈ {Z, X} for each bit
+    
+    STEP 3: Alice's State Preparation
+    For each bit i, Alice prepares quantum state:
+    
+    |ψᵢ⟩ = {
+        |bₐ⟩     if θₐ = Z (computational basis)
+        H|bₐ⟩    if θₐ = X (Hadamard basis)
+    }
+    
+    Mathematically:
+    - (Z, 0) → |0⟩
+    - (Z, 1) → |1⟩  
+    - (X, 0) → |+⟩ = (|0⟩ + |1⟩)/√2
+    - (X, 1) → |-⟩ = (|0⟩ - |1⟩)/√2
+    
+    STEP 4: Quantum Transmission
+    Alice sends |ψᵢ⟩ to Bob through quantum channel
+    
+    STEP 5: Bob's Random Basis Choice
+    Bob randomly chooses measurement basis θᵦ ∈ {Z, X}
+    
+    STEP 6: Bob's Measurement
+    Bob measures in basis θᵦ, obtains result bᵦ
+    
+    Measurement outcomes:
+    - If θₐ = θᵦ (matching bases):
+      P(bᵦ = bₐ) = 1 (perfect correlation)
+    
+    - If θₐ ≠ θᵦ (different bases):
+      P(bᵦ = 0) = P(bᵦ = 1) = 1/2 (random result)
+    
+    STEP 7: Basis Reconciliation (Classical Channel)
+    Alice and Bob publicly announce their basis choices θₐ, θᵦ
+    (NOT the bit values!)
+    
+    They keep only bits where θₐ = θᵦ (≈50% of bits)
+    This is the "sifted key"
+    
+    STEP 8: Error Checking
+    Alice and Bob compare a random subset of their sifted key
+    
+    Quantum Error Rate (QBER):
+    QBER = (# disagreements) / (# compared bits)
+    
+    - QBER ≈ 0%: No eavesdropping (secure)
+    - QBER ≈ 25%: Eavesdropper present!
+    - QBER > 11% (typical threshold): Abort protocol
+    
+    STEP 9: Privacy Amplification (Optional)
+    Apply hash function to reduce Eve's information
+    Key_final = Hash(Key_sifted)
+    
+    Why Eavesdropping is Detectable:
+    --------------------------------
+    
+    If Eve intercepts and measures qubits:
+    
+    1. Eve must guess measurement basis (50% chance of wrong basis)
+    2. Wrong basis → random measurement result
+    3. Eve re-sends (wrong) state to Bob
+    4. When bases match (Alice-Bob), they expect perfect correlation
+    5. Eve's interference causes ≈25% error rate
+    6. Alice and Bob detect anomalous QBER → abort!
+    
+    Mathematical Analysis:
+    ---------------------
+    
+    No eavesdropping:
+    - Alice and Bob share identical sifted key
+    - QBER ≈ 0% (only experimental errors)
+    
+    Eve intercepts all qubits:
+    - Eve guesses wrong basis 50% of the time
+    - When bases match (Alice-Bob-Eve): no error
+    - When Eve's basis differs from Alice:
+      Eve's re-sent state causes errors
+    - Expected QBER ≈ 25% → easily detected!
+    
+    Information-Theoretic Security:
+    ------------------------------
+    BB84 provides unconditional security based on:
+    1. No-cloning theorem: Eve cannot copy unknown quantum states
+    2. Measurement disturbance: Measuring quantum states changes them
+    3. Heisenberg uncertainty: Cannot measure complementary bases simultaneously
+    
+    Key Rate:
+    ---------
+    R = (1/2) × (1 - h(QBER)) bits per qubit
+    
+    where h(x) = -x log₂(x) - (1-x)log₂(1-x) is binary entropy
+    
+    Example: QBER = 5% → R ≈ 0.36 bits/qubit
+    
+    Practical Considerations:
+    ------------------------
+    - Channel loss: Not all photons reach Bob (does not compromise security)
+    - Detector errors: Contribute to QBER (< 11% threshold)
+    - Distance limit: ≈100-200 km with current technology
+    - Quantum repeaters needed for longer distances
+    
+    Applications:
+    ------------
+    - Secure government communications
+    - Banking and financial networks
+    - Critical infrastructure protection
+    - Long-term data security (quantum-resistant)
+    """
     print("=== BB84 QUANTUM KEY DISTRIBUTION PROTOCOL ===")
     print()
 

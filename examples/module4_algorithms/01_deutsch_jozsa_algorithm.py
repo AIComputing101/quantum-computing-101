@@ -109,33 +109,124 @@ class DeutschJozsaOracle:
         return len(set(self.truth_table)) == 1
 
     def create_oracle_circuit(self):
-        """Create the quantum oracle circuit."""
+        """
+        Create the quantum oracle circuit.
+        
+        Mathematical Foundation - Quantum Oracle:
+        ----------------------------------------
+        A quantum oracle implements a classical function f: {0,1}^n → {0,1}
+        as a unitary quantum operation.
+        
+        Oracle Transformation:
+        ---------------------
+        The oracle O_f acts on n+1 qubits:
+        
+        O_f: |x⟩|y⟩ → |x⟩|y ⊕ f(x)⟩
+        
+        where:
+        - x ∈ {0,1}^n is the n-bit input
+        - y ∈ {0,1} is the 1-bit output qubit
+        - ⊕ is XOR (addition modulo 2)
+        - f(x) is the classical function we're encoding
+        
+        Phase Kickback Trick:
+        --------------------
+        When the output qubit is in state |−⟩ = (|0⟩ − |1⟩)/√2:
+        
+        O_f|x⟩|−⟩ = |x⟩|− ⊕ f(x)⟩
+                  = |x⟩(|f(x)⟩ − |1 ⊕ f(x)⟩)/√2
+                  = (-1)^{f(x)}|x⟩|−⟩
+        
+        The function value becomes a PHASE!
+        - If f(x) = 0: no phase change
+        - If f(x) = 1: adds minus sign (−1 = e^{iπ})
+        
+        This is called "phase kickback" - the computation result
+        transfers from amplitude to phase.
+        
+        Implementation Strategy:
+        -----------------------
+        For each input x where f(x) = 1:
+        
+        1. Apply X gates to transform |x⟩ to |11...1⟩
+           (flip bits where x has 0's)
+        
+        2. Apply multi-controlled X to output qubit
+           MCX flips output only when all controls are |1⟩
+        
+        3. Undo X gates to restore original basis
+           (uncompute the transformation)
+        
+        Result: Output flipped only when input matches x
+        
+        Example for f(5) = 1 with n=3:
+        ------------------------------
+        Input x = 5 = 101₂ (binary)
+        
+        1. Current state: |101⟩|y⟩
+        2. Apply X to qubit 1 (middle bit is 0): |111⟩|y⟩
+        3. MCX flips output: |111⟩|y⊕1⟩
+        4. Undo X on qubit 1: |101⟩|y⊕1⟩
+        
+        Only input |101⟩ causes output flip! ✓
+        
+        Why This Works:
+        --------------
+        - Classical function f(x) is encoded as quantum unitary
+        - Preserves superposition (can evaluate all x simultaneously!)
+        - Reversible (can undo by applying oracle twice: O_f² = I)
+        - Works with phase kickback for Deutsch-Jozsa algorithm
+        
+        Complexity:
+        ----------
+        - Classical evaluation: 1 query per input (2^n queries worst case)
+        - Quantum evaluation: 1 query for ALL inputs simultaneously!
+        - This is the source of quantum advantage
+        
+        Returns:
+            QuantumCircuit: Oracle circuit implementing function f
+        """
         # n input qubits + 1 output qubit
+        # Input qubits: 0 to n-1
+        # Output qubit: n
         qc = QuantumCircuit(self.n_qubits + 1, name="Oracle")
 
         # Implement oracle based on truth table
+        # For each input value i where f(i) = 1, create controlled flip
         for i, output in enumerate(self.truth_table):
             if output == 1:
-                # Create controlled X gate for this input pattern
-                # Convert i to binary representation
+                # We need to flip output qubit when input = i
+                # Strategy: transform |i⟩ to |111...1⟩, apply MCX, undo transformation
+                
+                # Convert input index i to binary representation
+                # e.g., i=5, n=3 → "101"
                 binary_str = format(i, f"0{self.n_qubits}b")
 
-                # Apply X gates to qubits that should be 0 in the pattern
+                # STEP 1: Apply X gates to qubits that should be 0 in the pattern
+                # This transforms |i⟩ to |111...1⟩
+                # Example: |101⟩ → apply X to qubit 1 → |111⟩
                 for qubit, bit in enumerate(binary_str):
                     if bit == "0":
                         qc.x(qubit)
 
-                # Apply multi-controlled X gate
+                # STEP 2: Apply multi-controlled X gate
+                # MCX: flips target (output qubit) when ALL controls are |1⟩
+                # This implements: |111...1⟩|y⟩ → |111...1⟩|y⊕1⟩
                 if self.n_qubits == 1:
+                    # 1 control qubit: use CNOT
                     qc.cx(0, self.n_qubits)
                 elif self.n_qubits == 2:
+                    # 2 control qubits: use Toffoli (CCX)
                     qc.ccx(0, 1, self.n_qubits)
                 else:
-                    # For more qubits, use multi-controlled X
+                    # 3+ control qubits: use multi-controlled X
                     control_qubits = list(range(self.n_qubits))
                     qc.mcx(control_qubits, self.n_qubits)
 
-                # Undo X gates
+                # STEP 3: Undo X gates (uncompute)
+                # This transforms |111...1⟩ back to |i⟩
+                # Example: |111⟩ → apply X to qubit 1 → |101⟩
+                # Net effect: |i⟩|y⟩ → |i⟩|y⊕f(i)⟩ where f(i)=1
                 for qubit, bit in enumerate(binary_str):
                     if bit == "0":
                         qc.x(qubit)

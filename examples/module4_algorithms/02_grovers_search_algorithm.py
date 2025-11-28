@@ -43,23 +43,80 @@ class GroverSearchAlgorithm:
             print(f"[Grover] {message}")
 
     def create_oracle(self, n_qubits, marked_items):
-        """Create oracle circuit that marks specified items."""
+        """
+        Create oracle circuit that marks specified items.
+        
+        Mathematical Foundation - Oracle:
+        ---------------------------------
+        The oracle is a unitary operator O that "marks" target items by
+        flipping their phase:
+        
+        O|x⟩ = {  -|x⟩  if x is a marked item (solution)
+               {   |x⟩  if x is not marked
+        
+        More formally:
+        O = I - 2|ω⟩⟨ω|
+        
+        where |ω⟩ represents the marked state(s).
+        
+        Implementation Strategy:
+        -----------------------
+        To mark item x with binary representation x = x_{n-1}...x_1x_0:
+        
+        1. Apply X gates to qubits where x_i = 0
+           This transforms |x⟩ to |11...1⟩
+        
+        2. Apply multi-controlled Z gate (MCZ)
+           MCZ|11...1⟩ = -|11...1⟩ (adds negative phase)
+           MCZ|other⟩ = |other⟩ (leaves others unchanged)
+        
+        3. Undo X gates (return to original basis)
+           This transforms |11...1⟩ back to |x⟩
+        
+        Result: Only state |x⟩ gets marked with negative phase
+        
+        Example for n=3, marking item 5 (binary 101):
+        -----------------------------------------
+        1. Initial state: |101⟩
+        2. Apply X to qubit 1 (middle bit is 0): |111⟩
+        3. Apply MCZ: -|111⟩
+        4. Undo X on qubit 1: -|101⟩ ✓ (marked!)
+        
+        Why Phase Flip (not bit flip)?
+        -------------------------------
+        Phase flips allow interference effects that are key to Grover's algorithm.
+        In superposition (|0⟩+|1⟩)/√2, flipping phase of |1⟩ gives
+        (|0⟩-|1⟩)/√2, which interferes constructively/destructively with other states.
+        
+        Args:
+            n_qubits (int): Number of qubits in the search space
+            marked_items (list): List of item indices to mark
+            
+        Returns:
+            QuantumCircuit: Oracle circuit that marks the specified items
+        """
         oracle = QuantumCircuit(n_qubits, name="Oracle")
 
         for item in marked_items:
             # Convert item to binary representation
+            # E.g., item 5 with n_qubits=3 becomes "101"
             binary_item = format(item, f"0{n_qubits}b")
             self.log(f"Marking item {item} (binary: {binary_item})")
 
             # Apply X gates to qubits that should be 0
+            # This transforms our target state to |11...1⟩
+            # which the MCZ gate can recognize and mark
             for i, bit in enumerate(binary_item):
                 if bit == "0":
                     oracle.x(i)
 
             # Apply multi-controlled Z gate
+            # This adds a negative phase to the |11...1⟩ state only
+            # MCZ|11...1⟩ = -|11...1⟩
             self._add_mcz(oracle, list(range(n_qubits)))
 
-            # Undo X gates
+            # Undo X gates to return to computational basis
+            # Now the original target state |x⟩ has the negative phase
             for i, bit in enumerate(binary_item):
                 if bit == "0":
                     oracle.x(i)
@@ -100,25 +157,110 @@ class GroverSearchAlgorithm:
             circuit.ccx(control_qubits[0], control_qubits[1], target_qubit)
 
     def create_diffuser(self, n_qubits):
-        """Create diffusion operator (inversion about average)."""
+        """
+        Create diffusion operator (inversion about average).
+        
+        Mathematical Foundation - Grover Diffusion Operator:
+        ----------------------------------------------------
+        The diffusion operator D performs "inversion about the mean":
+        
+        D = 2|s⟩⟨s| - I
+        
+        where |s⟩ = (1/√N)Σ|x⟩ is the uniform superposition state.
+        
+        What "Inversion About Average" Means:
+        -------------------------------------
+        If a state has amplitude α_i, and the average amplitude is ᾱ:
+        
+        D: α_i → 2ᾱ - α_i
+        
+        - Amplitudes above average → decreased
+        - Amplitudes below average → increased
+        - Marked states (negative amplitude) → strongly increased
+        
+        Example with 4 states:
+        Before: [0.5, 0.5, 0.5, -0.5]  (last state marked by oracle)
+        Average: (0.5+0.5+0.5-0.5)/4 = 0.25
+        After:  [0, 0, 0, 1.0]  (amplitudes inverted about 0.25)
+        
+        This amplifies the marked state while decreasing others!
+        
+        Mathematical Derivation:
+        -----------------------
+        We want: D = 2|s⟩⟨s| - I
+        
+        Step-by-step construction:
+        1. Transform to basis where |s⟩ = |0...0⟩
+           Use H^⊗n: maps uniform superposition to |0...0⟩
+        
+        2. In this basis, D' = 2|0⟩⟨0| - I
+           This marks |0...0⟩ with phase flip and identity on others
+        
+        3. Apply (2|0⟩⟨0| - I):
+           - Can write as: X^⊗n · (2|1...1⟩⟨1...1| - I) · X^⊗n
+           - Middle part is multi-controlled Z on all qubits
+        
+        4. Transform back with H^⊗n
+        
+        Implementation: H^⊗n · X^⊗n · MCZ · X^⊗n · H^⊗n
+        ------------------------------------------------
+        
+        Circuit sequence:
+        1. H^⊗n: Transform to basis where |s⟩ → |0...0⟩
+        2. X^⊗n: Transform |0...0⟩ → |1...1⟩
+        3. MCZ:  Add phase -1 to |1...1⟩ state
+        4. X^⊗n: Transform back |1...1⟩ → |0...0⟩
+        5. H^⊗n: Transform back to original basis
+        
+        Why This Works:
+        ---------------
+        The combination H·X·MCZ·X·H implements the reflection operator
+        about the average amplitude. After oracle marks solutions with
+        negative phase, this diffuser amplifies those marked states.
+        
+        Geometric Interpretation:
+        ------------------------
+        Think of quantum state as a vector in N-dimensional space:
+        - Oracle: Reflects state across hyperplane orthogonal to |ω⟩
+        - Diffuser: Reflects state across hyperplane orthogonal to |s⟩
+        - Combined: These two reflections rotate toward |ω⟩!
+        
+        After k iterations, the state rotates by angle ~kθ where
+        sin²(θ/2) = M/N (M = marked items, N = total items)
+        
+        Args:
+            n_qubits (int): Number of qubits in the circuit
+            
+        Returns:
+            QuantumCircuit: Diffusion operator circuit
+        """
         diffuser = QuantumCircuit(n_qubits, name="Diffuser")
 
-        # Apply H gates
+        # Step 1: Apply Hadamard gates to all qubits
+        # Transforms from computational basis to Hadamard basis
+        # In this basis, |s⟩ (uniform superposition) becomes |0...0⟩
         for i in range(n_qubits):
             diffuser.h(i)
 
-        # Apply X gates
+        # Step 2: Apply X gates to all qubits
+        # Transforms |0...0⟩ to |1...1⟩
+        # Now we can use MCZ to mark this state
         for i in range(n_qubits):
             diffuser.x(i)
 
-        # Apply multi-controlled Z
+        # Step 3: Apply multi-controlled Z gate
+        # Adds phase -1 to |1...1⟩ state only
+        # This implements the (2|0⟩⟨0| - I) operation in the transformed basis
         self._add_mcz(diffuser, list(range(n_qubits)))
 
-        # Apply X gates
+        # Step 4: Apply X gates again to undo step 2
+        # Transforms |1...1⟩ back to |0...0⟩
         for i in range(n_qubits):
             diffuser.x(i)
 
-        # Apply H gates
+        # Step 5: Apply Hadamard gates to return to computational basis
+        # This completes the transformation and implements
+        # the full inversion-about-average operation
         for i in range(n_qubits):
             diffuser.h(i)
 

@@ -252,7 +252,22 @@ class HardwareOptimizer:
         return analysis
 
     def optimize_for_backend(self, circuit, backend_name, optimization_level=3):
-        """Optimize circuit for specific backend architecture."""
+        """
+        Optimize circuit for specific backend architecture.
+        
+        Key Concepts - Hardware Optimization:
+        -------------------------------------
+        1. Transpilation: Convert logical circuit → physical gates
+        2. Routing: Map qubits to hardware topology (add SWAPs if needed)
+        3. Optimization: Reduce depth/gates while preserving function
+        
+        Hardware Constraints:
+        - Limited connectivity (not all qubit pairs connected)
+        - Native gate set (only certain gates implemented)
+        - Noise characteristics (gate fidelities vary)
+        
+        Goal: Minimize circuit depth & gate count for real hardware
+        """
         if backend_name not in self.backends:
             raise ValueError(f"Backend {backend_name} not available")
 

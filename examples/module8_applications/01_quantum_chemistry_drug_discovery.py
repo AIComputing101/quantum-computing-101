@@ -122,31 +122,137 @@ class MolecularSimulator:
         return bond_lengths
 
     def create_hamiltonian(self, molecule):
-        """Create molecular Hamiltonian using simplified model."""
+        """
+        Create molecular Hamiltonian using simplified model.
+        
+        Mathematical Foundation - Molecular Hamiltonians:
+        -------------------------------------------------
+        The Electronic Structure Problem:
+        
+        In quantum chemistry, we want to solve the time-independent
+        Schrödinger equation for a molecule:
+        
+        H|ψ⟩ = E|ψ⟩
+        
+        where H is the molecular Hamiltonian and E is the energy.
+        
+        Full Molecular Hamiltonian:
+        --------------------------
+        H = T_n + T_e + V_nn + V_ne + V_ee
+        
+        where:
+        - T_n: Kinetic energy of nuclei
+        - T_e: Kinetic energy of electrons
+        - V_nn: Nuclear-nuclear repulsion
+        - V_ne: Nuclear-electron attraction
+        - V_ee: Electron-electron repulsion
+        
+        Born-Oppenheimer Approximation:
+        -------------------------------
+        Nuclei are much heavier than electrons, so we treat them as fixed.
+        This simplifies to the Electronic Hamiltonian:
+        
+        H_elec = T_e + V_ne + V_ee
+        
+        Second Quantization Form:
+        ------------------------
+        In quantum computing, we use second quantization with
+        creation (a†_i) and annihilation (a_i) operators:
+        
+        H = Σ_ij h_ij a†_i a_j + Σ_ijkl g_ijkl a†_i a†_j a_k a_l
+        
+        where:
+        - h_ij: One-electron integrals (kinetic + nuclear attraction)
+        - g_ijkl: Two-electron integrals (electron repulsion)
+        
+        Jordan-Wigner Transformation:
+        ----------------------------
+        To map fermions to qubits, we use Jordan-Wigner:
+        
+        a†_i → (X_i - iY_i)/2 · Z_{i-1} ⊗ ... ⊗ Z_0
+        a_i  → (X_i + iY_i)/2 · Z_{i-1} ⊗ ... ⊗ Z_0
+        
+        This transforms fermionic operators to Pauli operators!
+        
+        Pauli String Representation:
+        ---------------------------
+        The result is a sum of Pauli strings:
+        
+        H = Σ_k c_k P_k
+        
+        where:
+        - c_k: Real coefficients (energy contributions)
+        - P_k: Pauli strings (products of I, X, Y, Z)
+        
+        Example Terms:
+        -------------
+        1. One-electron (orbital energy):
+           c₁ Z_i → Diagonal term for orbital i
+        
+        2. Hopping (electron movement):
+           c₂ (X_i X_j + Y_i Y_j) → Electron hopping between orbitals
+        
+        3. Two-electron (repulsion):
+           c₃ Z_i Z_j → Coulomb repulsion between orbitals
+        
+        Why This Matters for Drug Discovery:
+        ------------------------------------
+        1. Binding Energy: How strongly drug binds to protein
+           ΔE = E_complex - E_drug - E_protein
+        
+        2. Reaction Barriers: Energy needed for chemical reactions
+           Determines reaction rates and selectivity
+        
+        3. Molecular Properties: Electronic structure determines:
+           - Reactivity
+           - Stability
+           - Biological activity
+        
+        Quantum Advantage:
+        -----------------
+        Classical methods: Exponential cost O(exp(N)) for N electrons
+        Quantum methods: Polynomial cost with VQE/QPE
+        
+        Critical for:
+        - Large molecules (>50 atoms)
+        - Transition metals
+        - Strong correlation effects
+        
+        Args:
+            molecule: Dictionary with molecular information
+            
+        Returns:
+            SparsePauliOp: Hamiltonian as sum of Pauli strings
+        """
         n_qubits = min(molecule["n_orbitals"], 8)  # Limit for simulation
 
         # Simplified Hamiltonian construction
-        # In practice, would use quantum chemistry libraries
+        # In practice, would use quantum chemistry libraries like PySCF + Qiskit Nature
         pauli_strings = []
         coefficients = []
 
         # One-electron terms (kinetic + nuclear attraction)
+        # Mathematical form: Σ_i h_i a†_i a_i → Σ_i h_i Z_i (after Jordan-Wigner)
         for i in range(n_qubits):
-            # Diagonal terms
+            # Diagonal Z terms represent orbital energies
+            # MATH: ⟨i|T + V_ne|i⟩ (expectation of kinetic + potential)
             pauli_strings.append("I" * i + "Z" + "I" * (n_qubits - i - 1))
             coefficients.append(-1.0 - 0.5 * np.random.random())
 
         # Two-electron terms (electron-electron repulsion)
+        # Mathematical form: Σ_ijkl g_ijkl a†_i a†_j a_k a_l
         for i in range(n_qubits):
             for j in range(i + 1, n_qubits):
-                # ZZ interactions
+                # ZZ interactions: Coulomb repulsion
+                # MATH: ⟨ij|1/r₁₂|ij⟩ (two electrons in orbitals i,j)
                 pauli_string = ["I"] * n_qubits
                 pauli_string[i] = "Z"
                 pauli_string[j] = "Z"
                 pauli_strings.append("".join(pauli_string))
                 coefficients.append(0.25 * np.random.random())
 
-                # XX and YY interactions
+                # XX and YY interactions: Exchange terms
+                # MATH: Allow electron hopping/exchange between orbitals
                 for pauli_pair in [("X", "X"), ("Y", "Y")]:
                     pauli_string = ["I"] * n_qubits
                     pauli_string[i] = pauli_pair[0]

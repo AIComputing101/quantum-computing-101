@@ -70,26 +70,137 @@ def measure_all(circuit: QuantumCircuit) -> QuantumCircuit:
 
 
 def analyze_state(state) -> Dict[str, Any]:
-    """Analyze a statevector or circuit producing a single-qubit state.
+    """
+    Analyze a statevector or circuit producing a single-qubit state.
+    
+    Mathematical Foundation - Qubit State Analysis:
+    ----------------------------------------------
+    
+    A single qubit state is represented as:
+    |ψ⟩ = α|0⟩ + β|1⟩
+    
+    where α, β are complex probability amplitudes satisfying |α|² + |β|² = 1
+    
+    This function extracts two key representations:
+    
+    1. MEASUREMENT PROBABILITIES (Born Rule):
+    -----------------------------------------
+    When measuring in computational basis {|0⟩, |1⟩}:
+    - P(0) = |α|² = α × α* (probability of measuring 0)
+    - P(1) = |β|² = β × β* (probability of measuring 1)
+    
+    where α* denotes complex conjugate of α
+    
+    These probabilities tell us the likelihood of each measurement outcome.
+    
+    2. BLOCH VECTOR (Geometric Representation):
+    -------------------------------------------
+    Any single qubit state can be visualized as a point on the Bloch sphere
+    using a 3D vector (x, y, z) where each component is an expectation value:
+    
+    Bloch vector formula:
+    x = ⟨X⟩ = ⟨ψ|X|ψ⟩ = 2 Re(α*β)
+    y = ⟨Y⟩ = ⟨ψ|Y|ψ⟩ = 2 Im(α*β)
+    z = ⟨Z⟩ = ⟨ψ|Z|ψ⟩ = |α|² - |β|²
+    
+    where X, Y, Z are Pauli matrices:
+    X = [[0, 1], [1, 0]]    (bit flip)
+    Y = [[0, -i], [i, 0]]   (bit+phase flip)
+    Z = [[1, 0], [0, -1]]   (phase flip)
+    
+    Mathematical Derivation of Bloch Components:
+    --------------------------------------------
+    
+    X-component (Re means "real part"):
+    ⟨ψ|X|ψ⟩ = [α*, β*] [[0,1],[1,0]] [α]
+                                      [β]
+            = [α*, β*] [β, α]ᵀ
+            = α*β + β*α
+            = α*β + (α*β)*  (since (α*β)* = β*α)
+            = 2 Re(α*β)
+    
+    Y-component (Im means "imaginary part"):
+    ⟨ψ|Y|ψ⟩ = [α*, β*] [[0,-i],[i,0]] [α]
+                                        [β]
+            = [α*, β*] [-iβ, iα]ᵀ
+            = -iα*β + iβ*α
+            = i(β*α - α*β)
+            = i·2i·Im(α*β)  (using Im(z) = (z-z*)/(2i))
+            = 2 Im(α*β)
+    
+    Z-component:
+    ⟨ψ|Z|ψ⟩ = [α*, β*] [[1,0],[0,-1]] [α]
+                                        [β]
+            = [α*, β*] [α, -β]ᵀ
+            = α*α - β*β
+            = |α|² - |β|²
+    
+    Bloch Sphere Properties:
+    ------------------------
+    - Vector length: √(x² + y² + z²) = 1 (always on sphere surface)
+    - Pure states: on surface (length = 1)
+    - Mixed states: inside sphere (length < 1)
+    
+    Special Points on Bloch Sphere:
+    -------------------------------
+    |0⟩: (0, 0, 1)   - North pole
+    |1⟩: (0, 0, -1)  - South pole
+    |+⟩: (1, 0, 0)   - Positive X axis
+    |-⟩: (-1, 0, 0)  - Negative X axis
+    |i⟩: (0, 1, 0)   - Positive Y axis (i = imaginary unit)
+    |-i⟩: (0, -1, 0) - Negative Y axis
+    
+    Why This Matters:
+    ----------------
+    - Probabilities: tell you measurement outcomes
+    - Bloch vector: shows quantum state geometry
+    - Together: complete characterization of single qubit state
+    
     Args:
-        state: Statevector or QuantumCircuit (1 qubit) or object convertible.
+        state: Statevector or QuantumCircuit (1 qubit) or convertible object
+        
     Returns:
-        dict with keys: probabilities, bloch_vector (x,y,z)
+        dict with keys:
+            - 'probabilities': {'0': P(0), '1': P(1)}
+            - 'bloch_vector': (x, y, z) coordinates on Bloch sphere
+            
+    Raises:
+        ValueError: If state is not a single-qubit state
     """
     if not isinstance(state, Statevector):
         state = Statevector.from_instruction(state)
     if int(math.log2(state.dim)) != 1:
         raise ValueError("analyze_state currently supports single-qubit states only")
-    # Probabilities
-    probs = [abs(a) ** 2 for a in state.data]
-    # Bloch vector using expectations
+    
+    # Extract probability amplitudes α and β
+    # For |ψ⟩ = α|0⟩ + β|1⟩, state.data = [α, β]
     alpha, beta = state.data
-    # <X> = 2 Re(alpha* beta*)? Actually <X> = 2 Re(alpha* beta_conj)
+    
+    # ------------------------------------------------------------------
+    # 1. Calculate measurement probabilities using Born rule
+    # ------------------------------------------------------------------
+    # P(outcome) = |amplitude|² = amplitude × conjugate(amplitude)
+    probs = [abs(a) ** 2 for a in state.data]
+    
+    # ------------------------------------------------------------------
+    # 2. Calculate Bloch vector components (expectation values)
+    # ------------------------------------------------------------------
+    
+    # X-component: ⟨X⟩ = 2 Re(α*β)
+    # Measures superposition along X-axis
+    # Large |⟨X⟩| means state is closer to |+⟩ or |-⟩
     bloch_x = 2 * (alpha.conjugate() * beta).real
-    # <Y> = 2 Im(beta* alpha*)? Proper sign: <Y> = 2 * (alpha.conjugate()*beta).imag
+    
+    # Y-component: ⟨Y⟩ = 2 Im(α*β)
+    # Measures superposition along Y-axis with imaginary phase
+    # Large |⟨Y⟩| means state has significant imaginary phase component
     bloch_y = 2 * (alpha.conjugate() * beta).imag
-    # <Z> = |alpha|^2 - |beta|^2
+    
+    # Z-component: ⟨Z⟩ = |α|² - |β|²
+    # Measures "up-ness" vs "down-ness" (computational basis bias)
+    # +1 → pure |0⟩, -1 → pure |1⟩, 0 → equal superposition
     bloch_z = abs(alpha) ** 2 - abs(beta) ** 2
+    
     return {
         "probabilities": {"0": probs[0], "1": probs[1]},
         "bloch_vector": (bloch_x, bloch_y, bloch_z),

@@ -87,7 +87,23 @@ class MultiFrameworkComparator:
         return frameworks_available
 
     def implement_bell_state_circuits(self):
-        """Implement Bell state preparation in different frameworks."""
+        """
+        Implement Bell state preparation in different frameworks.
+        
+        Mathematical Concept - Bell State:
+        ---------------------------------
+        Bell states are maximally entangled 2-qubit states.
+        
+        |Φ+⟩ = (|00⟩ + |11⟩)/√2  ← Most common Bell state
+        
+        Preparation:
+        1. Start: |00⟩
+        2. Apply H to qubit 0: (|0⟩+|1⟩)|0⟩/√2
+        3. Apply CNOT(0→1): (|00⟩+|11⟩)/√2 ✓
+        
+        Entanglement: Measuring one qubit instantly determines the other!
+        Applications: Quantum teleportation, superdense coding, QKD
+        """
         print("\n=== Bell State Circuit Implementation ===")
 
         circuits = {}

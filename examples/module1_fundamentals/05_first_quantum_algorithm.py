@@ -41,33 +41,99 @@ class QuantumRandomNumberGenerator:
         self.history = []
 
     def generate_single_bit(self, shots=1):
-        """Generate a single random bit using quantum superposition.
-
-        Args:
-            shots: Number of measurements (default: 1)
-
-        Returns:
-            int: Random bit (0 or 1) or list of bits if shots > 1
         """
-        # Create quantum circuit with 1 qubit
+        Generate a single random bit using quantum superposition.
+        
+        Mathematical Foundation - Quantum Random Number Generation:
+        -----------------------------------------------------------
+        This is a TRUE quantum random number generator, not pseudo-random!
+        
+        Algorithm:
+        ----------
+        1. Initialize: |ψ₀⟩ = |0⟩ (ground state)
+        
+        2. Apply Hadamard gate:
+           H|0⟩ = (|0⟩ + |1⟩)/√2 = |+⟩ (equal superposition)
+           
+           State after H: |ψ₁⟩ = (1/√2)|0⟩ + (1/√2)|1⟩
+        
+        3. Measure in computational basis:
+           - Probability of |0⟩: P(0) = |(1/√2)|² = 1/2 = 50%
+           - Probability of |1⟩: P(1) = |(1/√2)|² = 1/2 = 50%
+        
+        Mathematical Details:
+        --------------------
+        Hadamard gate matrix:
+        H = (1/√2)[[1,  1],
+                   [1, -1]]
+        
+        Action on |0⟩ = [1, 0]ᵀ:
+        H|0⟩ = (1/√2)[[1,  1],    [1]   = (1/√2)[1]   = [1/√2]
+                      [1, -1]]  ×  [0]            [1]     [1/√2]
+        
+        This creates perfect 50-50 superposition!
+        
+        Born Rule (Measurement):
+        -----------------------
+        For state |ψ⟩ = α|0⟩ + β|1⟩:
+        - P(measuring 0) = |α|² = |1/√2|² = 1/2
+        - P(measuring 1) = |β|² = |1/√2|² = 1/2
+        
+        Why This Is Truly Random:
+        -------------------------
+        • Classical RNG: Deterministic algorithms (pseudo-random)
+          - Given seed → predictable sequence
+          - Computable by anyone with the algorithm
+        
+        • Quantum RNG: Fundamental quantum randomness
+          - Measurement outcome is intrinsically random
+          - No hidden variables (Bell's theorem)
+          - Impossible to predict (even in principle!)
+        
+        This randomness comes from quantum mechanics itself,
+        not from our lack of knowledge!
+        
+        Applications:
+        ------------
+        - Cryptography (truly unpredictable keys)
+        - Monte Carlo simulations
+        - Gambling (provably fair)
+        - Scientific experiments requiring random sampling
+        
+        Args:
+            shots (int): Number of measurements (repetitions)
+            
+        Returns:
+            int or list: Single bit (0 or 1) if shots=1, 
+                        list of bits if shots > 1
+        """
+        # Create quantum circuit with 1 qubit and 1 classical bit
+        # Qubit holds quantum superposition
+        # Classical bit stores measurement result
         qc = QuantumCircuit(1, 1)
 
-        # Put qubit in superposition
+        # Apply Hadamard gate to create equal superposition
+        # Mathematical operation: |0⟩ → (|0⟩ + |1⟩)/√2
+        # This creates the source of quantum randomness!
         qc.h(0)
 
-        # Measure the qubit
+        # Measure the qubit in computational basis
+        # Collapse: (|0⟩ + |1⟩)/√2 → |0⟩ with 50% or |1⟩ with 50%
+        # This measurement is fundamentally random (quantum mechanics)
         qc.measure(0, 0)
 
-        # Execute the circuit
+        # Execute the circuit on quantum backend (simulator or real hardware)
+        # Each shot is an independent quantum experiment
         job = self.backend.run(transpile(qc, self.backend), shots=shots)
         result = job.result()
         counts = result.get_counts()
 
         if shots == 1:
-            # Return single bit
+            # Return single bit: either 0 or 1 (50% chance each)
             return int(list(counts.keys())[0])
         else:
-            # Return list of bits
+            # Return list of bits from multiple measurements
+            # Statistical distribution should approach 50-50 as shots → ∞
             bits = []
             for outcome, count in counts.items():
                 bits.extend([int(outcome)] * count)

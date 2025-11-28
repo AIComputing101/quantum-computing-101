@@ -72,42 +72,124 @@ def explain_superposition_concept():
 
 
 def create_superposition_states():
-    """Create various superposition states."""
+    """
+    Create various superposition states.
+    
+    Mathematical Foundation - Types of Superposition:
+    -------------------------------------------------
+    Superposition is the ability of a quantum state to exist as a combination
+    of multiple basis states simultaneously. General form:
+    
+    |ψ⟩ = α|0⟩ + β|1⟩
+    
+    where α, β ∈ ℂ (complex numbers) and |α|² + |β|² = 1 (normalization)
+    
+    1. EQUAL SUPERPOSITION:
+    ----------------------
+    |+⟩ = (1/√2)|0⟩ + (1/√2)|1⟩
+    
+    Properties:
+    - Equal probability: P(0) = P(1) = 1/2
+    - Created by: H|0⟩ (Hadamard on |0⟩)
+    - Real coefficients (no relative phase)
+    
+    2. UNEQUAL SUPERPOSITION:
+    -------------------------
+    Created by R_y(θ) rotation:
+    R_y(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
+    
+    Probabilities:
+    - P(0) = cos²(θ/2)
+    - P(1) = sin²(θ/2)
+    
+    Example: θ = π/3 (60°)
+    - P(0) = cos²(30°) = (√3/2)² ≈ 0.75 = 75%
+    - P(1) = sin²(30°) = (1/2)² = 0.25 = 25%
+    
+    3. PHASE SUPERPOSITION:
+    ----------------------
+    |-⟩ = (1/√2)|0⟩ - (1/√2)|1⟩
+    
+    Properties:
+    - Equal probability: P(0) = P(1) = 1/2
+    - Relative phase: -1 (180° = π radians)
+    - Created by: ZH|0⟩ or HX|0⟩
+    - Different from |+⟩ despite same probabilities!
+    
+    Phase matters for interference:
+    |+⟩ + |-⟩ = 2|0⟩ (constructive on |0⟩)
+    |+⟩ - |-⟩ = 2|1⟩ (constructive on |1⟩)
+    
+    4. COMPLEX PHASE SUPERPOSITION:
+    ------------------------------
+    |i⟩ = (1/√2)|0⟩ + (i/√2)|1⟩
+    
+    Properties:
+    - Equal probability: P(0) = P(1) = 1/2
+    - Relative phase: i (90° = π/2 radians)
+    - Created by: SH|0⟩
+    - Uses imaginary unit i = √(-1)
+    
+    Phase representation: e^(iπ/2) = cos(π/2) + i·sin(π/2) = i
+    
+    Why Different Phases Matter:
+    ----------------------------
+    Although |+⟩, |-⟩, |i⟩ all give 50-50 measurement outcomes,
+    their PHASES differ. This matters for:
+    - Quantum interference
+    - Multi-qubit gates
+    - Quantum algorithms (QFT, Grover)
+    
+    Measurement in Z-basis gives same statistics,
+    but measurement in X or Y basis reveals phase differences!
+    
+    Returns:
+        dict: Circuits creating different superposition types
+    """
     print("=== CREATING SUPERPOSITION STATES ===")
     print()
 
     circuits = {}
 
-    # Equal superposition (Hadamard)
+    # Equal superposition (Hadamard) - most common
+    # H|0⟩ = (|0⟩ + |1⟩)/√2 with equal weights, no relative phase
     qc_equal = QuantumCircuit(1)
     qc_equal.h(0)
     circuits["Equal: |+⟩ = (|0⟩ + |1⟩)/√2"] = qc_equal
 
-    # Unequal superposition
+    # Unequal superposition using Y-rotation
+    # R_y(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
+    # θ = π/3 gives 75% chance of |0⟩, 25% chance of |1⟩
     qc_unequal = QuantumCircuit(1)
     theta = np.pi / 3  # 60 degrees
     qc_unequal.ry(theta, 0)
     circuits[f"Unequal: cos({theta/2:.2f})|0⟩ + sin({theta/2:.2f})|1⟩"] = qc_unequal
 
-    # Phase superposition
+    # Phase superposition with negative phase
+    # ZH|0⟩ = Z(|0⟩+|1⟩)/√2 = (|0⟩-|1⟩)/√2
+    # The Z gate adds -1 phase to |1⟩ component
     qc_phase = QuantumCircuit(1)
     qc_phase.h(0)
     qc_phase.z(0)
     circuits["Phase: (|0⟩ - |1⟩)/√2"] = qc_phase
 
-    # Complex superposition
+    # Complex superposition with imaginary phase
+    # SH|0⟩ = S(|0⟩+|1⟩)/√2 = (|0⟩+i|1⟩)/√2
+    # The S gate multiplies |1⟩ by i = e^(iπ/2)
     qc_complex = QuantumCircuit(1)
     qc_complex.h(0)
     qc_complex.s(0)
     circuits["Complex: (|0⟩ + i|1⟩)/√2"] = qc_complex
 
-    # Analyze each state
+    # Analyze each state to show amplitudes and probabilities
     for label, circuit in circuits.items():
         state = Statevector.from_instruction(circuit)
         print(f"{label}:")
         print(f"  Statevector: {state}")
+        # Amplitudes (complex numbers)
         print(f"  |0⟩ amplitude: {state[0]:.3f}")
         print(f"  |1⟩ amplitude: {state[1]:.3f}")
+        # Probabilities (Born rule: P = |amplitude|²)
         print(f"  |0⟩ probability: {abs(state[0])**2:.3f}")
         print(f"  |1⟩ probability: {abs(state[1])**2:.3f}")
         print()

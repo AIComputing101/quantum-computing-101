@@ -85,45 +85,138 @@ def explain_entanglement_concept():
 
 
 def create_bell_states():
-    """Create the four Bell states (maximally entangled states)."""
+    """
+    Create the four Bell states (maximally entangled states).
+    
+    Mathematical Foundation - Bell States:
+    --------------------------------------
+    Bell states are the four maximally entangled two-qubit states.
+    They form an orthonormal basis for the 2-qubit Hilbert space.
+    
+    The Four Bell States:
+    --------------------
+    
+    1. |Φ+⟩ = (|00⟩ + |11⟩)/√2  (Phi-plus)
+       - "Both qubits same" state
+       - If measure first as 0, second is 0
+       - If measure first as 1, second is 1
+       - Created by: H ⊗ I followed by CNOT
+    
+    2. |Φ-⟩ = (|00⟩ - |11⟩)/√2  (Phi-minus)
+       - Same correlation but with minus phase
+       - Relative phase difference of π
+       - Created by: Z·H ⊗ I followed by CNOT
+    
+    3. |Ψ+⟩ = (|01⟩ + |10⟩)/√2  (Psi-plus)
+       - "Qubits opposite" state
+       - If measure first as 0, second is 1
+       - If measure first as 1, second is 0
+       - Anti-correlation!
+    
+    4. |Ψ-⟩ = (|01⟩ - |10⟩)/√2  (Psi-minus)
+       - Anti-correlated with minus phase
+       - Also called "singlet state"
+       - Important in quantum communication
+    
+    Mathematical Properties:
+    -----------------------
+    
+    1. Maximal Entanglement:
+       Cannot write as |ψ₁⟩ ⊗ |ψ₂⟩ (product state)
+       Must describe qubits together, not separately
+    
+    2. Orthonormality:
+       ⟨Φ+|Φ-⟩ = 0, ⟨Φ+|Ψ+⟩ = 0, etc.
+       ⟨Φ+|Φ+⟩ = 1, ⟨Φ-|Φ-⟩ = 1, etc.
+    
+    3. Completeness:
+       Any 2-qubit state can be written as:
+       |ψ⟩ = α|Φ+⟩ + β|Φ-⟩ + γ|Ψ+⟩ + δ|Ψ-⟩
+    
+    4. Perfect Correlations:
+       Measurement outcomes are 100% correlated
+       P(same) = 1 for |Φ±⟩
+       P(opposite) = 1 for |Ψ±⟩
+    
+    Circuit Construction:
+    --------------------
+    
+    General pattern for |Φ+⟩:
+    1. Start: |00⟩
+    2. H on qubit 0: (|0⟩ + |1⟩) ⊗ |0⟩ / √2 = (|00⟩ + |10⟩)/√2
+    3. CNOT(0,1): (|00⟩ + |11⟩)/√2 = |Φ+⟩
+    
+    CNOT creates entanglement when control is in superposition!
+    
+    For other Bell states, apply additional gates:
+    - |Φ-⟩: Add Z before CNOT
+    - |Ψ+⟩: Add X after CNOT on target
+    - |Ψ-⟩: Add Z before and X after
+    
+    Why "Maximally" Entangled?
+    --------------------------
+    Schmidt decomposition gives only 2 equal terms (rank = 2)
+    Entanglement entropy = log₂(2) = 1 (maximum for 2 qubits)
+    No local operations can increase entanglement beyond this
+    
+    Applications:
+    ------------
+    - Quantum teleportation (uses |Φ+⟩)
+    - Superdense coding
+    - Quantum key distribution (BB84, E91)
+    - Bell inequality tests (CHSH)
+    - Quantum error correction
+    
+    Returns:
+        dict: Circuits creating the four Bell states
+    """
     print("=== BELL STATES (MAXIMALLY ENTANGLED STATES) ===")
     print()
 
     bell_states = {}
 
     # Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2
+    # Most common Bell state, used in teleportation
+    # H creates superposition, CNOT creates entanglement
     qc_phi_plus = QuantumCircuit(2)
-    qc_phi_plus.h(0)
-    qc_phi_plus.cx(0, 1)
+    qc_phi_plus.h(0)  # H|0⟩ = (|0⟩+|1⟩)/√2
+    qc_phi_plus.cx(0, 1)  # CNOT entangles: (|00⟩+|11⟩)/√2
     bell_states["|Φ+⟩ = (|00⟩ + |11⟩)/√2"] = qc_phi_plus
 
     # Bell state |Φ-⟩ = (|00⟩ - |11⟩)/√2
+    # Add Z gate before CNOT to flip phase of |1⟩ component
+    # Z(|0⟩+|1⟩)/√2 = (|0⟩-|1⟩)/√2, then CNOT → (|00⟩-|11⟩)/√2
     qc_phi_minus = QuantumCircuit(2)
     qc_phi_minus.h(0)
-    qc_phi_minus.z(0)
+    qc_phi_minus.z(0)  # Phase flip: |1⟩ → -|1⟩
     qc_phi_minus.cx(0, 1)
     bell_states["|Φ-⟩ = (|00⟩ - |11⟩)/√2"] = qc_phi_minus
 
     # Bell state |Ψ+⟩ = (|01⟩ + |10⟩)/√2
+    # Create |Φ+⟩ then flip target qubit
+    # X on qubit 1: |00⟩→|01⟩, |11⟩→|10⟩
     qc_psi_plus = QuantumCircuit(2)
     qc_psi_plus.h(0)
     qc_psi_plus.cx(0, 1)
-    qc_psi_plus.x(1)
+    qc_psi_plus.x(1)  # Bit flip on target
     bell_states["|Ψ+⟩ = (|01⟩ + |10⟩)/√2"] = qc_psi_plus
 
     # Bell state |Ψ-⟩ = (|01⟩ - |10⟩)/√2
+    # Combine Z (phase) and X (bit flip) operations
+    # Also called "singlet state" - important in quantum mechanics
     qc_psi_minus = QuantumCircuit(2)
     qc_psi_minus.h(0)
-    qc_psi_minus.z(0)
+    qc_psi_minus.z(0)  # Phase flip
     qc_psi_minus.cx(0, 1)
-    qc_psi_minus.x(1)
+    qc_psi_minus.x(1)  # Bit flip
     bell_states["|Ψ-⟩ = (|01⟩ - |10⟩)/√2"] = qc_psi_minus
 
-    # Analyze each Bell state
+    # Analyze each Bell state to show entanglement structure
     for label, circuit in bell_states.items():
         state = Statevector.from_instruction(circuit)
         print(f"{label}:")
         print(f"  Statevector: {state}")
+        # Show amplitudes for all 4 basis states |00⟩, |01⟩, |10⟩, |11⟩
         print(
             f"  Amplitudes: |00⟩:{state[0]:.3f}, |01⟩:{state[1]:.3f}, |10⟩:{state[2]:.3f}, |11⟩:{state[3]:.3f}"
         )

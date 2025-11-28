@@ -37,35 +37,110 @@ from quantum_helpers import create_bell_state, run_circuit_with_shots, analyze_s
 
 
 def create_teleportation_circuit(state_to_teleport=None, use_random_state=True):
-    """Create a complete quantum teleportation circuit.
-
-    Args:
-        state_to_teleport: Optional specific state to teleport
-        use_random_state: If True, teleport a random quantum state
-
-    Returns:
-        Tuple of (circuit, original_state_description)
     """
-    # Create 3-qubit circuit
-    # Qubit 0: Alice's original qubit (to be teleported)
-    # Qubit 1: Alice's half of entangled pair
-    # Qubit 2: Bob's half of entangled pair (destination)
+    Create a complete quantum teleportation circuit.
+    
+    Mathematical Foundation - Quantum Teleportation:
+    -----------------------------------------------
+    Teleportation transfers a quantum state from Alice to Bob using:
+    1. Pre-shared entanglement (Bell state)
+    2. Classical communication (2 classical bits)
+    3. Local operations (controlled gates)
+    
+    Remarkable fact: The original qubit's state is DESTROYED (no-cloning!)
+    but recreated at Bob's location.
+    
+    Protocol Steps:
+    ---------------
+    Initial state: |ψ⟩ = α|0⟩ + β|1⟩ (unknown state to teleport)
+    
+    STEP 0: Prepare shared entangled pair
+    |Φ+⟩ = (|00⟩ + |11⟩)/√2 (Bell state)
+    Alice has first qubit, Bob has second
+    
+    STEP 1: Alice's Bell measurement
+    Alice entangles her original qubit with her half of Bell pair
+    Then measures both qubits in Bell basis
+    Results: 2 classical bits (4 possible outcomes: 00, 01, 10, 11)
+    
+    STEP 2: Classical communication
+    Alice sends her 2 measurement bits to Bob (classical channel)
+    
+    STEP 3: Bob's correction
+    Based on Alice's bits, Bob applies gates to his qubit:
+    - 00: Do nothing (I gate)
+    - 01: Apply X gate
+    - 10: Apply Z gate
+    - 11: Apply ZX gates
+    
+    Result: Bob's qubit now in state |ψ⟩ = α|0⟩ + β|1⟩ ✓
+    
+    Mathematical Analysis:
+    ---------------------
+    Full initial state (3 qubits):
+    |ψ_initial⟩ = |ψ⟩_Alice ⊗ |Φ+⟩_Alice-Bob
+                = (α|0⟩ + β|1⟩) ⊗ (|00⟩ + |11⟩)/√2
+    
+    After Bell measurement, state collapses to one of 4 outcomes,
+    each with probability 1/4:
+    
+    Measurement 00: Bob has α|0⟩ + β|1⟩ (already correct!)
+    Measurement 01: Bob has α|1⟩ + β|0⟩ (X needed)
+    Measurement 10: Bob has α|0⟩ - β|1⟩ (Z needed)
+    Measurement 11: Bob has α|1⟩ - β|0⟩ (ZX needed)
+    
+    Key Insights:
+    ------------
+    • NO PHYSICAL QUBIT MOVED! Only classical info transmitted
+    • Original state DESTROYED (measurement collapses it)
+    • Entanglement + classical bits = quantum state transfer
+    • Cannot transmit faster than light (classical comm needed)
+    • Works for ANY unknown quantum state!
+    
+    Why "Teleportation"?
+    -------------------
+    - State appears at Bob's location
+    - Original at Alice destroyed
+    - Like Star Trek transporter (information, not matter)
+    
+    Applications:
+    ------------
+    - Quantum networks (distribute quantum info)
+    - Quantum repeaters (extend entanglement range)
+    - Quantum error correction
+    - Distributed quantum computing
+    
+    Args:
+        state_to_teleport: Specific state name or None
+        use_random_state: If True, generate random state
+        
+    Returns:
+        tuple: (QuantumCircuit, state_description)
+    """
+    # Create 3-qubit circuit with 3 classical bits for measurements
+    # Qubit 0: Alice's original qubit (state to be teleported)
+    # Qubit 1: Alice's half of entangled Bell pair
+    # Qubit 2: Bob's half of entangled Bell pair (destination)
     qc = QuantumCircuit(3, 3)
 
-    # Prepare the state to be teleported on qubit 0
+    # PREPARE STATE TO TELEPORT
+    # This is Alice's unknown quantum state |ψ⟩ = α|0⟩ + β|1⟩
     if state_to_teleport is not None:
-        # Use provided state (for testing)
+        # Use provided state (for testing/demonstration)
         if state_to_teleport == "|+⟩":
+            # |+⟩ = H|0⟩ = (|0⟩ + |1⟩)/√2
             qc.h(0)
             state_desc = "|+⟩ = (|0⟩ + |1⟩)/√2"
         elif state_to_teleport == "|-⟩":
+            # |-⟩ = HX|0⟩ = (|0⟩ - |1⟩)/√2
             qc.x(0)
             qc.h(0)
             state_desc = "|-⟩ = (|0⟩ - |1⟩)/√2"
         elif state_to_teleport == "|0⟩":
-            # Already in |0⟩ state
+            # Already in |0⟩ state (do nothing)
             state_desc = "|0⟩"
         elif state_to_teleport == "|1⟩":
+            # |1⟩ = X|0⟩
             qc.x(0)
             state_desc = "|1⟩"
         else:
@@ -74,6 +149,7 @@ def create_teleportation_circuit(state_to_teleport=None, use_random_state=True):
             state_desc = "custom state"
     elif use_random_state:
         # Create a random state to teleport
+        # General qubit: R_z(φ)R_y(θ)|0⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩
         theta = np.random.uniform(0, np.pi)
         phi = np.random.uniform(0, 2 * np.pi)
         qc.ry(theta, 0)
@@ -86,17 +162,22 @@ def create_teleportation_circuit(state_to_teleport=None, use_random_state=True):
 
     qc.barrier()  # Visual separator
 
-    # Step 1: Create entangled pair between Alice (qubit 1) and Bob (qubit 2)
-    qc.h(1)  # Alice's qubit in superposition
-    qc.cx(1, 2)  # Entangle Alice's qubit 1 with Bob's qubit 2
+    # STEP 1: CREATE ENTANGLED BELL PAIR
+    # Alice and Bob share |Φ+⟩ = (|00⟩ + |11⟩)/√2
+    # Alice has qubit 1, Bob has qubit 2
+    qc.h(1)  # Put qubit 1 in superposition: |+⟩
+    qc.cx(1, 2)  # Entangle qubits 1 and 2: |Φ+⟩ = (|00⟩ + |11⟩)/√2
 
     qc.barrier()  # Visual separator
 
-    # Step 2: Alice's Bell measurement on her two qubits (0 and 1)
-    qc.cx(0, 1)  # CNOT between original and Alice's entangled qubit
-    qc.h(0)  # Hadamard on original qubit
+    # STEP 2: ALICE'S BELL MEASUREMENT
+    # Alice entangles her original qubit (0) with her Bell pair qubit (1)
+    # Then measures both in computational basis
+    qc.cx(0, 1)  # CNOT: entangle qubit 0 with qubit 1
+    qc.h(0)  # Hadamard: transform to Bell basis
 
-    # Measure Alice's qubits
+    # Measure Alice's two qubits (0 and 1)
+    # These measurements give 2 classical bits to send to Bob
     qc.measure(0, 0)  # Measure qubit 0 -> classical bit 0
     qc.measure(1, 1)  # Measure qubit 1 -> classical bit 1
 

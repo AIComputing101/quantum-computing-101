@@ -57,22 +57,111 @@ class VariationalQuantumEigensolver:
         self.history = []
 
     def build_ansatz(self, n_qubits, depth, parameters):
-        """Build parameterized quantum circuit ansatz."""
+        """
+        Build parameterized quantum circuit ansatz.
+        
+        Mathematical Foundation - Variational Ansatz:
+        --------------------------------------------
+        An ansatz is a parameterized quantum circuit that can represent
+        a family of quantum states by varying its parameters.
+        
+        General Form:
+        |ψ(θ)⟩ = U(θ)|0⟩
+        
+        where:
+        - θ = [θ₁, θ₂, ..., θₙ] are classical parameters
+        - U(θ) is a unitary circuit built from parameterized gates
+        - |0⟩ is the initial state (all qubits in |0⟩)
+        
+        Ansatz Design Goals:
+        -------------------
+        1. Expressivity: Can represent target state |ψ_target⟩
+        2. Efficiency: Uses minimal gates and parameters
+        3. Trainability: Gradients don't vanish (no barren plateaus)
+        4. Hardware compatibility: Gates available on real devices
+        
+        This Ansatz Structure (Hardware-Efficient):
+        ------------------------------------------
+        Alternating layers of:
+        
+        Layer k:
+        1. Single-qubit rotations: R_y(θ_{k,i}) on each qubit i
+           R_y(θ) = [[cos(θ/2), -sin(θ/2)],
+                     [sin(θ/2),  cos(θ/2)]]
+        
+        2. Entangling gates: CNOT between adjacent qubits
+           Creates correlations, enables non-separable states
+        
+        3. More rotations: R_y(θ_{k+1,i}) for additional flexibility
+        
+        Mathematical Analysis:
+        --------------------
+        
+        Total parameters: 2 × n_qubits × depth
+        - depth controls expressivity
+        - More depth ≈ more complex states possible
+        - But deeper ≈ more noise on hardware!
+        
+        State after layer k:
+        |ψ_k⟩ = CNOT_{adj} · R_y(θ_k) · |ψ_{k-1}⟩
+        
+        Why R_y Gates?
+        -------------
+        - R_y creates real superpositions (no global phase)
+        - R_y(π/2) transforms |0⟩ ↔ |+⟩
+        - R_y(π) is X gate: |0⟩ ↔ |1⟩
+        - Universal: R_y + CNOT = universal gate set
+        
+        Why CNOT Entanglers?
+        -------------------
+        - Creates entanglement when qubits in superposition
+        - Native gate on superconducting hardware
+        - Linear connectivity (adjacent qubits only)
+        - Efficient: O(n) gates per layer
+        
+        Alternative Ansätze:
+        -------------------
+        - UCCSD: Chemistry-inspired (Unitary Coupled Cluster)
+        - Hamiltonian variational: Problem-specific structure
+        - Low-depth: For NISQ devices with high noise
+        - All-to-all: Better expressivity but more gates
+        
+        Expressivity vs. Trainability Trade-off:
+        ---------------------------------------
+        - More depth → more expressivity → harder to train
+        - Barren plateaus: gradients vanish exponentially with depth
+        - Optimal depth depends on problem and hardware noise
+        
+        Args:
+            n_qubits (int): Number of qubits in circuit
+            depth (int): Number of ansatz layers
+            parameters (list): Variational parameters θ
+            
+        Returns:
+            QuantumCircuit: Parameterized ansatz circuit
+        """
         circuit = QuantumCircuit(n_qubits)
         param_idx = 0
 
+        # Repeat layers for specified depth
+        # Each layer adds expressivity but also noise
         for layer in range(depth):
-            # RY rotations
+            # Layer 1: Single-qubit rotations (parameterized)
+            # R_y(θ) gates create superposition
+            # Each qubit gets independent rotation angle
             for qubit in range(n_qubits):
                 if param_idx < len(parameters):
                     circuit.ry(parameters[param_idx], qubit)
                     param_idx += 1
 
-            # Entangling gates
+            # Layer 2: Entangling gates (CNOT chain)
+            # Creates quantum correlations between qubits
+            # Linear connectivity: adjacent qubits only
             for qubit in range(n_qubits - 1):
                 circuit.cx(qubit, qubit + 1)
 
-            # Additional RY rotations
+            # Layer 3: Additional rotations for more flexibility
+            # Allows correction/fine-tuning after entanglement
             for qubit in range(n_qubits):
                 if param_idx < len(parameters):
                     circuit.ry(parameters[param_idx], qubit)

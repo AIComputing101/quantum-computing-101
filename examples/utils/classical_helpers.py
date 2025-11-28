@@ -63,7 +63,14 @@ def basic_stats(data: List[float]) -> Dict[str, float]:
 
 
 def hamming_distance(a: str, b: str) -> int:
-    """Compute Hamming distance between two equal-length strings."""
+    """
+    Compute Hamming distance between two equal-length strings.
+    
+    Hamming distance = number of positions where bits differ
+    Example: "1010" vs "1110" → distance = 1
+    
+    Used in quantum error correction to measure error rates.
+    """
     if len(a) != len(b):
         raise ValueError("Strings must be same length")
     return sum(ch1 != ch2 for ch1, ch2 in zip(a, b))

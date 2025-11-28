@@ -43,31 +43,142 @@ class QuantumPCA:
         return rho
 
     def quantum_phase_estimation(self, unitary_matrix, n_counting_qubits=3):
-        """Quantum phase estimation for eigenvalue estimation."""
+        """
+        Quantum phase estimation for eigenvalue estimation.
+        
+        Mathematical Foundation - Quantum Phase Estimation (QPE):
+        ---------------------------------------------------------
+        QPE is a quantum algorithm that estimates eigenvalues of unitary operators.
+        This is the core subroutine for Quantum PCA.
+        
+        Problem Statement:
+        -----------------
+        Given:
+        - Unitary operator U
+        - Eigenstate |ψ⟩ where U|ψ⟩ = e^(2πiφ)|ψ⟩
+        
+        Find:
+        - Phase φ ∈ [0, 1) which encodes the eigenvalue
+        
+        For PCA:
+        --------
+        We want eigenvalues λ of covariance matrix C.
+        Create unitary: U = e^(iCt) where eigenvalues are e^(iλt)
+        QPE extracts λ from phase φ = λt/(2π)
+        
+        QPE Algorithm Steps:
+        -------------------
+        
+        1. PREPARATION:
+           Initialize:
+           - Counting register: |0⟩^⊗n → H^⊗n → |+⟩^⊗n
+           - System register: |ψ⟩ (eigenstate)
+           
+           State: (1/√2^n) Σⱼ |j⟩|ψ⟩
+        
+        2. CONTROLLED UNITARIES:
+           Apply controlled-U^(2^k) for k = 0, 1, ..., n-1
+           
+           |j⟩|ψ⟩ → |j⟩ U^j |ψ⟩ = |j⟩ e^(2πiφj) |ψ⟩
+           
+           Total state:
+           (1/√2^n) Σⱼ e^(2πiφj) |j⟩|ψ⟩
+        
+        3. INVERSE QFT:
+           Apply QFT^† to counting register
+           
+           QFT^†: |j⟩ → (1/√2^n) Σₖ e^(-2πijk/2^n) |k⟩
+           
+           After QFT^†, if φ = k/2^n exactly:
+           Result: |k⟩|ψ⟩ with probability 1
+        
+        4. MEASUREMENT:
+           Measure counting register → get binary approximation of φ
+           
+           Outcome: ⌊2^n φ⌋ with high probability
+           Precision: n qubits give n bits of φ
+        
+        Mathematical Details:
+        --------------------
+        
+        Phase-Eigenvalue Relationship:
+        U|ψ⟩ = e^(2πiφ)|ψ⟩
+        
+        where φ encodes the eigenvalue:
+        - For hermitian H: U = e^(iHt), so e^(2πiφ) = e^(iλt)
+        - Thus: φ = λt/(2π)
+        
+        Controlled-U^(2^k) Implementation:
+        For k-th control qubit and power 2^k:
+        
+        |0⟩|ψ⟩ → |0⟩|ψ⟩        (no operation)
+        |1⟩|ψ⟩ → |1⟩U^(2^k)|ψ⟩ = |1⟩e^(2πiφ·2^k)|ψ⟩
+        
+        Precision Analysis:
+        ------------------
+        With n counting qubits:
+        - Precision: ±1/2^n
+        - Success probability: ≥ 4/π² ≈ 0.405 (worst case)
+        - Can amplify success with multiple runs
+        
+        For PCA Application:
+        -------------------
+        1. Encode data in density matrix ρ
+        2. Apply QPE to estimate eigenvalues λᵢ of ρ
+        3. Eigenvalues give principal component variances
+        4. Largest λ → most important components
+        
+        Quantum Advantage:
+        -----------------
+        - Classical PCA: O(min(n²m, m²n)) for n×m matrix
+        - Quantum PCA: O(log(nm) poly(1/ε)) with quantum data
+        - Exponential speedup for appropriate problems!
+        
+        Challenges:
+        ----------
+        - Requires eigenstate |ψ⟩ preparation
+        - Need efficient controlled-U implementation
+        - Measurement destroys superposition
+        - QRAM required for classical data
+        
+        Args:
+            unitary_matrix: Unitary operator U
+            n_counting_qubits: Precision (n bits of phase)
+            
+        Returns:
+            QuantumCircuit: QPE circuit
+        """
         n_system_qubits = int(np.log2(unitary_matrix.shape[0]))
         total_qubits = n_counting_qubits + n_system_qubits
 
         circuit = QuantumCircuit(total_qubits, n_counting_qubits)
 
-        # Initialize counting register in superposition
+        # STEP 1: Initialize counting register in superposition
+        # Apply Hadamard to create |+⟩^⊗n = (1/√2^n) Σⱼ |j⟩
         for i in range(n_counting_qubits):
             circuit.h(i)
 
-        # Initialize system register (simplified)
+        # Initialize system register (simplified to |1⟩)
+        # In full implementation, would prepare actual eigenstate |ψ⟩
         circuit.x(n_counting_qubits)  # |1⟩ state
 
-        # Controlled unitary operations
+        # STEP 2: Controlled unitary operations
+        # Apply controlled-U^(2^k) for each counting qubit k
         for i in range(n_counting_qubits):
             power = 2**i
             # Simplified controlled unitary (in practice would use actual matrix)
+            # This adds phase: |1⟩ → e^(2πiφ·2^i)|1⟩
             for _ in range(power % 8):  # Mod to keep reasonable
                 circuit.cp(np.pi / 4, i, n_counting_qubits)
 
-        # Inverse QFT on counting register
+        # STEP 3: Inverse QFT on counting register
+        # Transforms phase encoding to computational basis
+        # QFT^†: extracts the phase φ as binary number
         qft_inv = QFT(n_counting_qubits, inverse=True)
         circuit.compose(qft_inv, range(n_counting_qubits), inplace=True)
 
-        # Measure counting register
+        # STEP 4: Measure counting register
+        # Outcome gives binary approximation of eigenvalue phase
         circuit.measure(range(n_counting_qubits), range(n_counting_qubits))
 
         return circuit

@@ -120,7 +120,87 @@ class QuantumPortfolioOptimizer:
             )
 
     def create_portfolio_qubo(self, target_assets=None, max_assets=8):
-        """Create QUBO formulation for portfolio optimization."""
+        """
+        Create QUBO formulation for portfolio optimization.
+        
+        Mathematical Foundation - Portfolio Optimization:
+        ------------------------------------------------
+        
+        The Markowitz Mean-Variance Model:
+        ----------------------------------
+        Optimize: max [Expected Return - Risk Penalty]
+        
+        Mathematically:
+        max_w [μᵀw - λ wᵀΣw]
+        
+        where:
+        - w: Portfolio weights (w_i = fraction in asset i)
+        - μ: Expected return vector (μ_i = expected return of asset i)
+        - Σ: Covariance matrix (Σ_ij = covariance of returns i,j)
+        - λ: Risk aversion parameter (higher λ = less risk tolerance)
+        
+        Constraints:
+        - Σ w_i = 1 (weights sum to 100%)
+        - w_i ≥ 0 (no short selling)
+        
+        Efficient Frontier:
+        ------------------
+        The curve of optimal portfolios:
+        - Each point = best return for given risk level
+        - Trade-off: Higher return → Higher risk
+        
+        QUBO Formulation (For Quantum Optimization):
+        -------------------------------------------
+        
+        QUBO = Quadratic Unconstrained Binary Optimization
+        Standard form: min xᵀQx where x ∈ {0,1}ⁿ
+        
+        Binary Encoding:
+        For n assets, use binary variables x_i ∈ {0,1}
+        Portfolio weight: w_i = x_i / n
+        
+        Objective Transformation:
+        Original: max [μᵀw - λ wᵀΣw]
+        QUBO form: min xᵀQx
+        
+        Where Q matrix elements:
+        - Diagonal Q_ii: Return benefit - Individual risk
+          Q_ii = -μ_i/n + λ·Σ_ii/n²
+          
+        - Off-diagonal Q_ij: Correlation risk  
+          Q_ij = 2λ·Σ_ij/n²
+        
+        Why QUBO Works on Quantum:
+        -------------------------
+        1. Ising Hamiltonian: QUBO maps to quantum Hamiltonian
+           H = Σ_ij Q_ij Z_i Z_j (using Z Pauli operators)
+           
+        2. Ground State Search: Minimum energy = optimal portfolio
+           Use VQE or QAOA to find ground state
+           
+        3. Quantum Advantage: For large n, classical search is O(2ⁿ)
+           Quantum algorithms can potentially do better
+        
+        Risk-Return Trade-off:
+        ---------------------
+        λ (risk aversion) controls portfolio behavior:
+        - λ → 0: Maximize return (ignore risk) → Aggressive
+        - λ → ∞: Minimize risk (ignore return) → Conservative
+        - λ = 1: Balanced portfolio
+        
+        Typical Application:
+        -------------------
+        - Portfolio size: 50-500 assets
+        - Quantum advantage for: n > 50 (classical becomes slow)
+        - Real-world: Combine quantum + classical optimization
+        
+        Args:
+            target_assets: List of asset symbols to optimize
+            max_assets: Maximum number of assets (quantum limitation)
+            
+        Returns:
+            dict: QUBO problem formulation
+        """
         if target_assets is None:
             # Select subset of assets for quantum optimization
             symbols = list(self.assets.keys())[:max_assets]
@@ -130,20 +210,21 @@ class QuantumPortfolioOptimizer:
         n_assets = len(symbols)
 
         # Extract relevant data
-        mu = self.expected_returns[symbols].values
-        cov = self.covariance_matrix.loc[symbols, symbols].values
+        mu = self.expected_returns[symbols].values  # Expected returns μ
+        cov = self.covariance_matrix.loc[symbols, symbols].values  # Covariance Σ
 
         # Portfolio optimization objective:
         # Maximize: w^T * mu - λ * w^T * Σ * w
         # Subject to: sum(w) = 1, w_i ∈ {0, 1/n_assets, 2/n_assets, ...}
 
         # For binary encoding, each asset can be 0 or 1/n_assets
-        risk_aversion = 1.0 / self.risk_tolerance
+        risk_aversion = 1.0 / self.risk_tolerance  # λ parameter
 
         # QUBO matrix Q: minimize x^T * Q * x
         Q = np.zeros((n_assets, n_assets))
 
         # Diagonal terms (individual asset contributions)
+        # Q_ii = -μ_i/n + λ·Σ_ii/n²
         for i in range(n_assets):
             Q[i, i] = -mu[i] / n_assets + risk_aversion * cov[i, i] / (n_assets**2)
 

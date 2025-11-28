@@ -27,14 +27,84 @@ import cmath
 
 
 def demonstrate_complex_basics():
-    """Demonstrate basic complex number operations."""
+    """
+    Demonstrate basic complex number operations.
+    
+    Mathematical Foundation - Complex Numbers:
+    ------------------------------------------
+    A complex number z can be represented in two forms:
+    
+    1. RECTANGULAR (Cartesian) FORM:
+       z = a + bi
+       where:
+       - a is the real part: Re(z) = a
+       - b is the imaginary part: Im(z) = b
+       - i is the imaginary unit: i² = -1
+    
+    2. POLAR (Euler) FORM:
+       z = r·e^(iθ) = r(cos(θ) + i·sin(θ))
+       where:
+       - r = |z| = √(a² + b²) is the magnitude (modulus)
+       - θ = arg(z) = arctan(b/a) is the phase (argument)
+    
+    Complex Arithmetic:
+    -------------------
+    For z₁ = a + bi and z₂ = c + di:
+    
+    1. Addition: z₁ + z₂ = (a+c) + (b+d)i
+       (Add real and imaginary parts separately)
+    
+    2. Multiplication: z₁ × z₂ = (ac - bd) + (ad + bc)i
+       In polar form: r₁e^(iθ₁) × r₂e^(iθ₂) = r₁r₂·e^(i(θ₁+θ₂))
+       (Multiply magnitudes, add phases)
+    
+    3. Division: z₁ / z₂ = (z₁ × z₂*)/(|z₂|²)
+       where z₂* is the complex conjugate
+       In polar form: r₁/r₂ · e^(i(θ₁-θ₂))
+       (Divide magnitudes, subtract phases)
+    
+    4. Complex Conjugate: z* = a - bi
+       Geometrically: reflection across real axis
+       Property: z × z* = |z|² (always real and positive)
+    
+    5. Magnitude: |z| = √(a² + b²) = √(z × z*)
+       Represents distance from origin in complex plane
+    
+    6. Phase/Argument: arg(z) = arctan(b/a)
+       Angle from positive real axis (in radians)
+       Range: (-π, π] or [0, 2π) depending on convention
+    
+    Why Complex Numbers in Quantum Computing?
+    ------------------------------------------
+    1. Quantum amplitudes are complex numbers
+    2. Quantum phases are represented by e^(iθ)
+    3. Interference effects require complex arithmetic
+    4. Unitary matrices have complex entries
+    5. Schrödinger equation is inherently complex
+    
+    Euler's Formula (fundamental to quantum mechanics):
+    e^(iθ) = cos(θ) + i·sin(θ)
+    
+    Special case (Euler's identity):
+    e^(iπ) + 1 = 0
+    
+    Returns:
+        list: List of complex numbers for further demonstration
+    """
     print("=== COMPLEX NUMBERS BASICS ===")
     print()
 
-    # Define some complex numbers
-    z1 = 3 + 4j
-    z2 = 1 - 2j
-    z3 = 2 * cmath.exp(1j * np.pi / 4)  # Polar form
+    # Define some complex numbers in different forms
+    # z1 in rectangular form: z = a + bi
+    z1 = 3 + 4j  # real part = 3, imaginary part = 4
+    
+    # z2 in rectangular form with negative imaginary part
+    z2 = 1 - 2j  # real part = 1, imaginary part = -2
+    
+    # z3 in polar form: z = r·e^(iθ)
+    # Here r=2, θ=π/4 (45°)
+    # Using Euler's formula: e^(iπ/4) = cos(π/4) + i·sin(π/4) = (√2/2) + i(√2/2)
+    z3 = 2 * cmath.exp(1j * np.pi / 4)  # Polar form: r=2, θ=45°
 
     print("Basic complex numbers:")
     print(f"z1 = {z1} = {z1.real} + {z1.imag}i")
@@ -42,18 +112,31 @@ def demonstrate_complex_basics():
     print(f"z3 = {z3:.3f} = 2*e^(iπ/4) (polar form)")
     print()
 
-    # Complex operations
+    # Complex operations demonstrate how quantum states transform
     print("Complex arithmetic:")
+    
+    # Addition: (a+bi) + (c+di) = (a+c) + (b+d)i
     print(f"z1 + z2 = {z1 + z2}")
+    
+    # Multiplication: crucial for quantum gate operations
+    # (a+bi)(c+di) = (ac-bd) + (ad+bc)i
     print(f"z1 * z2 = {z1 * z2}")
+    
+    # Division: z1/z2 = z1 × conj(z2) / |z2|²
     print(f"z1 / z2 = {z1 / z2:.3f}")
+    
+    # Complex conjugate: z* = a - bi (flip sign of imaginary part)
+    # Important for computing probabilities: P = |amplitude|² = amplitude × conj(amplitude)
     print(f"z1* (conjugate) = {z1.conjugate()}")
     print()
 
-    # Magnitude and phase
+    # Magnitude and phase are crucial for quantum states
+    # Magnitude determines probability, phase determines interference
     print("Magnitude and phase:")
     for i, z in enumerate([z1, z2, z3], 1):
+        # Magnitude: |z| = √(Re(z)² + Im(z)²)
         magnitude = abs(z)
+        # Phase: arg(z) = arctan(Im(z)/Re(z))
         phase = cmath.phase(z)
         print(
             f"z{i}: |z| = {magnitude:.3f}, arg(z) = {phase:.3f} rad = {np.degrees(phase):.1f}°"

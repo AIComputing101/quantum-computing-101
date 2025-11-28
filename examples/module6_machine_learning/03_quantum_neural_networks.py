@@ -70,23 +70,132 @@ class QuantumNeuralNetwork:
         return circuit
 
     def create_variational_layer(self, params, layer_idx):
-        """Create a variational layer."""
+        """
+        Create a variational layer for quantum neural network.
+        
+        Mathematical Foundation - Quantum Neural Networks:
+        -------------------------------------------------
+        A Quantum Neural Network (QNN) is a parameterized quantum circuit
+        that mimics classical neural networks but using quantum operations.
+        
+        QNN Architecture:
+        ----------------
+        |ψ_out⟩ = U_L(θ_L) · ... · U_2(θ_2) · U_1(θ_1) · φ(x) |0⟩
+        
+        where:
+        - φ(x): Feature map encoding classical data x
+        - U_l(θ_l): Parameterized unitary layers (this function)
+        - θ_l: Trainable parameters for layer l
+        - |ψ_out⟩: Output quantum state
+        
+        Variational Layer Structure:
+        ----------------------------
+        Each layer U_l(θ) consists of:
+        
+        1. Single-Qubit Rotations:
+           For each qubit i, apply three rotations:
+           - R_x(θ_{i,1}): Rotation around X-axis
+           - R_y(θ_{i,2}): Rotation around Y-axis  
+           - R_z(θ_{i,3}): Rotation around Z-axis
+        
+        2. Entangling Gates:
+           CNOT chain between adjacent qubits
+           Creates quantum correlations
+        
+        Mathematical Details:
+        --------------------
+        
+        Rotation Gates (Bloch sphere rotations):
+        
+        R_x(θ) = [[cos(θ/2),  -i·sin(θ/2)],
+                  [-i·sin(θ/2), cos(θ/2)]]
+        
+        R_y(θ) = [[cos(θ/2), -sin(θ/2)],
+                  [sin(θ/2),  cos(θ/2)]]
+        
+        R_z(θ) = [[e^(-iθ/2),     0     ],
+                  [   0,      e^(iθ/2)]]
+        
+        Universal Coverage:
+        ------------------
+        Three rotations R_x, R_y, R_z give complete control:
+        - Any single-qubit unitary can be decomposed as:
+          U = e^(iα) R_z(β) R_y(γ) R_z(δ)
+        - Three rotations ≈ universal single-qubit gates
+        
+        Why Three Rotations?
+        -------------------
+        - R_x: Controls mixing in X-basis (|+⟩, |-⟩)
+        - R_y: Controls mixing in Y-basis (|i⟩, |-i⟩)
+        - R_z: Controls phase (relative angle)
+        - Together: Full 3D control on Bloch sphere
+        
+        Entanglement Creation:
+        ---------------------
+        CNOT gates create correlations:
+        CNOT|ψ⟩ ⊗ |φ⟩ can produce entangled states
+        when |ψ⟩ or |φ⟩ are in superposition
+        
+        This allows QNN to learn non-linear functions!
+        
+        Training Process:
+        ----------------
+        1. Forward pass: Compute |ψ_out⟩ = QNN(x, θ)
+        2. Measure observable: ⟨O⟩ = ⟨ψ_out|O|ψ_out⟩
+        3. Compute loss: L = loss(⟨O⟩, y_target)
+        4. Gradient: ∂L/∂θ using parameter-shift rule
+        5. Update: θ ← θ - η ∇L
+        
+        Parameter-Shift Rule (Quantum Gradients):
+        ----------------------------------------
+        For rotation gate R(θ):
+        ∂⟨O⟩/∂θ = [⟨O⟩(θ + π/2) - ⟨O⟩(θ - π/2)] / 2
+        
+        This allows exact gradients without backpropagation!
+        
+        Quantum vs Classical NN:
+        -----------------------
+        Classical: f(x) = σ(W_L · ... · σ(W_1·x))
+        Quantum:   f(x) = ⟨ψ(x,θ)|O|ψ(x,θ)⟩
+        
+        Advantages:
+        - Exponential state space (2^n dimensions)
+        - Quantum interference
+        - Potentially fewer parameters for same expressivity
+        
+        Challenges:
+        - Barren plateaus (gradients vanish with depth)
+        - Measurement noise
+        - Limited depth on NISQ devices
+        
+        Args:
+            params (array): Variational parameters θ for this layer
+            layer_idx (int): Layer index (for parameter indexing)
+            
+        Returns:
+            QuantumCircuit: Variational layer circuit
+        """
         circuit = QuantumCircuit(self.n_qubits, name=f"Var_Layer_{layer_idx}")
         param_idx = layer_idx * 3 * self.n_qubits  # 3 parameters per qubit per layer
 
-        # Single-qubit rotations
+        # Single-qubit rotations: Full control over each qubit
+        # Apply R_x, R_y, R_z to each qubit independently
         for i in range(self.n_qubits):
             if param_idx < len(params):
+                # R_x: rotation around X-axis (bit-flip direction)
                 circuit.rx(params[param_idx], i)
                 param_idx += 1
             if param_idx < len(params):
+                # R_y: rotation around Y-axis (superposition control)
                 circuit.ry(params[param_idx], i)
                 param_idx += 1
             if param_idx < len(params):
+                # R_z: rotation around Z-axis (phase control)
                 circuit.rz(params[param_idx], i)
                 param_idx += 1
 
-        # Entangling gates
+        # Entangling gates: Create quantum correlations
+        # Linear chain topology for hardware efficiency
         for i in range(self.n_qubits - 1):
             circuit.cx(i, i + 1)
 

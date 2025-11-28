@@ -81,11 +81,14 @@ class QuantumCircuitPatterns:
         evolution = QuantumCircuit(3)
 
         # Time evolution simulation pattern
+        # Math: Implements e^(-iHt) for Hamiltonian H
+        # Used in: Quantum simulation, VQE, dynamics
         t = Parameter("t")
         for i in range(3):
             evolution.rx(2 * t, i)  # Single-qubit evolution
 
-        # Interaction terms
+        # Interaction terms (two-qubit couplings)
+        # Pattern: CX-RZ-CX implements ZZ interaction
         evolution.cx(0, 1)
         evolution.rz(t, 1)
         evolution.cx(0, 1)
