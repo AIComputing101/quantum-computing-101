@@ -3232,11 +3232,13 @@ hybrid_mitigation_correction_strategy()
 - ✓ Dynamical decoupling for dephasing protection
 - ✓ When and how to combine techniques
 
-**Cutting-Edge Techniques (5.3.5):** 🆕
+**Cutting-Edge Techniques (5.3.5-5.3.6):** 🆕
 - ✓ **TREX**: IBM's twirled readout mitigation (2-5× improvement)
 - ✓ **Google Willow**: First below-threshold demonstration
 - ✓ **QLDPC Codes**: 10-15× more efficient than surface codes
 - ✓ **PEC**: Quasi-probability error inversion (10-100× reduction)
+- ✓ **TEM**: Tensor network error mitigation (5-10× improvement)
+- ✓ **MPC**: Matrix Product Channel for VQE
 - ✓ **Unified pipelines**: Combining multiple strategies
 
 **Quantum Error Correction (5.4-5.6):**

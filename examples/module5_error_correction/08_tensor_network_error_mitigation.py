@@ -232,7 +232,7 @@ class TensorNetworkErrorMitigation:
             'error_reduction_pct': error_reduction_pct
         }
     
-    def visualize_tem_results(self, results, save_path='tem_results.png'):
+    def visualize_tem_results(self, results, save_path='module5_08_tem_results.png'):
         """Visualize TEM mitigation results"""
         
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))

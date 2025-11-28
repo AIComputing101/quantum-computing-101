@@ -191,7 +191,7 @@ class WillowSurfaceCodeAnalysis:
         print(f"   Above threshold: Errors INCREASE with more qubits ❌")
         print(f"   Willow proved we're in the \"good regime\"!")
     
-    def visualize_willow_results(self, results, save_path='willow_analysis.png'):
+    def visualize_willow_results(self, results, save_path='module5_07_willow_analysis.png'):
         """Visualize Google Willow's achievements"""
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         

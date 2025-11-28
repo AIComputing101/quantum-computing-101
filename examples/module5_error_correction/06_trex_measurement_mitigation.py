@@ -77,7 +77,10 @@ class TREXMitigation:
                     if (twirl_config >> qubit) & 1:
                         twirled_circuit.x(qubit)
                 
-                twirled_circuit.measure_all()
+                # Explicit measurement to existing classical registers
+                for qubit in range(num_qubits):
+                    twirled_circuit.measure(qubit, qubit)
+                
                 calibration_circuits.append((basis_state, twirl_config, twirled_circuit))
         
         return calibration_circuits
@@ -229,7 +232,7 @@ class TREXMitigation:
             'error_reduction_pct': (1 - mitigated_error/noisy_error) * 100 if noisy_error > 0 else 0
         }
     
-    def visualize_trex_results(self, results, save_path='trex_results.png'):
+    def visualize_trex_results(self, results, save_path='module5_06_trex_results.png'):
         """Visualize TREX mitigation results"""
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
         
@@ -348,7 +351,8 @@ def main():
         test_circuit = QuantumCircuit(2, 2)
         test_circuit.h(0)
         test_circuit.cx(0, 1)
-        test_circuit.measure_all()
+        test_circuit.measure(0, 0)
+        test_circuit.measure(1, 1)
         
         print(f"   Qubits: {test_circuit.num_qubits}")
         print(f"   Depth: {test_circuit.depth()}")
