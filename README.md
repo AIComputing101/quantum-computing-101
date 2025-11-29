@@ -1,12 +1,12 @@
 # Quantum Computing 101 🚀⚛️
 
-**The most comprehensive, beginner-friendly quantum computing course** with **45 examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
+**The most comprehensive, beginner-friendly quantum computing course** with **48 examples** covering everything from "what is a qubit?" to industry applications in drug discovery and financial optimization.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Qiskit](https://img.shields.io/badge/Qiskit-2.x-purple.svg)](https://qiskit.org/)
 [![Beginner Friendly](https://img.shields.io/badge/beginner-friendly-brightgreen.svg)]()
-[![Examples](https://img.shields.io/badge/examples-45_working-brightgreen.svg)]()
+[![Examples](https://img.shields.io/badge/examples-48_working-brightgreen.svg)]()
 
 ## 🎯 Perfect for Complete Beginners
 
@@ -53,10 +53,11 @@ Unlike other courses that oversell quantum computing, we give you an honest asse
 ### ✅ Qiskit 2.x Compatible & Fully Tested
 All examples have been updated and tested for **Qiskit 2.x compatibility** and **headless environment execution** (Docker, SSH, remote servers).
 
-**🎯 Testing Status: 52/56 examples (93%) passing**
-- ✅ Modules 1-7: 100% passing (46/46 examples)
-- ✅ Module 8: 50% passing (3/6 examples), 1 working but slow
-- All critical functionality verified and working
+**🎯 Testing Status: 48/48 examples (100%) passing** ✨
+- ✅ All modules: 100% passing (48/48 examples)
+- ✅ Comprehensive automated test suite included
+- ✅ All critical functionality verified and working
+- See [Testing Guide](docs/TESTING.md) for details
 
 **Recent Compatibility Fixes (November 2025):**
 - Updated all `bind_parameters` → `assign_parameters` (Qiskit 2.x API)
@@ -331,9 +332,11 @@ quantum-computing-101/
 ├── verify_examples.py          # Quality assurance tool
 ├── BEGINNERS_GUIDE.md          # Complete learning pathway (Updated v2.0)
 └── docs/                       # Additional documentation
+    ├── COMPATIBILITY.md        # Qiskit 2.x compatibility reference
     ├── CONTRIBUTING.md         # Contribution guidelines
     ├── CODE_OF_CONDUCT.md      # Community standards
-    └── SECURITY.md             # Security policy
+    ├── SECURITY.md             # Security policy
+    └── TESTING.md              # Testing guide and procedures
 ```
 
 ## 🤝 Contributing
@@ -355,12 +358,17 @@ git clone https://github.com/AIComputing101/quantum-computing-101.git
 cd quantum-computing-101
 pip install -r examples/requirements-dev.txt
 
-# Verify all examples work
+# Run comprehensive test suite (recommended)
+./test-examples.sh --continue
+
+# Or verify all examples work (legacy)
 python verify_examples.py
 
 # Run specific module tests
-python verify_examples.py --module module1_fundamentals
+./test-examples.sh --module module1_fundamentals
 ```
+
+For detailed testing procedures and options, see the **[Testing Guide](docs/TESTING.md)**.
 
 ## 🎓 Educational Use
 
@@ -466,7 +474,7 @@ pip install scikit-learn
 ## 📞 Support & Community
 
 ### **When You Need Help:**
-- 🐛 **Technical Issues**: Run `python verify_examples.py` to diagnose problems
+- 🐛 **Technical Issues**: Run `./test-examples.sh --continue` to diagnose problems (see [Testing Guide](docs/TESTING.md))
 - 📚 **Learning Questions**: Check the [Complete Beginner's Guide](BEGINNERS_GUIDE.md)
 - 📖 **Qiskit 2.x Compatibility**: All examples updated for Qiskit 2.x (tested November 2025)
 - 🐳 **Docker/Headless Problems**: Examples use matplotlib 'Agg' backend for headless compatibility

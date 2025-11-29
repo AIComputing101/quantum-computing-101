@@ -43,11 +43,11 @@ class MaterialSimulator:
         self.crystal_structures = {}
 
     def create_material(
-        self, material_id, elements, structure_type, lattice_parameters=None
+        self, id, elements, structure_type, lattice_parameters=None
     ):
         """Create material model for quantum simulation."""
         material = {
-            "id": material_id,
+            "id": id,
             "elements": elements,
             "structure_type": structure_type,  # 'crystal', 'amorphous', 'composite'
             "lattice_parameters": lattice_parameters
@@ -62,10 +62,10 @@ class MaterialSimulator:
             elements, structure_type
         )
 
-        self.materials[material_id] = material
+        self.materials[id] = material
 
         if self.verbose:
-            print(f"   Created material: {material_id} ({structure_type})")
+            print(f"   Created material: {id} ({structure_type})")
             print(f"     Elements: {', '.join(elements)}")
             print(f"     Density: {material['properties']['density']:.2f} g/cm³")
 

@@ -315,11 +315,14 @@ class QuantumPortfolioOptimizer:
 
             # Create circuit
             qc = QuantumCircuit(n_qubits)
-            qc.compose(bound_ansatz.decompose(), inplace=True)
+            qc.compose(bound_ansatz, inplace=True)
             qc.measure_all()
 
+            # Transpile to basis gates for simulator compatibility
+            transpiled_qc = transpile(qc, simulator, basis_gates=['cx', 'u', 'rz', 'ry', 'rx', 'id', 'h', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg'], optimization_level=1)
+
             # Run circuit
-            job = simulator.run(qc, shots=1000)
+            job = simulator.run(transpiled_qc, shots=1000)
             result = job.result()
             counts = result.get_counts()
 
@@ -363,10 +366,13 @@ class QuantumPortfolioOptimizer:
         bound_ansatz = qaoa_ansatz.assign_parameters(final_params)
 
         qc = QuantumCircuit(n_qubits)
-        qc.compose(bound_ansatz.decompose(), inplace=True)
+        qc.compose(bound_ansatz, inplace=True)
         qc.measure_all()
 
-        job = simulator.run(qc, shots=10000)
+        # Transpile to basis gates for simulator compatibility
+        transpiled_qc = transpile(qc, simulator, basis_gates=['cx', 'u', 'rz', 'ry', 'rx', 'id', 'h', 'x', 'y', 'z', 's', 'sdg', 't', 'tdg'], optimization_level=1)
+
+        job = simulator.run(transpiled_qc, shots=10000)
         final_result = job.result()
         final_counts = final_result.get_counts()
 
@@ -379,8 +385,8 @@ class QuantumPortfolioOptimizer:
             "optimal_cost": result.fun,
             "portfolio_weights": portfolio_weights,
             "probability": best_portfolio[1] / 10000,
-            "n_iterations": result.nit,
-            "success": result.success,
+            "n_iterations": getattr(result, 'nit', getattr(result, 'nfev', 0)),  # Handle different optimizers
+            "success": getattr(result, 'success', True),
             "counts_distribution": final_counts,
         }
 

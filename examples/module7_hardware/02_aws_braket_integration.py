@@ -176,27 +176,37 @@ class BraketManager:
         n_qubits = qiskit_circuit.num_qubits
         braket_circuit = Circuit()
 
+        # Create qubit index mapping (for newer Qiskit versions)
+        qubit_map = {qubit: idx for idx, qubit in enumerate(qiskit_circuit.qubits)}
+        
+        def get_qubit_index(qubit):
+            """Get qubit index - compatible with old and new Qiskit versions."""
+            if hasattr(qubit, 'index'):
+                return qubit.index  # Old Qiskit
+            else:
+                return qubit_map[qubit]  # New Qiskit
+
         # Convert Qiskit instructions to Braket
         for instruction in qiskit_circuit.data:
             gate = instruction[0]
             qubits = instruction[1]
 
             if gate.name == "h":
-                braket_circuit.h(qubits[0].index)
+                braket_circuit.h(get_qubit_index(qubits[0]))
             elif gate.name == "x":
-                braket_circuit.x(qubits[0].index)
+                braket_circuit.x(get_qubit_index(qubits[0]))
             elif gate.name == "y":
-                braket_circuit.y(qubits[0].index)
+                braket_circuit.y(get_qubit_index(qubits[0]))
             elif gate.name == "z":
-                braket_circuit.z(qubits[0].index)
+                braket_circuit.z(get_qubit_index(qubits[0]))
             elif gate.name == "cx":
-                braket_circuit.cnot(qubits[0].index, qubits[1].index)
+                braket_circuit.cnot(get_qubit_index(qubits[0]), get_qubit_index(qubits[1]))
             elif gate.name == "ry":
                 angle = float(gate.params[0])
-                braket_circuit.ry(qubits[0].index, angle)
+                braket_circuit.ry(get_qubit_index(qubits[0]), angle)
             elif gate.name == "rz":
                 angle = float(gate.params[0])
-                braket_circuit.rz(qubits[0].index, angle)
+                braket_circuit.rz(get_qubit_index(qubits[0]), angle)
             elif gate.name == "measure":
                 # Braket handles measurements differently
                 pass

@@ -155,7 +155,12 @@ class MultiFrameworkComparator:
             state = bell_circuit()
 
             print(f"   Device: {dev.name}")
-            print(f"   Wires: {dev.num_wires}")
+            # Use len(dev.wires) for newer PennyLane versions
+            try:
+                num_wires = dev.num_wires  # Older versions
+            except AttributeError:
+                num_wires = len(dev.wires)  # Newer versions
+            print(f"   Wires: {num_wires}")
 
             if self.verbose:
                 print("   Circuit function defined with @qml.qnode decorator")
@@ -282,8 +287,8 @@ class MultiFrameworkComparator:
         """Implement a parameterized variational circuit in different frameworks."""
         print("\n=== Variational Circuit Implementation ===")
 
-        # Parameters for the circuit
-        params = [np.pi / 4, np.pi / 3, np.pi / 6]
+        # Parameters for the circuit (as numpy array for compatibility)
+        params = np.array([np.pi / 4, np.pi / 3, np.pi / 6])
 
         variational_circuits = {}
 
@@ -399,7 +404,13 @@ class MultiFrameworkComparator:
 
             # Compute gradients
             grad_fn = qml.grad(circuit)
-            gradients["pennylane"] = grad_fn(params)
+            grad_result = grad_fn(params)
+            
+            # Convert to numpy array if needed
+            if isinstance(grad_result, tuple):
+                gradients["pennylane"] = np.array(grad_result) if grad_result else np.array([])
+            else:
+                gradients["pennylane"] = np.atleast_1d(grad_result)
 
             print(f"   Gradients: {gradients['pennylane']}")
             print("   Method: Automatic differentiation")
@@ -463,6 +474,19 @@ class MultiFrameworkComparator:
             for i in range(len(frameworks)):
                 for j in range(i + 1, len(frameworks)):
                     fw1, fw2 = frameworks[i], frameworks[j]
+                    
+                    # Check if gradients have compatible shapes
+                    if gradients[fw1].shape != gradients[fw2].shape:
+                        print(f"{fw1} vs {fw2}: Shape mismatch ({gradients[fw1].shape} vs {gradients[fw2].shape})")
+                        print("  → Cannot compare ⚠️")
+                        continue
+                    
+                    # Check if gradients are empty
+                    if gradients[fw1].size == 0 or gradients[fw2].size == 0:
+                        print(f"{fw1} vs {fw2}: One or both gradients are empty")
+                        print("  → Cannot compare ⚠️")
+                        continue
+                    
                     diff = np.linalg.norm(gradients[fw1] - gradients[fw2])
 
                     print(f"{fw1} vs {fw2}: L2 difference = {diff:.8f}")

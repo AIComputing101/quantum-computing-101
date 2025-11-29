@@ -25,6 +25,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector, Operator
 from scipy.linalg import eig
 import seaborn as sns
+import gc  # For garbage collection
 
 
 def demonstrate_vector_operations():
@@ -236,7 +237,8 @@ def visualize_matrix_operations():
     print()
 
     # Create a figure with subplots for different visualizations
-    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    # Reduced figure size for faster rendering
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
 
     # Define gates
     gates = {
@@ -275,7 +277,9 @@ def visualize_matrix_operations():
     ax.set_title("Eigenvalues in Complex Plane")
     ax.legend()
     ax.grid(True, alpha=0.3)
-    ax.set_aspect("equal")
+    ax.set_aspect("equal", adjustable='box')  # Keep equal aspect but constrain to box
+    ax.set_xlim(-1.5, 1.5)
+    ax.set_ylim(-1.5, 1.5)
 
     # Plot 3: State transformation examples
     ax = axes[0, 2]
@@ -329,7 +333,9 @@ def visualize_matrix_operations():
     ax.set_ylabel("Imaginary")
     ax.set_title("State Transformations of |0⟩")
     ax.grid(True, alpha=0.3)
-    ax.set_aspect("equal")
+    ax.set_aspect("equal", adjustable='box')  # Keep equal aspect but constrain to box
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
 
     # Plot 4: Matrix commutation relationships
     ax = axes[1, 0]
@@ -418,9 +424,17 @@ def visualize_matrix_operations():
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    plt.tight_layout()
-    plt.savefig("module2_02_matrix_operations.png", dpi=300, bbox_inches="tight")
-    plt.close()
+    # Apply tight_layout with error handling
+    try:
+        plt.tight_layout(pad=1.5)
+    except:
+        pass  # Ignore layout warnings
+    
+    # Save with standard DPI without bbox_inches to avoid dimension issues
+    plt.savefig("module2_02_matrix_operations.png", dpi=100)
+    plt.close(fig)  # Explicitly close the figure
+    gc.collect()  # Force garbage collection
+    print("Saved: module2_02_matrix_operations.png")
 
 
 def demonstrate_quantum_state_evolution():
@@ -463,7 +477,7 @@ def demonstrate_quantum_state_evolution():
         print()
 
     # Visualize evolution
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
     # Plot state amplitudes over time
     steps = range(len(states_evolution))
@@ -507,9 +521,17 @@ def demonstrate_quantum_state_evolution():
     ax2.set_xticks(steps)
     ax2.set_xticklabels(step_labels, rotation=45)
 
-    plt.tight_layout()
-    plt.savefig("module2_02_state_evolution.png", dpi=300, bbox_inches="tight")
-    plt.close()
+    # Apply tight_layout with error handling
+    try:
+        plt.tight_layout(pad=1.0)
+    except:
+        pass  # Ignore layout warnings
+    
+    # Save with standard DPI without bbox_inches to avoid dimension issues
+    plt.savefig("module2_02_state_evolution.png", dpi=100)
+    plt.close(fig)  # Explicitly close the figure
+    gc.collect()  # Force garbage collection
+    print("Saved: module2_02_state_evolution.png")
 
     return states_evolution
 
@@ -536,19 +558,29 @@ def main():
 
     try:
         # Vector operations
+        if args.verbose:
+            print("Running vector operations...")
         quantum_states = demonstrate_vector_operations()
 
         # Matrix operations
+        if args.verbose:
+            print("Running matrix operations...")
         quantum_gates = demonstrate_matrix_operations()
 
         # Eigenvalue problems
+        if args.verbose:
+            print("Running eigenvalue problems...")
         eigendata = demonstrate_eigenvalue_problems()
 
         # Visualizations
+        print("Generating matrix visualizations...")
         visualize_matrix_operations()
+        print("Matrix visualizations completed.")
 
         # State evolution
+        print("Running state evolution...")
         evolution = demonstrate_quantum_state_evolution()
+        print("State evolution completed.")
 
         print("✅ Example completed successfully!")
         print()

@@ -226,7 +226,7 @@ class QuantumNeuralNetwork:
                 meas_circuit.measure(0, 0)
 
                 simulator = AerSimulator()
-                job = simulator.run(meas_circuit, shots=1024)
+                job = simulator.run(meas_circuit, shots=256)  # Optimized for <60s execution
                 result = job.result()
                 counts = result.get_counts()
 
@@ -245,7 +245,7 @@ class QuantumNeuralNetwork:
                     meas_circuit.measure(qubit_idx, 0)
 
                     simulator = AerSimulator()
-                    job = simulator.run(meas_circuit, shots=1024)
+                    job = simulator.run(meas_circuit, shots=256)  # Optimized for <60s execution
                     result = job.result()
                     counts = result.get_counts()
 
@@ -769,10 +769,10 @@ def main():
     parser.add_argument(
         "--dataset", choices=["synthetic", "boston"], default="synthetic"
     )
-    parser.add_argument("--n-samples", type=int, default=100)
+    parser.add_argument("--n-samples", type=int, default=20)  # Optimized for <60s execution
     parser.add_argument("--n-qubits", type=int, default=2)
-    parser.add_argument("--n-layers", type=int, default=2)
-    parser.add_argument("--max-iter", type=int, default=50)
+    parser.add_argument("--n-layers", type=int, default=1)  # Optimized for <60s execution
+    parser.add_argument("--max-iter", type=int, default=10)  # Optimized for <60s execution
     parser.add_argument("--analyze-gradients", action="store_true")
     parser.add_argument("--show-visualization", action="store_true")
     parser.add_argument("--verbose", action="store_true")

@@ -29,6 +29,7 @@ from qiskit_aer.noise import (
     depolarizing_error,
     amplitude_damping_error,
     phase_damping_error,
+    ReadoutError,
 )
 from qiskit.visualization import plot_histogram
 import seaborn as sns
@@ -738,8 +739,11 @@ def characterize_realistic_noise():
         #
         # ASYMMETRY: 2% |1⟩→|0⟩ vs 1% |0⟩→|1⟩
         # PHYSICAL REASON: Excited state |1⟩ relaxes to ground |0⟩
-        readout_error = [[0.99, 0.02],  # Row 0: Probability of measuring |0⟩
-                        [0.01, 0.98]]   # Row 1: Probability of measuring |1⟩
+        # Matrix format: M[i,j] = P(measure i | prepared j)
+        # Each COLUMN must sum to 1.0 (all outcomes for a given prepared state)
+        readout_error_matrix = [[0.98, 0.02],  # Row 0: P(measure 0 | prepared 0), P(measure 0 | prepared 1)
+                                [0.02, 0.98]]  # Row 1: P(measure 1 | prepared 0), P(measure 1 | prepared 1)
+        readout_error = ReadoutError(readout_error_matrix)
         noise_model.add_all_qubit_readout_error(readout_error)
 
         return noise_model
